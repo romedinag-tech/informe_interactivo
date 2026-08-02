@@ -32,10 +32,10 @@ export function GlossaryTooltip({
       {label}
       {open && (
         <span
-          className="absolute left-0 top-full z-30 mt-1 block w-64 rounded-md border border-gray-200 bg-white p-3 text-left text-xs font-normal not-italic leading-snug text-ink shadow-lg"
+          className="surface-card absolute left-0 top-full z-30 mt-1 block w-64 p-3 text-left text-xs font-normal not-italic leading-snug text-ink shadow-lg"
           style={{ whiteSpace: "normal" }}
         >
-          <span className="block font-semibold text-navy">{entry.term}</span>
+          <span className="block font-semibold" style={{ color: "var(--accent)" }}>{entry.term}</span>
           <span className="mt-1 block text-ink-soft">{entry.definition}</span>
           {entry.source && (
             <span className="mt-1 block text-[10px] text-ink-soft">

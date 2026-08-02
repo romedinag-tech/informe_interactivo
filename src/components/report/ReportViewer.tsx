@@ -45,11 +45,11 @@ type Draft = {
   label: string;
 };
 
-const statusStyle: Record<string, string> = {
-  OPEN: "bg-amber-100 text-amber-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  RESOLVED: "bg-green-100 text-green-800",
-  DISMISSED: "bg-gray-100 text-gray-600",
+const statusMeta: Record<string, { label: string; badge: string }> = {
+  OPEN: { label: "Abierta", badge: "badge-info" },
+  IN_PROGRESS: { label: "En proceso", badge: "badge-warn" },
+  RESOLVED: { label: "Resuelta", badge: "badge-ok" },
+  DISMISSED: { label: "Descartada", badge: "badge-neutral" },
 };
 
 // Paleta sobria y de baja saturación para diferenciar capítulos (wayfinding).
@@ -279,7 +279,10 @@ export function ReportViewer({
 
       {/* ── Compositor como bottom-sheet en móvil ── */}
       {compose && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white p-4 shadow-2xl lg:hidden">
+        <div
+          className="fixed inset-x-0 bottom-0 z-50 border-t p-4 shadow-2xl lg:hidden"
+          style={{ background: "var(--surface)", borderColor: "var(--line)" }}
+        >
           {compose}
         </div>
       )}
@@ -294,7 +297,7 @@ export function ReportViewer({
             top: floatBtn.y,
             transform: "translate(-50%, -100%)",
           }}
-          className="z-50 rounded-full bg-navy px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-navy-700"
+          className="btn-primary ring-focus z-50 rounded-full px-3 py-1.5 text-xs shadow-lg"
         >
           + Observar
         </button>
@@ -343,11 +346,11 @@ function SidebarObs({
   };
 
   return (
-    <div className="rounded-md border border-gray-100 p-2">
-      <div className="flex items-center justify-between">
+    <div className="rounded-md border p-2" style={{ borderColor: "var(--line)" }}>
+      <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-ink-soft">{a.authorName}</span>
-        <span className={`rounded px-1.5 py-0.5 text-[10px] ${statusStyle[a.status]}`}>
-          {a.status}
+        <span className={`badge ${statusMeta[a.status]?.badge ?? "badge-neutral"}`}>
+          {statusMeta[a.status]?.label ?? a.status}
         </span>
       </div>
       {editing ? (
@@ -357,13 +360,13 @@ function SidebarObs({
             onChange={(e) => setDraft(e.target.value)}
             rows={3}
             autoFocus
-            className="w-full rounded border border-gray-300 bg-white p-1.5 text-xs text-ink focus:border-navy focus:outline-none"
+            className="field w-full p-1.5 text-xs"
           />
           <div className="mt-1 flex gap-2">
             <button
               onClick={save}
               disabled={pending || !draft.trim()}
-              className="rounded bg-navy px-2 py-0.5 text-[11px] font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+              className="btn-primary ring-focus px-2 py-0.5 text-[11px]"
             >
               Guardar
             </button>
@@ -372,7 +375,7 @@ function SidebarObs({
                 setDraft(a.body);
                 setEditing(false);
               }}
-              className="rounded px-2 py-0.5 text-[11px] text-ink-soft hover:bg-gray-100"
+              className="btn-ghost ring-focus px-2 py-0.5 text-[11px]"
             >
               Cancelar
             </button>
@@ -389,7 +392,8 @@ function SidebarObs({
                     setDraft(a.body);
                     setEditing(true);
                   }}
-                  className="text-navy hover:underline"
+                  className="ring-focus font-medium hover:underline"
+                  style={{ color: "var(--accent)" }}
                 >
                   Editar
                 </button>
@@ -398,7 +402,8 @@ function SidebarObs({
                 <button
                   onClick={remove}
                   disabled={pending}
-                  className="text-red-600 hover:underline disabled:opacity-50"
+                  className="ring-focus font-medium hover:underline disabled:opacity-50"
+                  style={{ color: "var(--danger)" }}
                 >
                   Eliminar
                 </button>
@@ -492,7 +497,7 @@ function BlockView({
     const c = block.content as ParagraphContent | CalloutContent;
     const wrap =
       block.type === "CALLOUT"
-        ? "rounded-md border-l-4 border-navy/40 bg-navy/5 px-4 py-2"
+        ? "rounded-md border-l-4 border-[color:var(--accent)] bg-[color:var(--accent-soft)] px-4 py-2"
         : "";
     return (
       <p {...common} data-text="true" className={wrap}>
@@ -510,7 +515,7 @@ function BlockView({
             <thead>
               <tr>
                 {c.columns.map((col) => (
-                  <th key={col} className="border-b-2 border-gray-300 px-2 py-1 text-left font-semibold">
+                  <th key={col} className="border-b-2 border-[color:var(--line-strong)] px-2 py-1 text-left font-semibold">
                     {col}
                   </th>
                 ))}
@@ -520,7 +525,7 @@ function BlockView({
               {c.rows.map((row, i) => (
                 <tr key={i}>
                   {row.map((cell, j) => (
-                    <td key={j} className="border-b border-gray-100 px-2 py-1">
+                    <td key={j} className="border-b border-[color:var(--line)] px-2 py-1">
                       {cell}
                     </td>
                   ))}
@@ -588,7 +593,7 @@ function BlockView({
               border: "1px solid var(--line)",
             }}
           >
-            <svg viewBox="0 0 24 24" className="h-7 w-7 text-navy" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            <svg viewBox="0 0 24 24" className="h-7 w-7" style={{ color: "var(--accent)" }} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
               <path d="M3 3v18h18" strokeLinecap="round" />
               <rect x="7" y="11" width="3" height="6" rx="0.5" />
               <rect x="12.5" y="7" width="3" height="10" rx="0.5" />
@@ -639,7 +644,7 @@ function BlockShell({
       {canComment && (
         <button
           onClick={() => onAnnotate(blockId, label)}
-          className="absolute -right-2 -top-2 z-10 hidden rounded-full bg-navy px-2 py-1 text-[11px] font-medium text-white shadow group-hover:block"
+          className="btn-primary ring-focus absolute -right-2 -top-2 z-10 hidden rounded-full px-2 py-1 text-[11px] shadow group-hover:block"
         >
           + Observar
         </button>
@@ -668,8 +673,8 @@ function ComposeCard({
   appendVoice: (t: string) => void;
 }) {
   return (
-    <div className="rounded-lg border border-navy/20 bg-white p-4 shadow-sm">
-      <div className="text-xs font-medium uppercase tracking-wide text-navy">
+    <div className="surface-card p-4">
+      <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--accent)" }}>
         Nueva observación
       </div>
       <p className="mt-1 line-clamp-3 text-sm text-ink-soft">{draft.label}</p>
@@ -679,18 +684,18 @@ function ComposeCard({
         rows={4}
         autoFocus
         placeholder="Escriba o dicte su observación…"
-        className="mt-3 w-full rounded-md border border-gray-300 bg-white p-2 text-sm focus:border-navy focus:outline-none"
+        className="field ring-focus mt-3 w-full p-2 text-sm"
       />
       <div className="mt-2 flex items-center justify-between">
         <VoiceInput onAppend={appendVoice} />
         <div className="flex gap-2">
-          <button onClick={onCancel} className="rounded-md px-3 py-1.5 text-sm text-ink-soft hover:bg-gray-100">
+          <button onClick={onCancel} className="btn-ghost ring-focus px-3 py-1.5 text-sm">
             Cancelar
           </button>
           <button
             onClick={onSubmit}
             disabled={pending || !body.trim()}
-            className="rounded-md bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+            className="btn-primary ring-focus px-3 py-1.5 text-sm"
           >
             {pending ? "Guardando…" : "Guardar"}
           </button>

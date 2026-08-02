@@ -24,8 +24,8 @@ export function ReadingProgress() {
   return (
     <div className="fixed inset-x-0 top-0 z-40 h-1 bg-transparent">
       <div
-        className="h-full bg-navy transition-[width] duration-150"
-        style={{ width: `${pct}%` }}
+        className="h-full transition-[width] duration-150"
+        style={{ background: "var(--accent)", width: `${pct}%` }}
       />
     </div>
   );

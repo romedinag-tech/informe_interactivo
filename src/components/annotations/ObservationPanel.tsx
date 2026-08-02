@@ -282,13 +282,13 @@ function ObservationCard({
                 onChange={(e) => setDraft(e.target.value)}
                 rows={3}
                 autoFocus
-                className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm text-ink focus:border-navy focus:outline-none"
+                className="field ring-focus w-full p-2 text-sm"
               />
               <div className="mt-1 flex gap-2">
                 <button
                   onClick={saveEdit}
                   disabled={pending || !draft.trim()}
-                  className="rounded-md bg-navy px-3 py-1 text-xs font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+                  className="btn-primary ring-focus px-3 py-1 text-xs"
                 >
                   Guardar
                 </button>
@@ -297,7 +297,7 @@ function ObservationCard({
                     setDraft(obs.body);
                     setEditing(false);
                   }}
-                  className="rounded-md px-3 py-1 text-xs text-ink-soft hover:bg-gray-100"
+                  className="btn-ghost ring-focus px-3 py-1 text-xs"
                 >
                   Cancelar
                 </button>
@@ -314,7 +314,8 @@ function ObservationCard({
                         setDraft(obs.body);
                         setEditing(true);
                       }}
-                      className="text-navy hover:underline"
+                      className="ring-focus font-medium hover:underline"
+                      style={{ color: "var(--accent)" }}
                     >
                       Editar
                     </button>
@@ -323,7 +324,8 @@ function ObservationCard({
                     <button
                       onClick={remove}
                       disabled={pending}
-                      className="text-red-600 hover:underline disabled:opacity-50"
+                      className="ring-focus font-medium hover:underline disabled:opacity-50"
+                      style={{ color: "var(--danger)" }}
                     >
                       Eliminar
                     </button>
@@ -338,16 +340,12 @@ function ObservationCard({
 
       {/* Hilo de respuestas / contrapropuestas */}
       {obs.replies.length > 0 && (
-        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+        <div className="mt-3 space-y-2 border-t pt-3" style={{ borderColor: "var(--line)" }}>
           {obs.replies.map((r) => (
-            <div key={r.id} className="rounded-md bg-navy/5 px-3 py-2">
-              <div className="text-xs text-navy">
+            <div key={r.id} className="rounded-md px-3 py-2" style={{ background: "var(--accent-soft)" }}>
+              <div className="flex items-center gap-2 text-xs" style={{ color: "var(--accent-strong)" }}>
                 {r.authorName}
-                {r.isResolution && (
-                  <span className="ml-2 rounded bg-green-100 px-1.5 py-0.5 text-[10px] text-green-800">
-                    Contrapropuesta
-                  </span>
-                )}
+                {r.isResolution && <span className="badge badge-ok">Contrapropuesta</span>}
               </div>
               <p className="mt-1 text-sm text-ink">{r.body}</p>
             </div>
@@ -357,7 +355,7 @@ function ObservationCard({
 
       {/* Acciones */}
       {canComment && obs.status !== "RESOLVED" && (
-        <div className="mt-3 border-t border-gray-100 pt-3">
+        <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
           <textarea
             value={reply}
             onChange={(e) => setReply(e.target.value)}
@@ -367,7 +365,7 @@ function ObservationCard({
                 ? "Escriba la contrapropuesta o respuesta…"
                 : "Escriba una réplica…"
             }
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-navy focus:outline-none"
+            className="field ring-focus w-full p-2 text-sm"
           />
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             <VoiceInput onAppend={(t) => setReply((p) => (p ? `${p} ${t}` : t))} />
@@ -375,7 +373,8 @@ function ObservationCard({
               <button
                 onClick={() => sendReply(false)}
                 disabled={pending || !reply.trim()}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-ink hover:bg-gray-50 disabled:opacity-50"
+                className="ring-focus rounded-md border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)] disabled:opacity-50"
+                style={{ borderColor: "var(--line)" }}
               >
                 Responder
               </button>
@@ -384,7 +383,7 @@ function ObservationCard({
                   <button
                     onClick={() => sendReply(true)}
                     disabled={pending || !reply.trim()}
-                    className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
+                    className="btn-primary ring-focus px-3 py-1.5 text-sm"
                   >
                     Resolver con contrapropuesta
                   </button>
@@ -392,7 +391,8 @@ function ObservationCard({
                     <button
                       onClick={() => changeStatus("IN_PROGRESS")}
                       disabled={pending}
-                      className="rounded-md border border-blue-300 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                      className="ring-focus rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+                      style={{ color: "var(--info)", borderColor: "var(--info-border)" }}
                     >
                       Marcar en proceso
                     </button>
@@ -400,7 +400,7 @@ function ObservationCard({
                   <button
                     onClick={() => changeStatus("DISMISSED")}
                     disabled={pending}
-                    className="rounded-md px-3 py-1.5 text-sm text-ink-soft hover:bg-gray-100 disabled:opacity-50"
+                    className="btn-ghost ring-focus px-3 py-1.5 text-sm disabled:opacity-50"
                   >
                     Descartar
                   </button>

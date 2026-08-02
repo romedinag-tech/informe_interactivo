@@ -112,25 +112,28 @@ export function ReviewToolbar({
     <div className="no-print flex flex-wrap items-center gap-2">
       <button
         onClick={downloadWord}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-ink hover:bg-gray-50"
+        className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
+        style={{ borderColor: "var(--line)" }}
       >
         Descargar Word
       </button>
       <button
         onClick={() => window.print()}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-ink hover:bg-gray-50"
+        className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
+        style={{ borderColor: "var(--line)" }}
       >
         Imprimir / PDF
       </button>
 
       {isReviewer &&
         (submittedAt ? (
-          <span className="flex items-center gap-2 text-sm text-green-700">
+          <span className="flex items-center gap-2 text-sm" style={{ color: "var(--ok)" }}>
             ✓ Enviada el {new Date(submittedAt).toLocaleDateString("es-CL")}
             <button
               onClick={reopen}
               disabled={pending}
-              className="rounded-md px-2 py-1 text-xs text-ink-soft underline hover:text-navy disabled:opacity-50"
+              className="ring-focus rounded-md px-2 py-1 text-xs underline hover:text-ink disabled:opacity-50"
+              style={{ color: "var(--muted)" }}
             >
               Reabrir
             </button>
@@ -139,7 +142,7 @@ export function ReviewToolbar({
           <button
             onClick={submit}
             disabled={pending}
-            className="rounded-lg bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-60"
+            className="btn-primary ring-focus rounded-lg px-3 py-1.5 text-sm disabled:opacity-60"
           >
             {pending ? "Enviando…" : "Enviar al consultor"}
           </button>

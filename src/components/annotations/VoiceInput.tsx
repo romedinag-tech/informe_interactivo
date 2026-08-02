@@ -86,17 +86,18 @@ export function VoiceInput({
     <button
       type="button"
       onClick={toggle}
+      aria-pressed={listening}
       title={listening ? "Detener dictado" : "Dictar observación"}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+      className="ring-focus inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition"
+      style={
         listening
-          ? "border-red-300 bg-red-50 text-red-700"
-          : "border-gray-300 bg-white text-ink-soft hover:bg-gray-50"
-      }`}
+          ? { borderColor: "var(--danger-border)", background: "var(--danger-bg)", color: "var(--danger)" }
+          : { borderColor: "var(--line)", background: "var(--surface-2)", color: "var(--muted)" }
+      }
     >
       <span
-        className={`h-2 w-2 rounded-full ${
-          listening ? "animate-pulse bg-red-500" : "bg-gray-400"
-        }`}
+        className={`h-2 w-2 rounded-full ${listening ? "animate-pulse" : ""}`}
+        style={{ background: listening ? "var(--danger)" : "var(--faint)" }}
       />
       {listening ? "Escuchando…" : "Dictar"}
     </button>

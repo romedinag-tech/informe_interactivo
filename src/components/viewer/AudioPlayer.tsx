@@ -187,7 +187,7 @@ export function AudioPlayer({
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-navy text-white shadow-lg hover:bg-navy-700"
+          className="btn-primary ring-focus fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full text-lg shadow-lg"
           title="Escuchar el informe"
           aria-label="Escuchar el informe"
         >
@@ -209,7 +209,7 @@ export function AudioPlayer({
                 stop();
                 setOpen(false);
               }}
-              className="text-ink-soft hover:text-navy"
+              className="ring-focus rounded text-ink-soft hover:text-ink"
               aria-label="Cerrar"
             >
               ✕
@@ -239,26 +239,29 @@ export function AudioPlayer({
             <button
               onClick={() => playChapter(idx - 1)}
               disabled={idx === 0}
-              className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 disabled:opacity-30"
+              className="btn-ghost ring-focus px-2 py-1 disabled:opacity-30"
               title="Anterior"
+              aria-label="Capítulo anterior"
             >
               ⏮
             </button>
             {status === "idle" || status === "paused" ? (
               <button
                 onClick={() => (status === "paused" ? togglePause() : playChapter(idx))}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-navy text-white hover:bg-navy-700"
+                className="btn-primary ring-focus flex h-10 w-10 items-center justify-center rounded-full"
                 title="Reproducir"
+                aria-label="Reproducir"
               >
                 ▶
               </button>
             ) : status === "loading" ? (
-              <span className="flex h-10 w-10 items-center justify-center text-navy">…</span>
+              <span className="flex h-10 w-10 items-center justify-center" style={{ color: "var(--accent)" }}>…</span>
             ) : (
               <button
                 onClick={togglePause}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-navy text-white hover:bg-navy-700"
+                className="btn-primary ring-focus flex h-10 w-10 items-center justify-center rounded-full"
                 title="Pausar"
+                aria-label="Pausar"
               >
                 ⏸
               </button>
@@ -266,8 +269,9 @@ export function AudioPlayer({
             <button
               onClick={() => playChapter(idx + 1)}
               disabled={idx >= chapters.length - 1}
-              className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 disabled:opacity-30"
+              className="btn-ghost ring-focus px-2 py-1 disabled:opacity-30"
               title="Siguiente"
+              aria-label="Capítulo siguiente"
             >
               ⏭
             </button>
@@ -297,12 +301,18 @@ export function AudioPlayer({
 
           <div className="mt-2 flex items-center justify-between gap-2 text-xs">
             <span className="text-ink-soft">Velocidad</span>
-            <div className="flex overflow-hidden rounded-full border border-gray-200">
+            <div className="flex overflow-hidden rounded-full border" style={{ borderColor: "var(--line)" }} role="group" aria-label="Velocidad de reproducción">
               {SPEEDS.map((s) => (
                 <button
                   key={s}
                   onClick={() => changeSpeed(s)}
-                  className={`px-2.5 py-1 ${speed === s ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
+                  aria-pressed={speed === s}
+                  className="ring-focus px-2.5 py-1 transition-colors"
+                  style={
+                    speed === s
+                      ? { background: "var(--accent)", color: "var(--accent-contrast)" }
+                      : { color: "var(--muted)" }
+                  }
                 >
                   {s}×
                 </button>
