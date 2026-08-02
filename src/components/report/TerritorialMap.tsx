@@ -4,10 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 type Var = [string, string, string, string]; // [campo, etiqueta, unidad, escala]
+type Punto = { la: number; lo: number; n?: string; t?: string };
 type MapData = {
   zonas?: GeoJSON.FeatureCollection;
   area?: GeoJSON.GeoJsonObject;
   vars?: Var[];
+  siniestros?: Punto[];
+  colegios?: Punto[];
 };
 
 const PALETTES: Record<string, string[]> = {
@@ -38,11 +41,13 @@ export function TerritorialMap({
   mapKey,
   title,
   defaultVar,
+  capa,
 }: {
   reportSlug: string;
   mapKey: string;
   title?: string;
   defaultVar?: string;
+  capa?: "siniestros" | "colegios";
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
@@ -50,14 +55,33 @@ export function TerritorialMap({
   const dataRef = useRef<MapData | null>(null);
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [visible, setVisible] = useState(false);
   const [vars, setVars] = useState<Var[]>([]);
   const [indicator, setIndicator] = useState<string>(defaultVar ?? "atr_neta");
+
+  // Carga diferida: solo inicializa Leaflet cuando el mapa se acerca a la vista.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const [legend, setLegend] = useState<
     { label: string; unit: string; classes: { color: string; from: number; to: number }[] } | null
   >(null);
 
-  // Crea el mapa una vez.
+  // Crea el mapa una vez (cuando ya es visible).
   useEffect(() => {
+    if (!visible || mapRef.current) return;
     let cancelled = false;
     (async () => {
       try {
@@ -96,6 +120,21 @@ export function TerritorialMap({
           const a = L.geoJSON(data.area, { style: { color: "#ffe14d", weight: 3, opacity: 1, fill: false } }).addTo(map);
           if (!bounds) bounds = a.getBounds();
         }
+
+        // Capa de puntos (siniestros / colegios) si el bloque la pide.
+        const pts = capa ? data[capa] : undefined;
+        if (pts?.length) {
+          const style =
+            capa === "siniestros"
+              ? { radius: 3, color: "#7a1f14", weight: 0.5, fillColor: "#e74c3c", fillOpacity: 0.75 }
+              : { radius: 4, color: "#12294d", weight: 1, fillColor: "#ffe14d", fillOpacity: 0.95 };
+          for (const pt of pts) {
+            if (typeof pt.la !== "number" || typeof pt.lo !== "number") continue;
+            const m = L.circleMarker([pt.la, pt.lo], style);
+            if (pt.n || pt.t) m.bindTooltip(String(pt.n ?? pt.t));
+            m.addTo(map);
+          }
+        }
         if (bounds && bounds.isValid()) map.fitBounds(bounds, { padding: [12, 12] });
         else map.setView([-35.43, -71.65], 12);
         setStatus("ready");
@@ -110,7 +149,7 @@ export function TerritorialMap({
       layerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportSlug, mapKey]);
+  }, [reportSlug, mapKey, visible]);
 
   // Recolorea la coropleta al cambiar de indicador.
   useEffect(() => {

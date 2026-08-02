@@ -7,7 +7,11 @@ import { DashboardChart, type DashChart } from "./DashboardChart";
 import { TerritorialMap } from "./TerritorialMap";
 import { VoiceInput } from "@/components/annotations/VoiceInput";
 import { GlossaryTooltip, type GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
-import { createAnnotation } from "@/app/actions/annotations";
+import {
+  createAnnotation,
+  updateAnnotationBody,
+  deleteAnnotation,
+} from "@/app/actions/annotations";
 import type {
   ViewChapter,
   ViewSection,
@@ -28,6 +32,7 @@ export type ClientAnnotation = {
   rangeEnd: number | null;
   body: string;
   status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED";
+  authorId: string;
   authorName: string;
   createdAt: string;
 };
@@ -64,6 +69,8 @@ export function ReportViewer({
   chapters,
   annotations,
   canComment,
+  canEdit,
+  currentUserId,
   glossary,
 }: {
   reportId: string;
@@ -71,6 +78,8 @@ export function ReportViewer({
   chapters: ViewChapter[];
   annotations: ClientAnnotation[];
   canComment: boolean;
+  canEdit: boolean;
+  currentUserId: string;
   glossary: GlossaryEntry[];
 }) {
   const router = useRouter();
@@ -237,20 +246,17 @@ export function ReportViewer({
                   ? "Seleccione texto, o use «Observar» en una tabla o gráfico."
                   : "Modo lectura."}
               </p>
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 max-h-[62vh] space-y-2 overflow-y-auto pr-1">
                 {annotations.length === 0 && (
                   <p className="text-xs text-ink-soft">Aún no hay observaciones.</p>
                 )}
-                {annotations.slice(0, 8).map((a) => (
-                  <div key={a.id} className="rounded-md border border-gray-100 p-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-ink-soft">{a.authorName}</span>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] ${statusStyle[a.status]}`}>
-                        {a.status}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-sm text-ink">{a.body}</p>
-                  </div>
+                {annotations.map((a) => (
+                  <SidebarObs
+                    key={a.id}
+                    a={a}
+                    canEdit={canEdit}
+                    currentUserId={currentUserId}
+                  />
                 ))}
               </div>
             </div>
@@ -279,6 +285,114 @@ export function ReportViewer({
         >
           + Observar
         </button>
+      )}
+    </div>
+  );
+}
+
+// Observación en el panel lateral, con editar/eliminar en línea.
+function SidebarObs({
+  a,
+  canEdit,
+  currentUserId,
+}: {
+  a: ClientAnnotation;
+  canEdit: boolean;
+  currentUserId: string;
+}) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(a.body);
+  const [pending, setPending] = useState(false);
+  const isOwner = a.authorId === currentUserId;
+  const canDelete = isOwner || canEdit;
+
+  const save = async () => {
+    if (!draft.trim()) return;
+    setPending(true);
+    try {
+      await updateAnnotationBody(a.id, draft.trim());
+      setEditing(false);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
+  const remove = async () => {
+    if (!confirm("¿Eliminar esta observación?")) return;
+    setPending(true);
+    try {
+      await deleteAnnotation(a.id);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="rounded-md border border-gray-100 p-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-ink-soft">{a.authorName}</span>
+        <span className={`rounded px-1.5 py-0.5 text-[10px] ${statusStyle[a.status]}`}>
+          {a.status}
+        </span>
+      </div>
+      {editing ? (
+        <div className="mt-1">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            autoFocus
+            className="w-full rounded border border-gray-300 bg-white p-1.5 text-xs text-ink focus:border-navy focus:outline-none"
+          />
+          <div className="mt-1 flex gap-2">
+            <button
+              onClick={save}
+              disabled={pending || !draft.trim()}
+              className="rounded bg-navy px-2 py-0.5 text-[11px] font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+            >
+              Guardar
+            </button>
+            <button
+              onClick={() => {
+                setDraft(a.body);
+                setEditing(false);
+              }}
+              className="rounded px-2 py-0.5 text-[11px] text-ink-soft hover:bg-gray-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-ink">{a.body}</p>
+          {(isOwner || canDelete) && (
+            <div className="mt-1 flex gap-3 text-[11px]">
+              {isOwner && (
+                <button
+                  onClick={() => {
+                    setDraft(a.body);
+                    setEditing(true);
+                  }}
+                  className="text-navy hover:underline"
+                >
+                  Editar
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={remove}
+                  disabled={pending}
+                  className="text-red-600 hover:underline disabled:opacity-50"
+                >
+                  Eliminar
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -419,6 +533,7 @@ function BlockView({
               mapKey={raw.key as string}
               title={raw.titulo as string | undefined}
               defaultVar={raw.var as string | undefined}
+              capa={raw.capa as "siniestros" | "colegios" | undefined}
             />
           </div>
         </BlockShell>

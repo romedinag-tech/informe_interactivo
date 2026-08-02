@@ -33,8 +33,14 @@ Estado tras la sesión autónoma. ✅ hecho · ⏳ pendiente · esfuerzo: 🟢�
 
 - ✅ **Observaciones editables**: botones **Editar** y **Eliminar** en el panel de
   observaciones (autor edita/elimina las suyas; el consultor puede eliminar).
-- 🟢 **Mapas temáticos restantes**: colocar el explorador (coropleta) en los demás
-  placeholders de mapa, cada uno con su indicador por defecto.
+- ✅ **Mapas temáticos**: los 10 placeholders de mapa ahora son el explorador con su
+  indicador (densificación, NSE, balance, caminata, bici…) + capas de puntos
+  (siniestros muestreados, colegios). Carga diferida al acercarse a la vista.
+- ✅ **Editar/eliminar observaciones desde el lector** (panel lateral), no solo desde
+  el botón superior.
+- 🟡 **Figuras estáticas restantes (~26)**: son imágenes del Word (histogramas, etc.)
+  cuya imagen se descartó al importar. Para mostrarlas hay que **re-extraer las
+  imágenes del `.docx`** (mammoth con imágenes) y guardarlas como assets.
 - 🟢 **Documento congelado adjunto al envío** (opcional): hoy el consultor ve las
   observaciones y descarga el Word en la plataforma; falta guardar una "foto" del
   documento exacto al momento de enviar, si se quiere.

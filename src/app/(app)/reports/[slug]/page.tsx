@@ -72,6 +72,7 @@ export default async function ReportPage({
     rangeEnd: a.rangeEnd,
     body: a.body,
     status: a.status,
+    authorId: a.authorId,
     authorName: a.author.name,
     createdAt: a.createdAt.toISOString(),
   }));
@@ -143,6 +144,8 @@ export default async function ReportPage({
           chapters={chapters}
           annotations={annotations}
           canComment={access.canComment}
+          canEdit={access.canEdit}
+          currentUserId={user.id}
           glossary={glossary}
         />
       </div>
