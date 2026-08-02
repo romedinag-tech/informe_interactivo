@@ -30,6 +30,26 @@ export function AudioPlayer({
   const autoScrollRef = useRef(autoScroll);
   autoScrollRef.current = autoScroll;
 
+  // Persistencia de preferencias (velocidad + auto-scroll).
+  useEffect(() => {
+    try {
+      const s = Number(localStorage.getItem("audio.speed"));
+      if (SPEEDS.includes(s as (typeof SPEEDS)[number])) setSpeed(s as (typeof SPEEDS)[number]);
+      const as = localStorage.getItem("audio.autoscroll");
+      if (as != null) setAutoScroll(as === "1");
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("audio.speed", String(speed));
+      localStorage.setItem("audio.autoscroll", autoScroll ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [speed, autoScroll]);
+
   const cleanup = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -177,6 +197,29 @@ export function AudioPlayer({
     return `${m}:${r.toString().padStart(2, "0")}`;
   };
   const seekable = source === "elevenlabs" && dur > 0;
+
+  // Atajos de teclado con el reproductor abierto: Espacio = play/pausa; ←/→ = capítulo.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (status === "playing" || status === "paused") togglePause();
+        else playChapter(idx);
+      } else if (e.code === "ArrowRight" && idx < chapters.length - 1) {
+        e.preventDefault();
+        playChapter(idx + 1);
+      } else if (e.code === "ArrowLeft" && idx > 0) {
+        e.preventDefault();
+        playChapter(idx - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, status, idx, chapters.length]);
 
   if (chapters.length === 0) return null;
 
@@ -332,6 +375,9 @@ export function AudioPlayer({
 
           <div className="mt-2 text-center text-[11px] text-ink-soft">
             Capítulo {idx + 1} de {chapters.length}
+          </div>
+          <div className="mt-0.5 text-center text-[10px]" style={{ color: "var(--faint)" }}>
+            Espacio: reproducir/pausar · ← → : capítulo
           </div>
         </div>
       )}
