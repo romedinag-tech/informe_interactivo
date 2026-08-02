@@ -414,9 +414,28 @@ function BlockView({
     if (!c.src) {
       return (
         <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Figura: ${c.alt || "gráfico"}`} onAnnotate={onAnnotateBlock}>
-          <div {...common} className="flex items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-ink-soft">
-            Figura del informe{c.alt ? ` — ${c.alt}` : ""} (pendiente de versión interactiva)
-          </div>
+          <figure
+            {...common}
+            className="flex flex-col items-center justify-center gap-2 rounded-xl2 px-4 py-10 text-center"
+            style={{
+              background:
+                "repeating-linear-gradient(135deg, var(--surface) 0 14px, var(--surface-2) 14px 15px)",
+              border: "1px solid var(--line)",
+            }}
+          >
+            <svg viewBox="0 0 24 24" className="h-7 w-7 text-navy" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <path d="M3 3v18h18" strokeLinecap="round" />
+              <rect x="7" y="11" width="3" height="6" rx="0.5" />
+              <rect x="12.5" y="7" width="3" height="10" rx="0.5" />
+              <rect x="18" y="13" width="3" height="4" rx="0.5" />
+            </svg>
+            <figcaption className="text-sm font-medium text-ink">
+              {c.alt || "Figura del informe"}
+            </figcaption>
+            <span className="text-xs text-ink-soft">
+              Gráfico interactivo — pendiente de conectar con el dashboard
+            </span>
+          </figure>
         </BlockShell>
       );
     }
