@@ -26,6 +26,7 @@ export type PanelObservation = {
   id: string;
   status: ObsStatus;
   severity: Severity;
+  orphaned: boolean;
   resolutionNote: string | null;
   authorId: string;
   authorName: string;
@@ -412,6 +413,11 @@ function ObservationCard({
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
+          {obs.orphaned && (
+            <span className="badge badge-danger" title="El texto anclado ya no existe en esta versión">
+              Ancla perdida
+            </span>
+          )}
           <span className={`badge ${meta.badge}`}>{meta.label}</span>
           {isOwner ? (
             <select

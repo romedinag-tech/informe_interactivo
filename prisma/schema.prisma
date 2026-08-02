@@ -64,6 +64,10 @@ model Report {
   // borrador hasta que el consultor lo valide.
   execSummary      String?
   execSummaryDraft Boolean @default(true)
+
+  // Versión del documento (entrega). Sube al registrar una nueva versión.
+  versionNumber Int    @default(1)
+  versionLabel  String @default("1.0")
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -81,8 +85,30 @@ model Report {
   maps        MapAsset[]
   figures     FigureAsset[]
   audit       AuditEvent[]
+  versions    ReportVersion[]
 
   @@index([status])
+}
+
+// Snapshot inmutable del contenido en el momento de una entrega. Permite el
+// diff entre versiones y auditar qué cambió entre rondas de revisión.
+model ReportVersion {
+  id          String   @id @default(cuid())
+  reportId    String
+  number      Int
+  label       String
+  note        String?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  // Contenido en orden de documento: [{ blockId, chapterNumber, chapterTitle,
+  // sectionTitle, type, text }]. Suficiente para diff y trazabilidad.
+  snapshot Json
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, number])
+  @@index([reportId])
 }
 
 // Registro de auditoría INMUTABLE (append-only): quién hizo qué y cuándo.
@@ -181,6 +207,9 @@ model Section {
   // Acordeón: si la sección (p.ej. anexo metodológico denso) inicia colapsada.
   collapsedByDefault Boolean @default(false)
 
+  // Bloqueo entre rondas: una sección declarada conforme no se edita.
+  locked Boolean @default(false)
+
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   blocks  Block[]
 
@@ -272,6 +301,10 @@ model Annotation {
   // Justificación al resolver o descartar (argumento de cierre). Se registra
   // también en el audit trail.
   resolutionNote String?
+
+  // Huérfana: al recibir una versión nueva, su ancla no pudo reubicarse.
+  orphaned   Boolean   @default(false)
+  orphanedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

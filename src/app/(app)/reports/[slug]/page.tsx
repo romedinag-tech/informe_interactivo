@@ -171,6 +171,7 @@ export default async function ReportPage({
               <p className="truncate text-[11px]" style={{ color: "var(--faint)" }}>
                 {report.subtitle && <span>{report.subtitle} · </span>}
                 <span className="uppercase tracking-wide">Informe {report.slug}</span>
+                <span> · v{report.versionLabel}</span>
                 <span>
                   {" · "}
                   Actualizado{" "}
@@ -186,6 +187,13 @@ export default async function ReportPage({
           {/* Acciones */}
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
+            <Link
+              href={`/reports/${report.slug}/versiones`}
+              className="ring-focus hidden rounded-lg border px-3 py-1.5 text-sm font-medium text-ink hover:bg-[color:var(--surface-2)] sm:inline-block"
+              style={{ borderColor: "var(--line)" }}
+            >
+              Versiones
+            </Link>
             {access.canEdit && (
               <Link
                 href={`/reports/${report.slug}/editar`}

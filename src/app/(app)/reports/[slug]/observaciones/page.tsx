@@ -120,6 +120,7 @@ export default async function ObservacionesPage({
           id: a.id,
           status: a.status,
           severity: a.severity,
+          orphaned: a.orphaned,
           resolutionNote: a.resolutionNote,
           authorId: a.authorId,
           authorName: a.author.name,
