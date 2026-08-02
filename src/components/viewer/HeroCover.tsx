@@ -15,6 +15,27 @@ function usePrefersReducedMotion(): boolean {
   return reduce;
 }
 
+// Elige una voz en español LATINOAMERICANO (evita el acento de España, es-ES).
+// Prioriza Chile/neutro y voces conocidas de buen tono.
+function pickLatamSpanishVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const all = window.speechSynthesis.getVoices();
+  const spanish = all.filter((v) => /^es(-|_|$)/i.test(v.lang));
+  if (spanish.length === 0) return null;
+  const isSpain = (v: SpeechSynthesisVoice) => /es[-_]es/i.test(v.lang);
+  const pool = spanish.filter((v) => !isSpain(v));
+  const candidates = pool.length ? pool : spanish; // si solo hay es-ES, úsalo igual
+  const langRank = ["es-cl", "es-419", "es-us", "es-mx", "es-co", "es-ar", "es-pe"];
+  const nameHint = /sabina|raul|raúl|paulina|jorge|juan|google.*estados unidos|latin/i;
+  return [...candidates].sort((a, b) => {
+    const la = langRank.indexOf(a.lang.toLowerCase());
+    const lb = langRank.indexOf(b.lang.toLowerCase());
+    const ra = (la < 0 ? 99 : la) - (nameHint.test(a.name) ? 0.5 : 0);
+    const rb = (lb < 0 ? 99 : lb) - (nameHint.test(b.name) ? 0.5 : 0);
+    return ra - rb;
+  })[0];
+}
+
 export function HeroCover({
   title,
   subtitle,
@@ -46,6 +67,18 @@ export function HeroCover({
   }, [spans]);
   const [active, setActive] = useState(-1);
   const [speaking, setSpeaking] = useState(false);
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
+  // Carga la voz latinoamericana (las voces del navegador llegan async).
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const load = () => {
+      voiceRef.current = pickLatamSpanishVoice();
+    };
+    load();
+    window.speechSynthesis.addEventListener("voiceschanged", load);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", load);
+  }, []);
 
   const stop = () => {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
@@ -58,7 +91,13 @@ export function HeroCover({
     if (!summary || typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(summary);
-    u.lang = "es-CL";
+    const voice = voiceRef.current ?? pickLatamSpanishVoice();
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang; // p. ej. es-CL / es-419 / es-US (nunca es-ES si hay alternativa)
+    } else {
+      u.lang = "es-419";
+    }
     u.rate = 1;
     u.onboundary = (e) => {
       const ci = e.charIndex ?? 0;
