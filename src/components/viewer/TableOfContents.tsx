@@ -87,9 +87,6 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
                   }`}
                 />
                 <span className="line-clamp-1 group-hover:line-clamp-none">
-                  {c.number ? (
-                    <span className="mr-1.5 font-serif text-ink-soft">{c.number}</span>
-                  ) : null}
                   {c.title}
                 </span>
               </button>

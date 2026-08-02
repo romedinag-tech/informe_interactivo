@@ -418,6 +418,7 @@ function BlockView({
               reportSlug={reportSlug}
               mapKey={raw.key as string}
               title={raw.titulo as string | undefined}
+              defaultVar={raw.var as string | undefined}
             />
           </div>
         </BlockShell>
