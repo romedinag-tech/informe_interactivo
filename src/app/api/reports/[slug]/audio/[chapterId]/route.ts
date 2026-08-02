@@ -11,6 +11,7 @@ import {
   isElevenLabsConfigured,
   synthesizeSpeech,
   createPronunciationDictionary,
+  resolveVoiceId,
   type DictLocator,
 } from "@/lib/elevenlabs";
 import { chapterNarrationText } from "@/lib/chapter-text";
@@ -23,10 +24,11 @@ export const dynamic = "force-dynamic";
 const CACHE_DIR = join(tmpdir(), "informes-audio-cache");
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string; chapterId: string }> }
 ) {
   const { slug, chapterId } = await params;
+  const voiceParam = new URL(req.url).searchParams.get("voice");
 
   const user = await currentUser();
   if (!user) return new NextResponse("No autenticado", { status: 401 });
@@ -48,7 +50,8 @@ export async function GET(
 
   const blocks = chapter.sections.flatMap((s) => s.blocks);
   const text = chapterNarrationText(chapter.title, blocks);
-  const { voiceId, model } = audioConfig;
+  const voiceId = resolveVoiceId(voiceParam);
+  const { model } = audioConfig;
 
   // Diccionario de pronunciación (derivado del glosario del informe).
   // Se crea una vez y se reutiliza; si cambian las reglas, se regenera.

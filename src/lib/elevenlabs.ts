@@ -1,10 +1,18 @@
 // Integración con ElevenLabs (text-to-speech hiperrealista, modelos Multilingual).
 // Si no hay API key configurada, el visor usa la voz del navegador como respaldo.
 
+import { NARRATOR_VOICES, DEFAULT_VOICE_ID } from "@/lib/voices";
+
 export const audioConfig = {
-  voiceId: process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL",
+  voiceId: process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID,
   model: process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2",
 };
+
+// Valida un voiceId contra la lista permitida; si no, usa el por defecto.
+export function resolveVoiceId(id?: string | null): string {
+  if (id && NARRATOR_VOICES.some((v) => v.id === id)) return id;
+  return audioConfig.voiceId;
+}
 
 export function isElevenLabsConfigured(): boolean {
   return Boolean(process.env.ELEVENLABS_API_KEY);
