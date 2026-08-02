@@ -9,7 +9,9 @@ import { TableOfContents, type TocChapter } from "@/components/viewer/TableOfCon
 import type { SearchEntry } from "@/components/viewer/DocSearch";
 import { AudioPlayer, type AudioChapter } from "@/components/viewer/AudioPlayer";
 import { DraftWatermark } from "@/components/viewer/DraftWatermark";
+import { HeroCover } from "@/components/viewer/HeroCover";
 import { TalcaMark } from "@/components/viewer/TalcaMark";
+import { brand } from "@/lib/brand";
 import { chapterNarrationText } from "@/lib/chapter-text";
 import type { GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
 import type { ViewChapter } from "@/types/content";
@@ -204,7 +206,17 @@ export default async function ReportPage({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-8 lg:py-8">
+      <div className="mx-auto max-w-[90rem] px-4 pt-6">
+        <HeroCover
+          title={report.title}
+          subtitle={report.subtitle}
+          eyebrow={brand.client?.name ?? "Informe técnico"}
+          summary={report.execSummary}
+          summaryDraft={report.execSummaryDraft}
+        />
+      </div>
+
+      <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-6 px-4 pb-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-8 lg:pb-8">
         <TableOfContents chapters={toc} searchIndex={searchIndex} />
         <ReportViewer
           reportId={report.id}

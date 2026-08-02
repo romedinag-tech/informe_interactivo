@@ -59,6 +59,11 @@ model Report {
   subtitle    String?
   status      ReportStatus @default(DRAFT)
   createdById String
+
+  // Resumen ejecutivo (~1 min) para la portada hero. Editable; se marca como
+  // borrador hasta que el consultor lo valide.
+  execSummary      String?
+  execSummaryDraft Boolean @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
