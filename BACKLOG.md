@@ -22,16 +22,19 @@ Estado tras la sesión autónoma. ✅ hecho · ⏳ pendiente · esfuerzo: 🟢�
 - ✅ **Instrucciones de uso** (`/instrucciones`) con enlace en la cabecera.
 - ✅ **Glosario: V&R Ltda** agregado (definición a confirmar por Rodrigo).
 - ✅ **Placeholders de figura** rediseñados (aspecto intencional, no cajas básicas).
+- ✅ **Gráficos interactivos del dashboard** (12): se extrajeron los datos agregados
+  del JSON embebido en `Dashboard_Diagnostico_Talca.html` y se recrearon como
+  componentes **Recharts nativos** (`DashboardChart`) con el estilo de la página,
+  colocados en su capítulo (`scripts/place-dashboard-charts.mjs`).
+- ✅ **Audio**: guardado permanente en base (no se regenera/no re-gasta) + voces
+  **alternadas** mujer/hombre (sin selector).
 
 ## Pendiente ⏳
 
-- 🔴 **Conectar los 48 gráficos al dashboard.** El `Dashboard_Diagnostico_Talca.html`
-  usa Chart.js con los datos en una estructura minificada (los gráficos leen de
-  `c.labels`/`c.data`, sin literales extraíbles de forma fiable). Recrearlos
-  automáticamente arriesga datos equivocados. **Camino recomendado:** el consultor
-  convierte cada placeholder en gráfico interactivo desde el **editor** (pegar los
-  datos → Recharts), o una sesión dedicada con Rodrigo confirmando la
-  correspondencia gráfico↔capítulo. Los títulos del dashboard mapean bien a los
-  capítulos (partición modal→cap.9, población→cap.7, siniestralidad→cap.11).
+- 🟢 **Documento congelado adjunto al envío** (opcional): hoy el consultor ve las
+  observaciones y descarga el Word en la plataforma; falta guardar una "foto" del
+  documento exacto al momento de enviar, si se quiere.
+- 🟢 **Afinar mapeo/estilo de algún gráfico** si Rodrigo detecta que uno quedó en
+  un capítulo distinto al original (cada gráfico está rotulado con su título).
 - 🟢 **Foto real de Talca** (libre de derechos) en la portada, si se quiere sobre el
   emblema actual — requiere una imagen con licencia verificada.
