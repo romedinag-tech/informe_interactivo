@@ -1,0 +1,16 @@
+[
+  {
+    "numero": "11-2",
+    "titulo": "Siniestralidad y entorno escolar",
+    "geojson": "geo/zonas.geojson",
+    "indicadores": [
+      { "campo": "gen", "label": "Viajes generados", "unidad": "viajes", "escala": "seq" },
+      { "campo": "cobertura", "label": "Cobertura escolar", "unidad": "matrícula ÷ pob. 6-17", "escala": "div" }
+    ],
+    "indicadorDefecto": "gen",
+    "capasPunto": [
+      { "archivo": "geo/siniestros.geojson", "label": "Siniestros" },
+      { "archivo": "geo/colegios.geojson", "label": "Colegios" }
+    ]
+  }
+]

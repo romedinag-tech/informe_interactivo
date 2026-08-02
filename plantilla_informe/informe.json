@@ -1,0 +1,26 @@
+{
+  "slug": "prediagnostico-ciudad",
+  "title": "Síntesis de Prediagnóstico — Ciudad",
+  "subtitle": "Diagnóstico territorial y de movilidad para el Plan Maestro",
+  "execSummary": "Reemplaza este texto por el resumen ejecutivo (~1 min) que quieras que se lea en la portada. Si lo dejas vacío, la portada muestra solo el título y la metadata.",
+  "glosario": [
+    {
+      "term": "IMIV",
+      "definition": "Informe de Mitigación de Impacto Vial: evalúa los efectos de un proyecto sobre el sistema de transporte y define medidas de mitigación.",
+      "source": "Ley 20.958; DS 30/2019 MTT-MINVU",
+      "pronunciation": "ímiv"
+    },
+    {
+      "term": "SECTRA",
+      "definition": "Programa de Vialidad y Transporte Urbano del Ministerio de Transportes.",
+      "source": "MTT",
+      "pronunciation": "Séctra"
+    },
+    {
+      "term": "EOD",
+      "definition": "Encuesta Origen–Destino de viajes de los hogares por propósito, modo, hora y zona.",
+      "source": "SECTRA",
+      "pronunciation": "e o de"
+    }
+  ]
+}

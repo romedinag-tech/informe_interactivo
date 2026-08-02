@@ -1,0 +1,35 @@
+[
+  {
+    "numero": "9-1",
+    "tipo": "dona",
+    "titulo": "Partición modal del área",
+    "unidad": "%",
+    "fuente": "EOD; elaboración propia",
+    "labels": ["Auto", "Transporte público", "Caminata", "Bicicleta"],
+    "data": [49.6, 22.9, 20.6, 5.7]
+  },
+  {
+    "numero": "9-2",
+    "tipo": "barras_apiladas",
+    "titulo": "Partición modal según quintil de ingreso",
+    "unidad": "%",
+    "fuente": "EOD; elaboración propia",
+    "labels": ["Q1", "Q2", "Q3", "Q4", "Q5"],
+    "series": [
+      { "label": "Auto", "data": [20, 35, 48, 60, 72] },
+      { "label": "Transporte público", "data": [45, 38, 30, 22, 15] },
+      { "label": "No motorizado", "data": [35, 27, 22, 18, 13] }
+    ]
+  },
+  {
+    "numero": "8-1",
+    "tipo": "barras_linea",
+    "titulo": "Demanda hora a hora",
+    "eje_izq": "Viajes",
+    "eje_der": "% acumulado",
+    "fuente": "EOD; elaboración propia",
+    "labels": ["6", "7", "8", "9", "10", "11", "12"],
+    "serie_barra": { "label": "Viajes", "data": [500, 1200, 3100, 2200, 1400, 1100, 1300] },
+    "serie_linea": { "label": "% acumulado", "data": [5, 17, 48, 70, 84, 95, 100] }
+  }
+]
