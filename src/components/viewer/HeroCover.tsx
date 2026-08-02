@@ -114,7 +114,7 @@ export function HeroCover({
         <div
           className="absolute inset-0 -z-10"
           aria-hidden
-          style={{ background: "linear-gradient(180deg, rgba(6,10,16,0.45) 0%, rgba(6,10,16,0.78) 100%)" }}
+          style={{ background: "linear-gradient(180deg, rgba(6,10,16,0.55) 0%, rgba(6,10,16,0.82) 100%)" }}
         />
       )}
 
