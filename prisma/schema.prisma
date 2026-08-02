@@ -62,6 +62,11 @@ model Report {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  // Diccionario de pronunciación de ElevenLabs derivado del glosario (caché).
+  pronunciationDictId      String?
+  pronunciationDictVersion String?
+  pronunciationHash        String? // hash de las reglas; si cambia, se regenera
+
   createdBy   User               @relation("ReportAuthor", fields: [createdById], references: [id])
   chapters    Chapter[]
   annotations Annotation[]
@@ -216,6 +221,10 @@ model GlossaryTerm {
   term       String // texto exacto que aparece en el informe (p.ej. "IMIV")
   definition String
   source     String? // norma/fuente de la definición (opcional)
+
+  // Alias de pronunciación para la narración (p.ej. "IMIV" -> "ímiv"). Si es
+  // null, la voz lo lee tal cual. Alimenta el diccionario de ElevenLabs.
+  pronunciation String?
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 

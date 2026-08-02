@@ -10,8 +10,11 @@ import {
   audioConfig,
   isElevenLabsConfigured,
   synthesizeSpeech,
+  createPronunciationDictionary,
+  type DictLocator,
 } from "@/lib/elevenlabs";
 import { chapterNarrationText } from "@/lib/chapter-text";
+import { buildPronRules, pronRulesHash } from "@/lib/pronunciation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,10 +48,60 @@ export async function GET(
 
   const blocks = chapter.sections.flatMap((s) => s.blocks);
   const text = chapterNarrationText(chapter.title, blocks);
-
   const { voiceId, model } = audioConfig;
+
+  // Diccionario de pronunciación (derivado del glosario del informe).
+  // Se crea una vez y se reutiliza; si cambian las reglas, se regenera.
+  const report = await prisma.report.findUnique({
+    where: { id: chapter.report.id },
+    select: {
+      id: true,
+      pronunciationDictId: true,
+      pronunciationDictVersion: true,
+      pronunciationHash: true,
+      glossary: { select: { term: true, pronunciation: true } },
+    },
+  });
+
+  let dictLocators: DictLocator[] | undefined;
+  let dictVersion = report?.pronunciationDictVersion ?? "";
+  if (report && isElevenLabsConfigured()) {
+    const rules = buildPronRules(report.glossary);
+    if (rules.length > 0) {
+      const hash = pronRulesHash(rules);
+      let dictId = report.pronunciationDictId;
+      if (!dictId || report.pronunciationHash !== hash) {
+        try {
+          const created = await createPronunciationDictionary(
+            `informe-${slug}`,
+            rules
+          );
+          dictId = created.id;
+          dictVersion = created.versionId;
+          await prisma.report.update({
+            where: { id: report.id },
+            data: {
+              pronunciationDictId: created.id,
+              pronunciationDictVersion: created.versionId,
+              pronunciationHash: hash,
+            },
+          });
+        } catch {
+          /* si falla el diccionario, narramos sin él */
+        }
+      }
+      if (dictId && dictVersion) {
+        dictLocators = [
+          { pronunciation_dictionary_id: dictId, version_id: dictVersion },
+        ];
+      }
+    }
+  }
+
+  // La versión del diccionario entra en la clave de caché: si cambia la
+  // pronunciación, el audio se regenera.
   const textHash = createHash("sha256")
-    .update(`${voiceId}|${model}|${text}`)
+    .update(`${voiceId}|${model}|${dictVersion}|${text}`)
     .digest("hex");
 
   // 1) ¿Está en caché?
@@ -66,10 +119,10 @@ export async function GET(
     );
   }
 
-  // 3) Generar con ElevenLabs.
+  // 3) Generar con ElevenLabs (con el diccionario de pronunciación si existe).
   let audio: Buffer;
   try {
-    audio = await synthesizeSpeech(text, { voiceId, model });
+    audio = await synthesizeSpeech(text, { voiceId, model, dictLocators });
   } catch (e) {
     // Falla la API → respaldo del navegador en vez de romper la lectura.
     return NextResponse.json(
