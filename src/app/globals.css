@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   Tokens de tema — claro (default), oscuro y sepia.
+   El tema se fija con [data-theme] en <html> (ver ThemeToggle + script no-FOUC).
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --border: #e5e7eb;
+  --fg: #1f2a37;
+  --fg-soft: #4b5563;
+  --accent: #1e3a5f;
+  --accent-contrast: #ffffff;
+  --reading-bg: #ffffff;
+  --reading-fg: #1f2a37;
+  --highlight: #fef3c7;
+  --highlight-active: #fde68a;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1620;
+  --surface: #16202c;
+  --surface-2: #1c2836;
+  --border: #2a3846;
+  --fg: #e5e9ee;
+  --fg-soft: #9aa7b4;
+  --accent: #7aa2d6;
+  --accent-contrast: #0f1620;
+  --reading-bg: #131b24;
+  --reading-fg: #e7ebf0;
+  --highlight: rgba(250, 204, 21, 0.22);
+  --highlight-active: rgba(250, 204, 21, 0.4);
+  color-scheme: dark;
+}
+
+:root[data-theme="sepia"] {
+  --bg: #e9dfc9;
+  --surface: #f7f1e3;
+  --surface-2: #efe6d2;
+  --border: #ddceb0;
+  --fg: #433422;
+  --fg-soft: #6b5a42;
+  --accent: #7a542a;
+  --accent-contrast: #f7f1e3;
+  --reading-bg: #f7f1e3;
+  --reading-fg: #433422;
+  --highlight: #f0e0a8;
+  --highlight-active: #e6cf86;
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Superficie de lectura (columna del documento). */
+.reading-surface {
+  background: var(--reading-bg);
+  color: var(--reading-fg);
+}
+
+/* ── Resaltado de fragmentos con observaciones ── */
+.has-annotation {
+  background: var(--highlight);
+  border-bottom: 2px solid var(--highlight-active);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.has-annotation:hover,
+.has-annotation.is-active {
+  background: var(--highlight-active);
+}
+.block-annotated {
+  outline: 2px solid var(--highlight-active);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ── Término de glosario ── */
+.glossary-term {
+  border-bottom: 1px dotted var(--accent);
+  cursor: help;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Adaptación de la app existente a oscuro/sepia sin reescribir clases:
+   se remapean las utilidades Tailwind más usadas mediante mayor especificidad.
+   ───────────────────────────────────────────────────────────── */
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="sepia"] .bg-white {
+  background-color: var(--surface) !important;
+}
+:root[data-theme="dark"] .bg-gray-50,
+:root[data-theme="dark"] .bg-gray-100,
+:root[data-theme="sepia"] .bg-gray-50,
+:root[data-theme="sepia"] .bg-gray-100 {
+  background-color: var(--surface-2) !important;
+}
+:root[data-theme="dark"] .text-ink,
+:root[data-theme="sepia"] .text-ink {
+  color: var(--fg) !important;
+}
+:root[data-theme="dark"] .text-ink-soft,
+:root[data-theme="sepia"] .text-ink-soft {
+  color: var(--fg-soft) !important;
+}
+:root[data-theme="dark"] .text-navy,
+:root[data-theme="sepia"] .text-navy {
+  color: var(--accent) !important;
+}
+:root[data-theme="dark"] .border-gray-200,
+:root[data-theme="dark"] .border-gray-300,
+:root[data-theme="dark"] .border-gray-100,
+:root[data-theme="sepia"] .border-gray-200,
+:root[data-theme="sepia"] .border-gray-300,
+:root[data-theme="sepia"] .border-gray-100 {
+  border-color: var(--border) !important;
+}

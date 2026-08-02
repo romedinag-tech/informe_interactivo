@@ -1,0 +1,250 @@
+// Esquema relacional — Plataforma de informes interactivos con revisión ministerial.
+// Modelo de contenido estructurado (Informe > Capítulo > Sección > Bloque) para que
+// cada nodo tenga un ID estable al cual anclar observaciones contextuales.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Autenticación y roles (RBAC)
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  CONSULTOR // acceso total de edición, gestión de respuestas
+  REVISOR   // lectura del informe + permiso para comentar
+  ADMIN     // administración de usuarios y asignaciones
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(REVISOR)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relaciones
+  reportsCreated Report[]           @relation("ReportAuthor")
+  assignments    ReportAssignment[]
+  annotations    Annotation[]
+  replies        AnnotationReply[]
+
+  @@index([role])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Informe y su estructura de contenido
+// ─────────────────────────────────────────────────────────────
+
+enum ReportStatus {
+  DRAFT      // en edición por el consultor
+  IN_REVIEW  // publicado para revisión ministerial
+  RESOLVED   // observaciones cerradas
+  ARCHIVED
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  title       String
+  subtitle    String?
+  status      ReportStatus @default(DRAFT)
+  createdById String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdBy   User               @relation("ReportAuthor", fields: [createdById], references: [id])
+  chapters    Chapter[]
+  annotations Annotation[]
+  assignments ReportAssignment[]
+  glossary    GlossaryTerm[]
+  audios      AudioAsset[]
+
+  @@index([status])
+}
+
+// Control de acceso por informe: quién puede ver/comentar qué informe.
+model ReportAssignment {
+  id        String   @id @default(cuid())
+  reportId  String
+  userId    String
+  role      Role // rol efectivo sobre ESTE informe (revisor, consultor, etc.)
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, userId])
+  @@index([userId])
+}
+
+model Chapter {
+  id       String    @id @default(cuid())
+  reportId String
+  order    Int
+  title    String
+  number   String? // p.ej. "1", "2.1" (numeración editorial)
+
+  report   Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  sections Section[]
+  audios   AudioAsset[]
+
+  @@unique([reportId, order])
+  @@index([reportId])
+}
+
+model Section {
+  id        String @id @default(cuid())
+  chapterId String
+  order     Int
+  title     String?
+
+  // Acordeón: si la sección (p.ej. anexo metodológico denso) inicia colapsada.
+  collapsedByDefault Boolean @default(false)
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  blocks  Block[]
+
+  @@unique([chapterId, order])
+  @@index([chapterId])
+}
+
+enum BlockType {
+  HEADING
+  PARAGRAPH
+  TABLE
+  CHART
+  IMAGE
+  CALLOUT
+}
+
+// Unidad atómica de contenido y ancla de las observaciones.
+// `anchorKey` es un identificador corto y ESTABLE (no cambia aunque se reordene),
+// que se expone en el DOM (data-anchor) para vincular la selección del revisor.
+model Block {
+  id        String    @id @default(cuid())
+  sectionId String
+  order     Int
+  type      BlockType
+  anchorKey String    @unique @default(cuid())
+
+  // Contenido tipado según `type`:
+  //  - HEADING/PARAGRAPH/CALLOUT: { text }
+  //  - TABLE:   { columns: [...], rows: [[...]] }
+  //  - CHART:   { kind: "bar"|"line"|..., data: [...], options: {...} }
+  //  - IMAGE:   { src, alt, caption }
+  content Json
+
+  section     Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  annotations Annotation[]
+
+  @@unique([sectionId, order])
+  @@index([sectionId])
+  @@index([anchorKey])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Observaciones contextuales (anotaciones)
+// ─────────────────────────────────────────────────────────────
+
+enum AnnotationStatus {
+  OPEN       // observación abierta por el revisor
+  IN_PROGRESS // el consultor la está atendiendo
+  RESOLVED   // resuelta con contrapropuesta aceptada
+  DISMISSED  // descartada (con justificación)
+}
+
+model Annotation {
+  id       String @id @default(cuid())
+  reportId String
+  blockId  String // nodo de contenido al que se ancla (obligatorio)
+  authorId String // revisor que la crea
+
+  // Anclaje fino DENTRO del bloque (opcional). Si es null, la observación
+  // aplica al bloque completo (tabla, gráfico, subtítulo).
+  quote      String? // texto exacto seleccionado (para re-anclar si el contenido cambia)
+  rangeStart Int? // offset de caracter inicial dentro del texto del bloque
+  rangeEnd   Int? // offset de caracter final
+
+  body   String // el texto de la observación (dictado o tecleado)
+  status AnnotationStatus @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  report  Report            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  block   Block             @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  author  User              @relation(fields: [authorId], references: [id])
+  replies AnnotationReply[]
+
+  @@index([reportId, status])
+  @@index([blockId])
+}
+
+// Hilo de respuesta: contrapropuesta del consultor / réplica del revisor.
+model AnnotationReply {
+  id           String  @id @default(cuid())
+  annotationId String
+  authorId     String
+  body         String
+  isResolution Boolean @default(false) // marca la contrapropuesta que cierra la observación
+
+  createdAt DateTime @default(now())
+
+  annotation Annotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id])
+
+  @@index([annotationId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Glosario emergente (tooltips de términos técnicos: IMIV, SECTRA, EOD…)
+// ─────────────────────────────────────────────────────────────
+
+model GlossaryTerm {
+  id         String  @id @default(cuid())
+  reportId   String
+  term       String // texto exacto que aparece en el informe (p.ej. "IMIV")
+  definition String
+  source     String? // norma/fuente de la definición (opcional)
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, term])
+  @@index([reportId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Caché de audio (narración por capítulo con ElevenLabs)
+// ─────────────────────────────────────────────────────────────
+
+model AudioAsset {
+  id        String @id @default(cuid())
+  reportId  String
+  chapterId String
+
+  // Clave de caché: hash del (texto + voz + modelo). Evita regenerar y re-pagar.
+  textHash String
+  voiceId  String
+  model    String
+
+  path     String // ruta del .mp3 en disco (.audio-cache/…)
+  mimeType String @default("audio/mpeg")
+  bytes    Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  report  Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([textHash])
+  @@index([chapterId])
+  @@index([reportId])
+}

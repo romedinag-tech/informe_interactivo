@@ -1,0 +1,42 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+.vscode/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
+.env
+.env*.local
+
+# prisma / db
+/prisma/*.db
+/prisma/*.db-journal
+
+# postgres embebido (dev local)
+/.pgdata
+
+# caché de audio (narración ElevenLabs)
+/.audio-cache
+
+# insumos pesados / confidenciales (informe y dashboard de origen)
+/Insumos
+
+# typescript
+*.tsbuildinfo

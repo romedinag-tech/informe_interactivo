@@ -1,0 +1,569 @@
+"use client";
+
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChartBlock } from "./ChartBlock";
+import { VoiceInput } from "@/components/annotations/VoiceInput";
+import { GlossaryTooltip, type GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
+import { createAnnotation } from "@/app/actions/annotations";
+import type {
+  ViewChapter,
+  ViewSection,
+  ViewBlock,
+  ParagraphContent,
+  HeadingContent,
+  CalloutContent,
+  TableContent,
+  ChartContent,
+  ImageContent,
+} from "@/types/content";
+
+export type ClientAnnotation = {
+  id: string;
+  blockId: string;
+  quote: string | null;
+  rangeStart: number | null;
+  rangeEnd: number | null;
+  body: string;
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED";
+  authorName: string;
+  createdAt: string;
+};
+
+type Draft = {
+  blockId: string;
+  quote?: string;
+  rangeStart?: number;
+  rangeEnd?: number;
+  label: string;
+};
+
+const statusStyle: Record<string, string> = {
+  OPEN: "bg-amber-100 text-amber-800",
+  IN_PROGRESS: "bg-blue-100 text-blue-800",
+  RESOLVED: "bg-green-100 text-green-800",
+  DISMISSED: "bg-gray-100 text-gray-600",
+};
+
+export function ReportViewer({
+  reportId,
+  chapters,
+  annotations,
+  canComment,
+  glossary,
+}: {
+  reportId: string;
+  chapters: ViewChapter[];
+  annotations: ClientAnnotation[];
+  canComment: boolean;
+  glossary: GlossaryEntry[];
+}) {
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [body, setBody] = useState("");
+  const [pending, setPending] = useState(false);
+  const [floatBtn, setFloatBtn] = useState<{ x: number; y: number } | null>(null);
+
+  const byBlock = useMemo(() => {
+    const m = new Map<string, ClientAnnotation[]>();
+    for (const a of annotations) {
+      const list = m.get(a.blockId) ?? [];
+      list.push(a);
+      m.set(a.blockId, list);
+    }
+    return m;
+  }, [annotations]);
+
+  // Índice de glosario + matcher (una sola vez).
+  const glossaryIndex = useMemo(() => {
+    const map = new Map<string, GlossaryEntry>();
+    for (const g of glossary) map.set(g.term.toLowerCase(), g);
+    if (glossary.length === 0) return { map, regex: null as RegExp | null };
+    const alt = [...glossary]
+      .sort((a, b) => b.term.length - a.term.length)
+      .map((g) => g.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|");
+    let regex: RegExp | null = null;
+    try {
+      regex = new RegExp(`(?<![\\p{L}\\p{N}])(${alt})(?![\\p{L}\\p{N}])`, "giu");
+    } catch {
+      regex = new RegExp(`\\b(${alt})\\b`, "gi");
+    }
+    return { map, regex };
+  }, [glossary]);
+
+  const onMouseUp = useCallback(() => {
+    if (!canComment) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      setFloatBtn(null);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    const node =
+      range.startContainer.nodeType === Node.TEXT_NODE
+        ? range.startContainer.parentElement
+        : (range.startContainer as HTMLElement);
+    const blockEl = node?.closest<HTMLElement>("[data-block-id][data-text='true']");
+    if (!blockEl) {
+      setFloatBtn(null);
+      return;
+    }
+    const pre = document.createRange();
+    pre.selectNodeContents(blockEl);
+    pre.setEnd(range.startContainer, range.startOffset);
+    const start = pre.toString().length;
+    const quote = range.toString();
+    if (!quote.trim()) return;
+
+    const rect = range.getBoundingClientRect();
+    setFloatBtn({ x: rect.left + rect.width / 2, y: rect.top - 8 });
+    setDraft({
+      blockId: blockEl.dataset.blockId!,
+      quote,
+      rangeStart: start,
+      rangeEnd: start + quote.length,
+      label: `«${quote.length > 60 ? quote.slice(0, 60) + "…" : quote}»`,
+    });
+  }, [canComment]);
+
+  const annotateBlock = (blockId: string, label: string) => {
+    setFloatBtn(null);
+    window.getSelection()?.removeAllRanges();
+    setDraft({ blockId, label });
+    setBody("");
+  };
+
+  const submit = async () => {
+    if (!draft || !body.trim()) return;
+    setPending(true);
+    try {
+      await createAnnotation({
+        reportId,
+        blockId: draft.blockId,
+        body: body.trim(),
+        quote: draft.quote,
+        rangeStart: draft.rangeStart,
+        rangeEnd: draft.rangeEnd,
+      });
+      setDraft(null);
+      setBody("");
+      window.getSelection()?.removeAllRanges();
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const appendVoice = useCallback((t: string) => {
+    setBody((prev) => (prev ? `${prev} ${t}` : t));
+  }, []);
+
+  const compose = draft && (
+    <ComposeCard
+      draft={draft}
+      body={body}
+      setBody={setBody}
+      onSubmit={submit}
+      onCancel={() => setDraft(null)}
+      pending={pending}
+      appendVoice={appendVoice}
+    />
+  );
+
+  return (
+    <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      {/* ── Documento ── */}
+      <article
+        ref={containerRef}
+        onMouseUp={onMouseUp}
+        className="reading-surface prose prose-slate max-w-none rounded-lg px-6 py-8 shadow-sm dark:prose-invert sm:px-10"
+      >
+        {chapters.map((ch) => (
+          <section key={ch.id} id={`ch-${ch.id}`} className="mb-12 scroll-mt-24">
+            <h2 className="font-serif">
+              {ch.number ? `${ch.number}. ` : ""}
+              {ch.title}
+            </h2>
+            {ch.sections.map((sec) => (
+              <SectionView
+                key={sec.id}
+                section={sec}
+                byBlock={byBlock}
+                glossaryIndex={glossaryIndex}
+                onAnnotateBlock={annotateBlock}
+                canComment={canComment}
+              />
+            ))}
+          </section>
+        ))}
+      </article>
+
+      {/* ── Panel lateral (escritorio) ── */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-20 self-start">
+          {compose ?? (
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="text-sm font-medium text-ink">Observaciones</div>
+              <p className="mt-1 text-xs text-ink-soft">
+                {canComment
+                  ? "Seleccione texto, o use «Observar» en una tabla o gráfico."
+                  : "Modo lectura."}
+              </p>
+              <div className="mt-3 space-y-2">
+                {annotations.length === 0 && (
+                  <p className="text-xs text-ink-soft">Aún no hay observaciones.</p>
+                )}
+                {annotations.slice(0, 8).map((a) => (
+                  <div key={a.id} className="rounded-md border border-gray-100 p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-ink-soft">{a.authorName}</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] ${statusStyle[a.status]}`}>
+                        {a.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-sm text-ink">{a.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ── Compositor como bottom-sheet en móvil ── */}
+      {compose && (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white p-4 shadow-2xl lg:hidden">
+          {compose}
+        </div>
+      )}
+
+      {/* ── Botón flotante junto a la selección ── */}
+      {floatBtn && draft && (
+        <button
+          onClick={() => setFloatBtn(null)}
+          style={{
+            position: "fixed",
+            left: floatBtn.x,
+            top: floatBtn.y,
+            transform: "translate(-50%, -100%)",
+          }}
+          className="z-50 rounded-full bg-navy px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-navy-700"
+        >
+          + Observar
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Sección con acordeón ──
+function SectionView({
+  section,
+  byBlock,
+  glossaryIndex,
+  onAnnotateBlock,
+  canComment,
+}: {
+  section: ViewSection;
+  byBlock: Map<string, ClientAnnotation[]>;
+  glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
+  onAnnotateBlock: (blockId: string, label: string) => void;
+  canComment: boolean;
+}) {
+  const [open, setOpen] = useState(!section.collapsedByDefault);
+
+  const body = section.blocks.map((b) => (
+    <BlockView
+      key={b.id}
+      block={b}
+      annotations={byBlock.get(b.id) ?? []}
+      glossaryIndex={glossaryIndex}
+      onAnnotateBlock={onAnnotateBlock}
+      canComment={canComment}
+    />
+  ));
+
+  if (!section.title) {
+    return <div id={`sec-${section.id}`} className="scroll-mt-24">{body}</div>;
+  }
+
+  return (
+    <div id={`sec-${section.id}`} className="scroll-mt-24">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 text-left"
+      >
+        <span className="text-ink-soft transition-transform" style={{ transform: open ? "rotate(90deg)" : "none" }}>
+          ▸
+        </span>
+        <h3 className="my-0 font-serif">{section.title}</h3>
+      </button>
+      {open && <div className="mt-2">{body}</div>}
+    </div>
+  );
+}
+
+function BlockView({
+  block,
+  annotations,
+  glossaryIndex,
+  onAnnotateBlock,
+  canComment,
+}: {
+  block: ViewBlock;
+  annotations: ClientAnnotation[];
+  glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
+  onAnnotateBlock: (blockId: string, label: string) => void;
+  canComment: boolean;
+}) {
+  const hasAnn = annotations.length > 0;
+  const common = { "data-block-id": block.id } as const;
+
+  if (block.type === "HEADING") {
+    const c = block.content as HeadingContent;
+    return (
+      <h4 {...common} data-text="true" className={hasAnn ? "has-annotation" : ""}>
+        {c.text}
+      </h4>
+    );
+  }
+
+  if (block.type === "PARAGRAPH" || block.type === "CALLOUT") {
+    const c = block.content as ParagraphContent | CalloutContent;
+    const wrap =
+      block.type === "CALLOUT"
+        ? "rounded-md border-l-4 border-navy/40 bg-navy/5 px-4 py-2"
+        : "";
+    return (
+      <p {...common} data-text="true" className={wrap}>
+        <RichText text={c.text} annotations={annotations} glossaryIndex={glossaryIndex} />
+      </p>
+    );
+  }
+
+  if (block.type === "TABLE") {
+    const c = block.content as TableContent;
+    return (
+      <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Tabla: ${c.caption ?? c.columns.join(", ")}`} onAnnotate={onAnnotateBlock}>
+        <div className="overflow-x-auto">
+          <table {...common} className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                {c.columns.map((col) => (
+                  <th key={col} className="border-b-2 border-gray-300 px-2 py-1 text-left font-semibold">
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {c.rows.map((row, i) => (
+                <tr key={i}>
+                  {row.map((cell, j) => (
+                    <td key={j} className="border-b border-gray-100 px-2 py-1">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {c.caption && <p className="mt-1 text-center text-xs text-ink-soft">{c.caption}</p>}
+      </BlockShell>
+    );
+  }
+
+  if (block.type === "CHART") {
+    const c = block.content as ChartContent;
+    return (
+      <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Gráfico: ${c.caption ?? c.kind}`} onAnnotate={onAnnotateBlock}>
+        <div {...common}>
+          <ChartBlock content={c} />
+        </div>
+      </BlockShell>
+    );
+  }
+
+  if (block.type === "IMAGE") {
+    const c = block.content as ImageContent;
+    // Placeholder de gráfico del Word aún sin reemplazar (src vacío).
+    if (!c.src) {
+      return (
+        <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Figura: ${c.alt || "gráfico"}`} onAnnotate={onAnnotateBlock}>
+          <div {...common} className="flex items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-ink-soft">
+            Figura del informe{c.alt ? ` — ${c.alt}` : ""} (pendiente de versión interactiva)
+          </div>
+        </BlockShell>
+      );
+    }
+    return (
+      <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Imagen: ${c.alt}`} onAnnotate={onAnnotateBlock}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img {...common} src={c.src} alt={c.alt} className="mx-auto rounded" />
+        {c.caption && <p className="mt-1 text-center text-xs text-ink-soft">{c.caption}</p>}
+      </BlockShell>
+    );
+  }
+
+  return null;
+}
+
+function BlockShell({
+  blockId,
+  annotated,
+  canComment,
+  label,
+  onAnnotate,
+  children,
+}: {
+  blockId: string;
+  annotated: boolean;
+  canComment: boolean;
+  label: string;
+  onAnnotate: (blockId: string, label: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`group relative my-4 ${annotated ? "block-annotated" : ""}`}>
+      {canComment && (
+        <button
+          onClick={() => onAnnotate(blockId, label)}
+          className="absolute -right-2 -top-2 z-10 hidden rounded-full bg-navy px-2 py-1 text-[11px] font-medium text-white shadow group-hover:block"
+        >
+          + Observar
+        </button>
+      )}
+      {children}
+    </div>
+  );
+}
+
+// ── Compositor de observación (reutilizado en sidebar y bottom-sheet) ──
+function ComposeCard({
+  draft,
+  body,
+  setBody,
+  onSubmit,
+  onCancel,
+  pending,
+  appendVoice,
+}: {
+  draft: Draft;
+  body: string;
+  setBody: (v: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  pending: boolean;
+  appendVoice: (t: string) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-navy/20 bg-white p-4 shadow-sm">
+      <div className="text-xs font-medium uppercase tracking-wide text-navy">
+        Nueva observación
+      </div>
+      <p className="mt-1 line-clamp-3 text-sm text-ink-soft">{draft.label}</p>
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={4}
+        autoFocus
+        placeholder="Escriba o dicte su observación…"
+        className="mt-3 w-full rounded-md border border-gray-300 bg-white p-2 text-sm focus:border-navy focus:outline-none"
+      />
+      <div className="mt-2 flex items-center justify-between">
+        <VoiceInput onAppend={appendVoice} />
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="rounded-md px-3 py-1.5 text-sm text-ink-soft hover:bg-gray-100">
+            Cancelar
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={pending || !body.trim()}
+            className="rounded-md bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+          >
+            {pending ? "Guardando…" : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Texto con resaltado de observaciones (por rango/cita) y términos de glosario.
+function RichText({
+  text,
+  annotations,
+  glossaryIndex,
+}: {
+  text: string;
+  annotations: ClientAnnotation[];
+  glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
+}) {
+  const ranges = annotations
+    .map((a) => {
+      if (a.rangeStart != null && a.rangeEnd != null) return { start: a.rangeStart, end: a.rangeEnd };
+      if (a.quote) {
+        const idx = text.indexOf(a.quote);
+        if (idx >= 0) return { start: idx, end: idx + a.quote.length };
+      }
+      return null;
+    })
+    .filter((r): r is { start: number; end: number } => r != null)
+    .sort((a, b) => a.start - b.start);
+
+  const out: React.ReactNode[] = [];
+  let cursor = 0;
+  let key = 0;
+
+  const pushPlain = (s: string) => {
+    if (s) out.push(<GlossaryText key={`g${key++}`} text={s} glossaryIndex={glossaryIndex} />);
+  };
+
+  for (const r of ranges) {
+    if (r.start < cursor) continue;
+    pushPlain(text.slice(cursor, r.start));
+    out.push(
+      <mark key={`m${key++}`} className="has-annotation">
+        {text.slice(r.start, r.end)}
+      </mark>
+    );
+    cursor = r.end;
+  }
+  pushPlain(text.slice(cursor));
+  return <>{out}</>;
+}
+
+// Envuelve los términos de glosario dentro de un tramo de texto plano.
+function GlossaryText({
+  text,
+  glossaryIndex,
+}: {
+  text: string;
+  glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
+}) {
+  const { map, regex } = glossaryIndex;
+  if (!regex) return <>{text}</>;
+
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  regex.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    const matched = m[1];
+    const entry = map.get(matched.toLowerCase());
+    if (m.index > last) out.push(text.slice(last, m.index));
+    if (entry) {
+      out.push(<GlossaryTooltip key={`t${key++}`} label={matched} entry={entry} />);
+    } else {
+      out.push(matched);
+    }
+    last = m.index + matched.length;
+    if (m.index === regex.lastIndex) regex.lastIndex++; // evita bucles con match vacío
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return <>{out}</>;
+}
