@@ -41,7 +41,6 @@ export function HeroCover({
   subtitle,
   eyebrow,
   summary,
-  summaryDraft,
 }: {
   title: string;
   subtitle?: string | null;
@@ -139,6 +138,7 @@ export function HeroCover({
           muted
           loop
           playsInline
+          preload="metadata"
           poster={hero.poster}
           aria-hidden
         >
@@ -157,23 +157,23 @@ export function HeroCover({
         />
       )}
 
-      <div className="px-6 py-10 sm:px-10 sm:py-14">
+      <div className="px-5 py-8 sm:px-10 sm:py-14">
         {eyebrow && (
           <p
-            className="text-xs font-semibold uppercase tracking-[0.18em]"
+            className="text-[10px] font-semibold uppercase tracking-[0.16em] sm:text-xs sm:tracking-[0.18em]"
             style={{ color: onMedia ? "rgba(255,255,255,0.9)" : "var(--accent)" }}
           >
             {eyebrow}
           </p>
         )}
         <h1
-          className="mt-2 max-w-3xl font-serif text-3xl font-semibold leading-tight sm:text-4xl"
+          className="mt-2 max-w-3xl font-serif text-2xl font-semibold leading-tight sm:text-3xl md:text-4xl"
           style={{ color: textColor }}
         >
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-2 max-w-2xl text-base" style={{ color: softColor }}>
+          <p className="mt-2 max-w-2xl text-sm sm:text-base" style={{ color: softColor }}>
             {subtitle}
           </p>
         )}
@@ -190,7 +190,6 @@ export function HeroCover({
               <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: softColor }}>
                 Resumen ejecutivo · 1 min
               </span>
-              {summaryDraft && <span className="badge badge-warn">Borrador para validar</span>}
               <button
                 onClick={speaking ? stop : play}
                 className="ring-focus ml-auto rounded-full px-3 py-1 text-xs font-medium"
