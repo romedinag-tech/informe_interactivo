@@ -2,71 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────────────────────
-   Tokens de tema — claro (default), oscuro y sepia.
-   Paleta sobria y editorial: papel gris frío, tarjetas blancas,
-   acento azul marino profundo.
-   ───────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   SISTEMA DE DISEÑO — "Informes Interactivos"
+   Paleta institucional propia: acento azul profundo confiable,
+   neutros templados escalonados, estados semánticos. 3 temas con
+   contraste WCAG 2.1 AA. La escala de espaciado es la de Tailwind
+   (base 4px); aquí viven color, tipografía, radios, sombras y foco.
+   ═══════════════════════════════════════════════════════════════ */
 :root {
-  --paper: #f4f6f9;
-  --surface: #ffffff;
-  --surface-2: #eef1f6;
-  --line: #e6e9f0;
-  --ink: #1a2231;
-  --muted: #5b6675;
-  --accent: #1c3663;
-  --accent-strong: #12294d;
-  --accent-soft: #e9eef6;
+  /* Superficies y neutros (grises fríos escalonados) */
+  --paper: #f1f4f9; /* fondo de página */
+  --surface: #ffffff; /* tarjetas */
+  --surface-2: #eef2f7; /* relleno sutil */
+  --surface-3: #e4eaf2; /* hundido / hover de fila */
+  --line: #dbe1ea; /* borde por defecto */
+  --line-strong: #c3ccda; /* borde marcado / divisores */
+
+  /* Texto (3 niveles, todos AA sobre --surface) */
+  --ink: #16202f; /* primario  ~14:1 */
+  --muted: #515b6b; /* secundario ~6.6:1 */
+  --faint: #6b7484; /* terciario / metadatos ~4.9:1 */
+
+  /* Acento institucional (azul profundo) */
+  --accent: #1e4d88; /* texto/acción sobre blanco ~6.3:1 · blanco encima ~6.3:1 */
+  --accent-strong: #163c6c; /* hover / activo */
+  --accent-soft: #e9f0f9; /* fondo de estado activo */
   --accent-contrast: #ffffff;
+
+  /* Estados semánticos (fg AA sobre blanco y sobre su -bg) */
+  --info: #1e4d88;
+  --info-bg: #e8f0fb;
+  --info-border: #c2d7f1;
+  --ok: #1f6a45; /* Aprobado */
+  --ok-bg: #e6f4ec;
+  --ok-border: #bfe0cd;
+  --warn: #8a5510; /* Observado */
+  --warn-bg: #fbf0d8;
+  --warn-border: #efd7a3;
+  --danger: #9c2a30; /* Rechazado */
+  --danger-bg: #fbe9ea;
+  --danger-border: #f0c7ca;
+
+  /* Lectura */
   --reading-bg: #ffffff;
-  --reading-fg: #1f2733;
-  --highlight: #fdeec2;
-  --highlight-active: #f8dd93;
+  --reading-fg: #1c2532;
+  --measure: 40rem; /* medida de línea ~68 caracteres */
+
+  /* Resaltado de observaciones */
+  --highlight: #fde7bf;
+  --highlight-active: #f7d98a;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-card: 14px;
+
+  /* Sombras (3 niveles) */
+  --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.03);
   --shadow-card: 0 10.5px 25px -5px rgba(16, 24, 40, 0.05),
     0 8px 10px -6px rgba(16, 24, 40, 0.04);
-  --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.04),
-    0 1px 3px rgba(16, 24, 40, 0.03);
+  --shadow-pop: 0 18px 40px -12px rgba(16, 24, 40, 0.16),
+    0 8px 14px -8px rgba(16, 24, 40, 0.08);
+
+  /* Foco accesible */
+  --focus: #1e4d88;
+  --ring: rgba(30, 77, 136, 0.35);
+
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --paper: #0e141c;
-  --surface: #151d28;
-  --surface-2: #1b2634;
-  --line: #273343;
-  --ink: #e7ecf2;
-  --muted: #93a1b2;
-  --accent: #7ea6da;
-  --accent-strong: #a3c0e8;
-  --accent-soft: rgba(126, 166, 218, 0.14);
-  --accent-contrast: #0e141c;
-  --reading-bg: #131b25;
-  --reading-fg: #e7ecf2;
+  --paper: #0d131c;
+  --surface: #151e2a;
+  --surface-2: #1c2836;
+  --surface-3: #233141;
+  --line: #2b3949;
+  --line-strong: #3b4b5f;
+  --ink: #e8eef5;
+  --muted: #a1aec0;
+  --faint: #7c8998;
+  --accent: #6ea3e2;
+  --accent-strong: #8fbcee;
+  --accent-soft: rgba(110, 163, 226, 0.16);
+  --accent-contrast: #0d131c;
+  --info: #7fb0e8;
+  --info-bg: rgba(30, 77, 136, 0.24);
+  --info-border: rgba(127, 176, 232, 0.4);
+  --ok: #6fc79a;
+  --ok-bg: rgba(31, 106, 69, 0.24);
+  --ok-border: rgba(111, 199, 154, 0.4);
+  --warn: #e2b768;
+  --warn-bg: rgba(138, 85, 16, 0.28);
+  --warn-border: rgba(226, 183, 104, 0.4);
+  --danger: #e88a90;
+  --danger-bg: rgba(156, 42, 48, 0.28);
+  --danger-border: rgba(232, 138, 144, 0.4);
+  --reading-bg: #121a24;
+  --reading-fg: #e8eef5;
   --highlight: rgba(250, 204, 21, 0.2);
-  --highlight-active: rgba(250, 204, 21, 0.38);
-  --shadow-card: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+  --highlight-active: rgba(250, 204, 21, 0.4);
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 20px 44px -12px rgba(0, 0, 0, 0.6);
+  --focus: #8fbcee;
+  --ring: rgba(143, 188, 238, 0.4);
   color-scheme: dark;
 }
 
 :root[data-theme="sepia"] {
-  --paper: #ece2ce;
+  --paper: #eae0cc;
   --surface: #f8f3e8;
   --surface-2: #f1e8d6;
-  --line: #ddd0b5;
-  --ink: #40331f;
-  --muted: #6d5c40;
-  --accent: #7a542a;
+  --surface-3: #ebe0c9;
+  --line: #dccfb2;
+  --line-strong: #cbb98f;
+  --ink: #362f1f;
+  --muted: #665739;
+  --faint: #6f6040; /* AA sobre superficie sepia */
+  --accent: #7a542a; /* bronce cálido — coherente con el modo lectura */
   --accent-strong: #5f4120;
   --accent-soft: #efe6d2;
   --accent-contrast: #f8f3e8;
+  --info: #355a86;
+  --info-bg: #e7eef7;
+  --info-border: #c6d5ea;
+  --ok: #2f6a49;
+  --ok-bg: #e4efdf;
+  --ok-border: #c2d9bb;
+  --warn: #8a5510;
+  --warn-bg: #f4e7c9;
+  --warn-border: #e6cf9a;
+  --danger: #9b3a34;
+  --danger-bg: #f3e0da;
+  --danger-border: #e6c3b9;
   --reading-bg: #f8f3e8;
-  --reading-fg: #40331f;
+  --reading-fg: #362f1f;
   --highlight: #f0e0a8;
   --highlight-active: #e6cf86;
-  --shadow-card: 0 10px 24px -6px rgba(90, 70, 40, 0.12);
   --shadow-soft: 0 1px 2px rgba(90, 70, 40, 0.08);
+  --shadow-card: 0 10px 24px -6px rgba(90, 70, 40, 0.12);
+  --shadow-pop: 0 18px 36px -10px rgba(90, 70, 40, 0.2);
+  --focus: #7a542a;
+  --ring: rgba(122, 84, 42, 0.35);
   color-scheme: light;
 }
 
@@ -76,49 +154,84 @@ body {
   color: var(--ink);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Componentes base
-   ───────────────────────────────────────────────────────────── */
+/* ─── Componentes base ─── */
 @layer components {
-  /* Tarjeta limpia sobre el papel: sin borde gris duro, sombra muy suave. */
   .surface-card {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
   }
-
   .surface-flat {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
   }
-
-  /* Superficie de lectura del documento. */
   .reading-surface {
     background: var(--reading-bg);
     color: var(--reading-fg);
   }
+
+  /* Badges de estado semántico (reutilizables) */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .badge-neutral {
+    background: var(--surface-2);
+    color: var(--muted);
+    border-color: var(--line);
+  }
+  .badge-info {
+    background: var(--info-bg);
+    color: var(--info);
+    border-color: var(--info-border);
+  }
+  .badge-ok {
+    background: var(--ok-bg);
+    color: var(--ok);
+    border-color: var(--ok-border);
+  }
+  .badge-warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+    border-color: var(--warn-border);
+  }
+  .badge-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger-border);
+  }
 }
 
 /* ── Sistema tipográfico de lectura (.reading) ──
-   H2 serif (capítulo), H3 sans en versalita (sección) → contraste marcado. */
+   Escala modular: H2 serif (capítulo) · H3 sans versalita (sección)
+   · H4 serif (subtítulo) · cuerpo sans a medida ~68 caracteres. */
 .reading {
   font-size: 1.0625rem;
-  line-height: 1.75;
+  line-height: 1.72;
   letter-spacing: 0.001em;
 }
 .reading > * {
-  max-width: var(--tw-reading, 44rem);
+  max-width: 44rem;
   margin-inline: auto;
 }
 .reading p {
+  max-width: var(--measure);
   margin: 1.05em auto;
   color: var(--reading-fg);
 }
 .reading h2 {
   font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.1rem);
+  font-size: clamp(1.55rem, 1.2rem + 1.5vw, 2rem);
   line-height: 1.15;
   font-weight: 600;
   letter-spacing: -0.012em;
@@ -127,7 +240,7 @@ body {
 }
 .reading h3 {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -167,7 +280,7 @@ body {
   box-shadow: inset 0 -0.55em 0 var(--highlight);
   border-bottom: 2px solid var(--highlight-active);
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background 150ms ease;
 }
 .has-annotation:hover,
 .has-annotation.is-active {
@@ -186,10 +299,8 @@ body {
   text-underline-offset: 3px;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Adaptación de las clases Tailwind existentes a los tokens
-   (para que toda la app tome la paleta sin reescribir cada clase).
-   ───────────────────────────────────────────────────────────── */
+/* ─── Remapeo de utilidades Tailwind existentes a los tokens ───
+   Permite que la app tome la paleta sin reescribir cada clase. */
 .bg-white {
   background-color: var(--surface) !important;
 }
@@ -207,9 +318,7 @@ body {
 .border-gray-300 {
   border-color: var(--line) !important;
 }
-.bg-gray-50 {
-  background-color: var(--surface-2) !important;
-}
+.bg-gray-50,
 .bg-gray-100 {
   background-color: var(--surface-2) !important;
 }
@@ -228,20 +337,30 @@ body {
   border-color: var(--accent) !important;
 }
 
-/* Enfoque visible accesible. */
+/* ── Foco visible accesible y uniforme (WCAG 2.4.7) ── */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
+  border-radius: 3px;
+}
+/* Anillo suave adicional en controles de superficie. */
+.ring-focus:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* ── Impresión / exportar a PDF: solo el consolidado de observaciones ── */
+/* ── Impresión / exportar a PDF ── */
 @media print {
   header,
   .no-print {
@@ -253,7 +372,6 @@ body {
   .print-area {
     display: block;
   }
-  /* Oculta controles interactivos dentro del área imprimible. */
   .print-area button,
   .print-area textarea,
   .print-area select,
