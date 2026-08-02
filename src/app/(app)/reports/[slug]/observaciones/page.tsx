@@ -6,6 +6,7 @@ import {
   ObservationPanel,
   type PanelChapter,
 } from "@/components/annotations/ObservationPanel";
+import { ReviewToolbar } from "@/components/annotations/ReviewToolbar";
 import type { BlockContent, TableContent, ChartContent, ImageContent } from "@/types/content";
 
 // Deriva la etiqueta de contexto que se muestra junto a la observación.
@@ -49,6 +50,21 @@ export default async function ObservacionesPage({
 
   const access = await getReportAccess(report.id, user.id);
   if (!access.canView) redirect("/reports");
+
+  // Estado de envío de la revisión (para el botón "Enviar al consultor").
+  const assignment = await prisma.reportAssignment.findUnique({
+    where: { reportId_userId: { reportId: report.id, userId: user.id } },
+    select: { submittedAt: true },
+  });
+  const isReviewer = access.canComment && !access.canEdit;
+
+  // Para el consultor: estado de envío de los revisores.
+  const reviewerSubs = access.canEdit
+    ? await prisma.reportAssignment.findMany({
+        where: { reportId: report.id, role: "REVISOR" },
+        select: { submittedAt: true, user: { select: { name: true } } },
+      })
+    : [];
 
   // Capítulos con sus observaciones (a través de bloque → sección → capítulo).
   const chapters = await prisma.chapter.findMany({
@@ -106,22 +122,52 @@ export default async function ObservacionesPage({
 
   return (
     <>
-      <div className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
-          <h1 className="font-serif text-xl text-navy">{report.title}</h1>
-          <Link
-            href={`/reports/${report.slug}`}
-            className="text-sm text-navy hover:underline"
-          >
-            ← Volver al informe
-          </Link>
+      <div className="no-print border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/reports/${report.slug}`}
+              className="text-sm text-navy hover:underline"
+            >
+              ← Volver
+            </Link>
+            <h1 className="font-serif text-lg text-ink">{report.title}</h1>
+          </div>
+          <ReviewToolbar
+            reportId={report.id}
+            reportSlug={report.slug}
+            reportTitle={report.title}
+            chapters={panelChapters}
+            isReviewer={isReviewer}
+            submittedAt={assignment?.submittedAt?.toISOString() ?? null}
+          />
         </div>
       </div>
-      <ObservationPanel
-        chapters={panelChapters}
-        canEdit={access.canEdit}
-        canComment={access.canComment}
-      />
+      {reviewerSubs.length > 0 && (
+        <div className="no-print mx-auto max-w-4xl px-4 pt-4">
+          <div className="surface-flat flex flex-wrap gap-x-4 gap-y-1 p-3 text-xs">
+            {reviewerSubs.map((r, i) => (
+              <span key={i} className="text-ink-soft">
+                {r.user.name}:{" "}
+                {r.submittedAt ? (
+                  <span className="text-green-700">
+                    enviada el {new Date(r.submittedAt).toLocaleDateString("es-CL")}
+                  </span>
+                ) : (
+                  <span className="text-amber-600">en revisión</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="print-area">
+        <ObservationPanel
+          chapters={panelChapters}
+          canEdit={access.canEdit}
+          canComment={access.canComment}
+        />
+      </div>
     </>
   );
 }

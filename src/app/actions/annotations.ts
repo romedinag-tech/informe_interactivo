@@ -87,6 +87,32 @@ export async function replyToAnnotation(input: z.infer<typeof replySchema>) {
   revalidatePath(`/reports`, "layout");
 }
 
+// ── Revisor envía formalmente sus observaciones al consultor ──
+export async function submitReview(reportId: string) {
+  const user = await requireUser();
+  const access = await getReportAccess(reportId, user.id);
+  if (!access.canComment) throw new Error("SIN_PERMISO");
+
+  await prisma.reportAssignment.update({
+    where: { reportId_userId: { reportId, userId: user.id } },
+    data: { submittedAt: new Date() },
+  });
+  revalidatePath("/reports", "layout");
+}
+
+// ── Reabrir la revisión (deshacer el envío) ──
+export async function reopenReview(reportId: string) {
+  const user = await requireUser();
+  const access = await getReportAccess(reportId, user.id);
+  if (!access.canComment) throw new Error("SIN_PERMISO");
+
+  await prisma.reportAssignment.update({
+    where: { reportId_userId: { reportId, userId: user.id } },
+    data: { submittedAt: null },
+  });
+  revalidatePath("/reports", "layout");
+}
+
 // ── Cambiar estado (consultor gestiona el flujo) ──
 const statusSchema = z.object({
   annotationId: z.string().min(1),

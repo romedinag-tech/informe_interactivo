@@ -240,3 +240,29 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Impresión / exportar a PDF: solo el consolidado de observaciones ── */
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-area {
+    display: block;
+  }
+  /* Oculta controles interactivos dentro del área imprimible. */
+  .print-area button,
+  .print-area textarea,
+  .print-area select,
+  .print-area input {
+    display: none !important;
+  }
+  .surface-card {
+    box-shadow: none !important;
+    border-color: #d7dce4 !important;
+    break-inside: avoid;
+  }
+}

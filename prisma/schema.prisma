@@ -85,6 +85,9 @@ model ReportAssignment {
   role      Role // rol efectivo sobre ESTE informe (revisor, consultor, etc.)
   createdAt DateTime @default(now())
 
+  // Marca cuándo el revisor envió formalmente sus observaciones al consultor.
+  submittedAt DateTime?
+
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
