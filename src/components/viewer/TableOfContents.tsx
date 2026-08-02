@@ -39,31 +39,62 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
   };
 
   const hasSubsections = chapters.some((c) => c.sections.some((s) => s.title));
+  const activeIndex = chapters.findIndex((c) => c.id === active);
+  const position = activeIndex >= 0 ? activeIndex + 1 : 0;
+  const progress = chapters.length ? position / chapters.length : 0;
 
   const list = (
     <nav aria-label="Contenidos">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--muted)" }}>
           Contenidos
         </span>
         {hasSubsections && (
-          <div className="flex overflow-hidden rounded-full border border-gray-200 text-[10px]">
-            <button
-              onClick={() => setDepth(1)}
-              className={`px-2 py-0.5 ${depth === 1 ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
-              title="Solo capítulos"
-            >
-              N1
-            </button>
-            <button
-              onClick={() => setDepth(2)}
-              className={`px-2 py-0.5 ${depth === 2 ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
-              title="Capítulos y secciones"
-            >
-              N2
-            </button>
+          <div
+            className="flex overflow-hidden rounded-full border text-[10px]"
+            style={{ borderColor: "var(--line)" }}
+            role="group"
+            aria-label="Nivel de detalle del índice"
+          >
+            {([1, 2] as const).map((d) => (
+              <button
+                key={d}
+                onClick={() => setDepth(d)}
+                aria-pressed={depth === d}
+                className="ring-focus px-2 py-0.5 font-medium transition-colors"
+                style={
+                  depth === d
+                    ? { background: "var(--accent)", color: "#fff" }
+                    : { color: "var(--muted)" }
+                }
+                title={d === 1 ? "Solo capítulos" : "Capítulos y secciones"}
+              >
+                N{d}
+              </button>
+            ))}
           </div>
         )}
+      </div>
+
+      {/* Progreso de lectura */}
+      <div className="mb-3">
+        <div
+          className="h-1 overflow-hidden rounded-full"
+          style={{ background: "var(--surface-3)" }}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={chapters.length}
+          aria-valuenow={position}
+          aria-label="Progreso de lectura"
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-300"
+            style={{ width: `${progress * 100}%`, background: "var(--accent)" }}
+          />
+        </div>
+        <div className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
+          {position > 0 ? `Capítulo ${position} de ${chapters.length}` : `${chapters.length} capítulos`}
+        </div>
       </div>
 
       <ul className="space-y-0.5">
@@ -75,33 +106,32 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
               <button
                 onClick={() => go(`ch-${c.id}`)}
                 title={c.title}
-                className={`group relative block w-full rounded-md py-1.5 pl-3 pr-2 text-left text-[13px] leading-snug transition ${
+                aria-current={isActive ? "location" : undefined}
+                className="ring-focus group relative block w-full rounded-md py-1.5 pl-3 pr-2 text-left text-[13px] leading-snug transition"
+                style={
                   isActive
-                    ? "bg-[var(--accent-soft)] font-semibold text-navy"
-                    : "text-ink hover:bg-gray-100"
-                }`}
+                    ? { background: "var(--accent-soft)", color: "var(--accent-strong)", fontWeight: 600 }
+                    : { color: "var(--ink)" }
+                }
               >
                 <span
-                  className={`absolute inset-y-1 left-0 w-0.5 rounded-full ${
-                    isActive ? "bg-navy" : "bg-transparent"
-                  }`}
+                  className="absolute inset-y-1 left-0 w-0.5 rounded-full"
+                  style={{ background: isActive ? "var(--accent)" : "transparent" }}
+                  aria-hidden
                 />
-                <span className="line-clamp-1 group-hover:line-clamp-none">
-                  {c.title}
-                </span>
+                <span className="line-clamp-1 group-hover:line-clamp-none">{c.title}</span>
               </button>
               {depth === 2 && subs.length > 0 && (
-                <ul className="ml-4 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+                <ul className="ml-4 mt-0.5 space-y-0.5 border-l pl-2" style={{ borderColor: "var(--line)" }}>
                   {subs.map((s) => (
                     <li key={s.id}>
                       <button
                         onClick={() => go(`sec-${s.id}`)}
                         title={s.title ?? ""}
-                        className="block w-full rounded px-2 py-1 text-left text-xs text-ink-soft hover:bg-gray-100"
+                        className="ring-focus block w-full rounded px-2 py-1 text-left text-xs"
+                        style={{ color: "var(--muted)" }}
                       >
-                        <span className="line-clamp-1 hover:line-clamp-none">
-                          {s.title}
-                        </span>
+                        <span className="line-clamp-1 hover:line-clamp-none">{s.title}</span>
                       </button>
                     </li>
                   ))}
@@ -124,15 +154,23 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
 
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-40 rounded-full bg-navy px-4 py-2 text-sm font-medium text-white shadow-lg lg:hidden"
+        className="ring-focus fixed bottom-4 left-4 z-40 rounded-full px-4 py-2 text-sm font-medium text-white shadow-lg lg:hidden"
+        style={{ background: "var(--accent)" }}
       >
         ☰ Índice
       </button>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-4 shadow-xl">
-            <button onClick={() => setOpen(false)} className="mb-3 text-sm text-ink-soft">
+          <div
+            className="absolute left-0 top-0 h-full w-72 overflow-y-auto p-4 shadow-xl"
+            style={{ background: "var(--surface)" }}
+          >
+            <button
+              onClick={() => setOpen(false)}
+              className="ring-focus mb-3 text-sm"
+              style={{ color: "var(--muted)" }}
+            >
               ✕ Cerrar
             </button>
             {list}

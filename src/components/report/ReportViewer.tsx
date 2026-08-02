@@ -206,19 +206,32 @@ export function ReportViewer({
       >
         {chapters.map((ch, ci) => {
           const accent = SECTION_ACCENTS[ci % SECTION_ACCENTS.length];
+          const isCover = ci === 0;
           return (
-            <section key={ch.id} id={`ch-${ch.id}`} className="mb-14 scroll-mt-28">
-              <div
-                className="mb-6 flex items-center gap-3 border-b pb-3"
-                style={{ borderColor: "var(--line)" }}
-              >
-                <span
-                  className="h-7 w-1 shrink-0 rounded-full"
-                  style={{ background: accent }}
-                  aria-hidden
-                />
-                <h2>{ch.title}</h2>
-              </div>
+            <section
+              key={ch.id}
+              id={`ch-${ch.id}`}
+              className={`scroll-mt-28 ${isCover ? "cover mb-16" : "mb-14"}`}
+            >
+              {isCover ? (
+                <div className="cover-head">
+                  <span className="cover-eyebrow">Informe técnico</span>
+                  <h2>{ch.title}</h2>
+                  <span className="cover-rule" aria-hidden />
+                </div>
+              ) : (
+                <div
+                  className="mb-6 flex items-center gap-3 border-b pb-3"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <span
+                    className="h-7 w-1 shrink-0 rounded-full"
+                    style={{ background: accent }}
+                    aria-hidden
+                  />
+                  <h2>{ch.title}</h2>
+                </div>
+              )}
               {ch.sections.map((sec) => (
                 <SectionView
                   key={sec.id}
