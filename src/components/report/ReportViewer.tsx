@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChartBlock } from "./ChartBlock";
 import { DashboardChart, type DashChart } from "./DashboardChart";
+import { TerritorialMap } from "./TerritorialMap";
 import { VoiceInput } from "@/components/annotations/VoiceInput";
 import { GlossaryTooltip, type GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
 import { createAnnotation } from "@/app/actions/annotations";
@@ -59,12 +60,14 @@ const SECTION_ACCENTS = [
 
 export function ReportViewer({
   reportId,
+  reportSlug,
   chapters,
   annotations,
   canComment,
   glossary,
 }: {
   reportId: string;
+  reportSlug: string;
   chapters: ViewChapter[];
   annotations: ClientAnnotation[];
   canComment: boolean;
@@ -215,6 +218,7 @@ export function ReportViewer({
                   glossaryIndex={glossaryIndex}
                   onAnnotateBlock={annotateBlock}
                   canComment={canComment}
+                  reportSlug={reportSlug}
                 />
               ))}
             </section>
@@ -287,12 +291,14 @@ function SectionView({
   glossaryIndex,
   onAnnotateBlock,
   canComment,
+  reportSlug,
 }: {
   section: ViewSection;
   byBlock: Map<string, ClientAnnotation[]>;
   glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
   onAnnotateBlock: (blockId: string, label: string) => void;
   canComment: boolean;
+  reportSlug: string;
 }) {
   const [open, setOpen] = useState(!section.collapsedByDefault);
 
@@ -304,6 +310,7 @@ function SectionView({
       glossaryIndex={glossaryIndex}
       onAnnotateBlock={onAnnotateBlock}
       canComment={canComment}
+      reportSlug={reportSlug}
     />
   ));
 
@@ -333,12 +340,14 @@ function BlockView({
   glossaryIndex,
   onAnnotateBlock,
   canComment,
+  reportSlug,
 }: {
   block: ViewBlock;
   annotations: ClientAnnotation[];
   glossaryIndex: { map: Map<string, GlossaryEntry>; regex: RegExp | null };
   onAnnotateBlock: (blockId: string, label: string) => void;
   canComment: boolean;
+  reportSlug: string;
 }) {
   const hasAnn = annotations.length > 0;
   const common = { "data-block-id": block.id } as const;
@@ -400,6 +409,20 @@ function BlockView({
 
   if (block.type === "CHART") {
     const raw = block.content as Record<string, unknown>;
+    // Mapa navegable (Leaflet + satélite).
+    if (raw._map) {
+      return (
+        <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Mapa: ${(raw.titulo as string) ?? "territorial"}`} onAnnotate={onAnnotateBlock}>
+          <div {...common}>
+            <TerritorialMap
+              reportSlug={reportSlug}
+              mapKey={raw.key as string}
+              title={raw.titulo as string | undefined}
+            />
+          </div>
+        </BlockShell>
+      );
+    }
     // Gráfico recreado del dashboard (interactivo, estilo de la página).
     if (raw._dash) {
       const dc = raw as unknown as DashChart;

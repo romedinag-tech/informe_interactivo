@@ -73,8 +73,24 @@ model Report {
   assignments ReportAssignment[]
   glossary    GlossaryTerm[]
   audios      AudioAsset[]
+  maps        MapAsset[]
 
   @@index([status])
+}
+
+// Geodata de un mapa navegable (zonas GeoJSON + capas + variables). Se carga
+// bajo demanda (no infla la página del informe).
+model MapAsset {
+  id       String  @id @default(cuid())
+  reportId String
+  key      String // p.ej. "explorador"
+  title    String?
+  data     Json // { zonas: FeatureCollection, area, vars, capas... }
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, key])
+  @@index([reportId])
 }
 
 // Control de acceso por informe: quién puede ver/comentar qué informe.

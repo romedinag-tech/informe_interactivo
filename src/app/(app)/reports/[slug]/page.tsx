@@ -139,6 +139,7 @@ export default async function ReportPage({
         <TableOfContents chapters={toc} />
         <ReportViewer
           reportId={report.id}
+          reportSlug={report.slug}
           chapters={chapters}
           annotations={annotations}
           canComment={access.canComment}
