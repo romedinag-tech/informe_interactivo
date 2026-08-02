@@ -119,28 +119,34 @@ El consultor crea informes **importando un `.docx`** (`/reports/importar`):
 
 ## Visor premium (estilo libro digital)
 
-El visor (`/reports/[slug]`) implementa el estándar de `estandar del informe.md`:
+El visor (`/reports/[slug]`) — diseño editorial sobrio (Inter + Source Serif 4,
+tarjetas blancas con sombras suaves, acento azul marino):
 
 - **Modo claro / oscuro / sepia** con selector y persistencia (sin parpadeo).
-- **TOC retráctil** con scrollspy (sidebar en escritorio, *drawer* en móvil).
-- **Barra de progreso** de lectura superior.
-- **Secciones colapsables** (acordeón); los anexos densos inician colapsados.
-- **Glosario emergente**: términos como *IMIV*, *SECTRA*, *EOD* muestran su
-  definición en un tooltip (modelo `GlossaryTerm`).
-- **Superficie de lectura** con ancho controlado (*measure*) y tipografía serif.
-- **Panel de anotaciones** como *bottom-sheet* en móvil.
+- **Cabecera compacta**: un solo título centrado + emblema de Talca.
+- **TOC** con scrollspy, **selector de niveles N1/N2**, hover que despliega el
+  título completo e indicador de capítulo activo.
+- **Barra de progreso** de lectura; **secciones colapsables**; **acento sobrio por
+  capítulo** para diferenciar secciones.
+- **Glosario emergente** (`GlossaryTerm`) e **anotaciones** (teclado y voz), con
+  panel *bottom-sheet* en móvil.
 
 ## Módulo de audio (ElevenLabs + respaldo del navegador)
 
 Reproductor flotante 🎧 que narra el informe por capítulo:
 
-- Con `ELEVENLABS_API_KEY` configurada, genera voz hiperrealista
-  (`eleven_multilingual_v2`) vía `/api/reports/[slug]/audio/[chapterId]`.
-- **Caché inteligente**: cada audio se guarda en `.audio-cache/<hash>.mp3` y se
-  registra en `AudioAsset` (clave = hash de texto+voz+modelo) para no repetir
-  llamadas ni costos.
-- **Sin clave**, el reproductor usa la voz del navegador (Web Speech) como
-  respaldo, así la función "escuchar" opera desde el primer día.
+- Voz hiperrealista (`eleven_multilingual_v2`) con **pronunciación de siglas** vía
+  diccionario de ElevenLabs generado desde el glosario.
+- **Controles**: selector de capítulos, **voz femenina/masculina**, **velocidad
+  1×/1.5×/2×**, **auto-scroll** que sigue la lectura (desactivable).
+- **Caché** en `AudioAsset` + disco temporal. Sin clave, usa la voz del navegador.
+
+## Revisión y exportación
+
+- **Enviar al consultor** (revisor) con confirmación; el consultor ve el estado
+  (`ReportAssignment.submittedAt`).
+- **Exportar** el consolidado de observaciones a **Word (.doc)** y **PDF**.
+- **Instrucciones de uso** en `/instrucciones`.
 
 ## Datos de ejemplo
 
@@ -151,6 +157,6 @@ el informe real **Síntesis de Prediagnóstico — Talca** (`/reports/prediagnos
 ## Próximos pasos sugeridos
 
 - Conectar los 48 gráficos estáticos del informe de Talca al dashboard de origen
-  (`Dashboard_Diagnostico_Talca.html`) como componentes interactivos.
-- Notificaciones y exportación del consolidado a Word/PDF.
+  (`Dashboard_Diagnostico_Talca.html`) — ver `BACKLOG.md`.
 - Chunking + concatenación de audio para capítulos largos (>5000 caracteres).
+- Foto real (con licencia) de Talca en la portada sobre el emblema actual.
