@@ -617,10 +617,21 @@ function BlockView({
       );
     }
     return (
-      <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Imagen: ${c.alt}`} onAnnotate={onAnnotateBlock}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img {...common} src={c.src} alt={c.alt} className="mx-auto rounded" />
-        {c.caption && <p className="mt-1 text-center text-xs text-ink-soft">{c.caption}</p>}
+      <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Figura: ${c.alt}`} onAnnotate={onAnnotateBlock}>
+        <figure {...common} className="m-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={c.src}
+            alt={c.alt}
+            loading="lazy"
+            decoding="async"
+            className="mx-auto block h-auto max-w-full rounded-lg"
+            style={{ border: "1px solid var(--line)", background: "#fff" }}
+          />
+          {c.caption && (
+            <figcaption className="mt-1 text-center text-xs text-ink-soft">{c.caption}</figcaption>
+          )}
+        </figure>
       </BlockShell>
     );
   }

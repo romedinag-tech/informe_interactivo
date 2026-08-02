@@ -74,6 +74,7 @@ model Report {
   glossary    GlossaryTerm[]
   audios      AudioAsset[]
   maps        MapAsset[]
+  figures     FigureAsset[]
 
   @@index([status])
 }
@@ -90,6 +91,21 @@ model MapAsset {
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@unique([reportId, key])
+  @@index([reportId])
+}
+
+// Imagen (figura estática del Word) de un bloque IMAGE. Bytes en la base,
+// servida por ruta autenticada; no infla la página del informe.
+model FigureAsset {
+  id          String   @id @default(cuid())
+  reportId    String
+  blockId     String   @unique
+  contentType String   @default("image/png")
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
   @@index([reportId])
 }
 
