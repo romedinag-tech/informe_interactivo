@@ -101,7 +101,8 @@ export function ObservationPanel({
           <select
             value={chapterF}
             onChange={(e) => setChapterF(e.target.value)}
-            className="ring-focus ml-auto rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-ink"
+            className="ring-focus ml-auto rounded-md border px-2 py-1 text-xs text-ink"
+            style={{ borderColor: "var(--line)", background: "var(--surface-2)" }}
             aria-label="Filtrar por capítulo"
           >
             <option value="all">Todos los capítulos</option>

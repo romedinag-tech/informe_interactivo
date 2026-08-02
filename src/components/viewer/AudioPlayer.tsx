@@ -224,7 +224,8 @@ export function AudioPlayer({
               if (status === "playing") playChapter(i);
               else if (autoScroll) scrollToChapter(i);
             }}
-            className="mt-2 w-full truncate rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-ink"
+            className="ring-focus mt-2 w-full truncate rounded-md border px-2 py-1.5 text-sm text-ink"
+            style={{ borderColor: "var(--line)", background: "var(--surface-2)" }}
             title={chapters[idx].title}
           >
             {chapters.map((c, i) => (

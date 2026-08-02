@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -17,6 +18,23 @@ import {
   Legend,
 } from "recharts";
 
+// Sigue el tema activo (claro/sepia/oscuro) para adaptar la paleta de series.
+function useTheme(): string {
+  const [theme, setTheme] = useState("light");
+  useEffect(() => {
+    const read = () =>
+      setTheme(document.documentElement.getAttribute("data-theme") || "light");
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => obs.disconnect();
+  }, []);
+  return theme;
+}
+
 // Contenido de un gráfico recreado a partir del dashboard de origen.
 export type DashChart = {
   _dash: true;
@@ -33,7 +51,8 @@ export type DashChart = {
   serie_linea?: { label: string; data: number[] };
 };
 
-const PAL = [
+// Paleta para fondos claros (claro + sepia): tonos institucionales sobrios.
+const PAL_LIGHT = [
   "#1c3663",
   "#2f5d54",
   "#6b4a2f",
@@ -42,10 +61,33 @@ const PAL = [
   "#7a4a4a",
   "#2a5570",
 ];
+// Paleta para fondo oscuro: mismas familias, subidas en luminosidad para contraste.
+const PAL_DARK = [
+  "#7aa2e3",
+  "#6fc2a8",
+  "#c9a06a",
+  "#9a9ad6",
+  "#c9a25e",
+  "#d98a8a",
+  "#78b4d6",
+];
 
 const axisProps = {
   tick: { fontSize: 11, fill: "var(--muted)" },
   stroke: "var(--line)",
+} as const;
+
+const tooltipProps = {
+  contentStyle: {
+    background: "var(--surface)",
+    border: "1px solid var(--line)",
+    borderRadius: 8,
+    boxShadow: "var(--shadow-card)",
+    color: "var(--ink)",
+    fontSize: 12,
+  },
+  labelStyle: { color: "var(--ink)", fontWeight: 600 },
+  itemStyle: { color: "var(--muted)" },
 } as const;
 
 function rowsFromSeries(labels: (string | number)[], series: { label: string; data: number[] }[]) {
@@ -58,6 +100,8 @@ function rowsFromSeries(labels: (string | number)[], series: { label: string; da
 
 export function DashboardChart({ c }: { c: DashChart }) {
   const labels = c.labels ?? [];
+  const theme = useTheme();
+  const PAL = theme === "dark" ? PAL_DARK : PAL_LIGHT;
 
   const chart = () => {
     switch (c.tipo) {
@@ -70,7 +114,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
                 <Cell key={i} fill={PAL[i % PAL.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(v: number) => `${v}${c.unidad ?? ""}`} />
+            <Tooltip {...tooltipProps} formatter={(v: number) => `${v}${c.unidad ?? ""}`} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
           </PieChart>
         );
@@ -82,7 +126,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
             <XAxis dataKey="name" {...axisProps} />
             <YAxis {...axisProps} />
-            <Tooltip formatter={(v: number) => `${v}${c.unidad ?? ""}`} />
+            <Tooltip {...tooltipProps} formatter={(v: number) => `${v}${c.unidad ?? ""}`} />
             <Bar dataKey="value" fill={PAL[0]} radius={[3, 3, 0, 0]} />
           </BarChart>
         );
@@ -95,7 +139,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" horizontal={false} />
             <XAxis type="number" {...axisProps} />
             <YAxis type="category" dataKey="name" width={90} {...axisProps} />
-            <Tooltip />
+            <Tooltip {...tooltipProps} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {series.map((s, i) => (
               <Bar key={s.label} dataKey={s.label} fill={PAL[i % PAL.length]} radius={[0, 3, 3, 0]} />
@@ -111,7 +155,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
             <XAxis dataKey="name" {...axisProps} />
             <YAxis {...axisProps} />
-            <Tooltip />
+            <Tooltip {...tooltipProps} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {series.map((s, i) => (
               <Bar key={s.label} dataKey={s.label} stackId="a" fill={PAL[i % PAL.length]} />
@@ -133,7 +177,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
             <XAxis dataKey="name" {...axisProps} />
             <YAxis yAxisId="l" {...axisProps} />
             <YAxis yAxisId="r" orientation="right" {...axisProps} />
-            <Tooltip />
+            <Tooltip {...tooltipProps} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar yAxisId="l" dataKey={bar?.label ?? "barra"} fill={PAL[0]} radius={[3, 3, 0, 0]} />
             <Line yAxisId="r" type="monotone" dataKey={line?.label ?? "linea"} stroke={PAL[2]} strokeWidth={2} dot={false} />
@@ -149,7 +193,7 @@ export function DashboardChart({ c }: { c: DashChart }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
             <XAxis dataKey="name" {...axisProps} />
             <YAxis {...axisProps} />
-            <Tooltip />
+            <Tooltip {...tooltipProps} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {series.map((s, i) => (
               <Line key={s.label} type="monotone" dataKey={s.label} stroke={PAL[i % PAL.length]} strokeWidth={2} dot={false} />
