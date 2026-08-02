@@ -45,6 +45,17 @@ const statusStyle: Record<string, string> = {
   DISMISSED: "bg-gray-100 text-gray-600",
 };
 
+// Paleta sobria y de baja saturación para diferenciar capítulos (wayfinding).
+const SECTION_ACCENTS = [
+  "#1c3663", // navy
+  "#2f5d54", // verde bosque
+  "#6b4a2f", // tierra
+  "#4a4a6f", // índigo apagado
+  "#5b4a2a", // ocre
+  "#7a4a4a", // tinto suave
+  "#2a5570", // azul petróleo
+];
+
 export function ReportViewer({
   reportId,
   chapters,
@@ -178,33 +189,43 @@ export function ReportViewer({
       <article
         ref={containerRef}
         onMouseUp={onMouseUp}
-        className="reading-surface prose prose-slate max-w-none rounded-lg px-6 py-8 shadow-sm dark:prose-invert sm:px-10"
+        className="reading reading-surface surface-card px-5 py-10 sm:px-12"
       >
-        {chapters.map((ch) => (
-          <section key={ch.id} id={`ch-${ch.id}`} className="mb-12 scroll-mt-24">
-            <h2 className="font-serif">
-              {ch.number ? `${ch.number}. ` : ""}
-              {ch.title}
-            </h2>
-            {ch.sections.map((sec) => (
-              <SectionView
-                key={sec.id}
-                section={sec}
-                byBlock={byBlock}
-                glossaryIndex={glossaryIndex}
-                onAnnotateBlock={annotateBlock}
-                canComment={canComment}
-              />
-            ))}
-          </section>
-        ))}
+        {chapters.map((ch, ci) => {
+          const accent = SECTION_ACCENTS[ci % SECTION_ACCENTS.length];
+          return (
+            <section key={ch.id} id={`ch-${ch.id}`} className="mb-14 scroll-mt-28">
+              <div
+                className="mb-6 flex items-center gap-3 border-b pb-3"
+                style={{ borderColor: "var(--line)" }}
+              >
+                <span
+                  className="h-7 w-1 shrink-0 rounded-full"
+                  style={{ background: accent }}
+                  aria-hidden
+                />
+                <h2>{ch.title}</h2>
+              </div>
+              {ch.sections.map((sec) => (
+                <SectionView
+                  key={sec.id}
+                  section={sec}
+                  byBlock={byBlock}
+                  glossaryIndex={glossaryIndex}
+                  onAnnotateBlock={annotateBlock}
+                  canComment={canComment}
+                />
+              ))}
+            </section>
+          );
+        })}
       </article>
 
       {/* ── Panel lateral (escritorio) ── */}
       <aside className="hidden lg:block">
-        <div className="sticky top-20 self-start">
+        <div className="sticky top-24 self-start">
           {compose ?? (
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="surface-card p-4">
               <div className="text-sm font-medium text-ink">Observaciones</div>
               <p className="mt-1 text-xs text-ink-soft">
                 {canComment
@@ -427,7 +448,10 @@ function BlockShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`group relative my-4 ${annotated ? "block-annotated" : ""}`}>
+    <div
+      className={`group relative my-6 rounded-xl2 p-4 ${annotated ? "block-annotated" : ""}`}
+      style={{ background: "var(--surface-2)" }}
+    >
       {canComment && (
         <button
           onClick={() => onAnnotate(blockId, label)}

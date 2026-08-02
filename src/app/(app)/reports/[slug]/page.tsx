@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/viewer/ThemeToggle";
 import { ReadingProgress } from "@/components/viewer/ReadingProgress";
 import { TableOfContents, type TocChapter } from "@/components/viewer/TableOfContents";
 import { AudioPlayer, type AudioChapter } from "@/components/viewer/AudioPlayer";
+import { TalcaMark } from "@/components/viewer/TalcaMark";
 import { chapterNarrationText } from "@/lib/chapter-text";
 import type { GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
 import type { ViewChapter } from "@/types/content";
@@ -101,27 +102,32 @@ export default async function ReportPage({
     <>
       <ReadingProgress />
 
-      <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="min-w-0">
-            <h1 className="truncate font-serif text-xl text-navy">{report.title}</h1>
+      <div className="sticky top-11 z-30 border-b border-gray-200 bg-white/85 backdrop-blur">
+        <div className="mx-auto grid max-w-[90rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2.5 md:grid-cols-[1fr_auto_1fr]">
+          <div className="hidden items-center md:flex">
+            <TalcaMark className="h-8 w-8 text-navy" />
+          </div>
+          <div className="min-w-0 md:text-center">
+            <h1 className="truncate font-serif text-lg font-semibold text-ink md:text-xl">
+              {report.title}
+            </h1>
             {report.subtitle && (
-              <p className="truncate text-sm text-ink-soft">{report.subtitle}</p>
+              <p className="truncate text-xs text-ink-soft">{report.subtitle}</p>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <ThemeToggle />
             {access.canEdit && (
               <Link
                 href={`/reports/${report.slug}/editar`}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-gray-50"
               >
                 Editar
               </Link>
             )}
             <Link
               href={`/reports/${report.slug}/observaciones`}
-              className="rounded-md border border-navy px-3 py-1.5 text-sm font-medium text-navy hover:bg-navy hover:text-white"
+              className="rounded-lg bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700"
             >
               Observaciones ({annotations.length})
             </Link>

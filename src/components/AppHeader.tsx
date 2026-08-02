@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import type { SessionUser } from "@/lib/rbac";
+import { TalcaMark } from "@/components/viewer/TalcaMark";
 
 const roleLabel: Record<string, string> = {
   CONSULTOR: "Consultor",
@@ -10,15 +11,18 @@ const roleLabel: Record<string, string> = {
 
 export function AppHeader({ user }: { user: SessionUser }) {
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/reports" className="font-serif text-lg text-navy">
-          Informes Interactivos
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/85 backdrop-blur">
+      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between px-4">
+        <Link href="/reports" className="flex items-center gap-2 text-navy">
+          <TalcaMark className="h-5 w-5" />
+          <span className="text-[13px] font-semibold uppercase tracking-[0.14em]">
+            Informes Interactivos
+          </span>
         </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-ink-soft">
-            {user.name}{" "}
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-ink">
+        <div className="flex items-center gap-3 text-sm">
+          <span className="hidden text-ink-soft sm:inline">
+            {user.name}
+            <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-ink">
               {roleLabel[user.role] ?? user.role}
             </span>
           </span>
@@ -28,7 +32,9 @@ export function AppHeader({ user }: { user: SessionUser }) {
               await signOut({ redirectTo: "/login" });
             }}
           >
-            <button className="text-ink-soft hover:text-navy">Salir</button>
+            <button className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 hover:text-navy">
+              Salir
+            </button>
           </form>
         </div>
       </div>

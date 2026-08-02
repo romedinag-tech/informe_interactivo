@@ -13,14 +13,13 @@ export type TocChapter = {
 export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
   const [open, setOpen] = useState(false); // drawer móvil
   const [active, setActive] = useState<string | null>(null);
+  const [depth, setDepth] = useState<1 | 2>(1); // niveles del índice
 
-  // Scrollspy: marca el capítulo visible.
   useEffect(() => {
     const targets = chapters
       .map((c) => document.getElementById(`ch-${c.id}`))
       .filter((el): el is HTMLElement => el != null);
     if (targets.length === 0) return;
-
     const obs = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -28,7 +27,7 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visible[0]) setActive(visible[0].target.id.replace("ch-", ""));
       },
-      { rootMargin: "-10% 0px -70% 0px", threshold: 0 }
+      { rootMargin: "-12% 0px -70% 0px", threshold: 0 }
     );
     targets.forEach((t) => obs.observe(t));
     return () => obs.disconnect();
@@ -39,54 +38,93 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
     setOpen(false);
   };
 
+  const hasSubsections = chapters.some((c) => c.sections.some((s) => s.title));
+
   const list = (
-    <nav className="space-y-1 text-sm">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
-        Contenidos
+    <nav aria-label="Contenidos">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
+          Contenidos
+        </span>
+        {hasSubsections && (
+          <div className="flex overflow-hidden rounded-full border border-gray-200 text-[10px]">
+            <button
+              onClick={() => setDepth(1)}
+              className={`px-2 py-0.5 ${depth === 1 ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
+              title="Solo capítulos"
+            >
+              N1
+            </button>
+            <button
+              onClick={() => setDepth(2)}
+              className={`px-2 py-0.5 ${depth === 2 ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
+              title="Capítulos y secciones"
+            >
+              N2
+            </button>
+          </div>
+        )}
       </div>
-      {chapters.map((c) => (
-        <div key={c.id}>
-          <button
-            onClick={() => go(`ch-${c.id}`)}
-            className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-gray-100 ${
-              active === c.id ? "bg-gray-100 font-medium text-navy" : "text-ink"
-            }`}
-            title={c.title}
-          >
-            {c.number ? `${c.number}. ` : ""}
-            {c.title}
-          </button>
-          {c.sections.some((s) => s.title) && active === c.id && (
-            <div className="ml-3 border-l border-gray-200 pl-2">
-              {c.sections
-                .filter((s) => s.title)
-                .map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => go(`sec-${s.id}`)}
-                    className="block w-full truncate rounded px-2 py-0.5 text-left text-xs text-ink-soft hover:bg-gray-100"
-                    title={s.title ?? ""}
-                  >
-                    {s.title}
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-      ))}
+
+      <ul className="space-y-0.5">
+        {chapters.map((c) => {
+          const isActive = active === c.id;
+          const subs = c.sections.filter((s) => s.title);
+          return (
+            <li key={c.id}>
+              <button
+                onClick={() => go(`ch-${c.id}`)}
+                title={c.title}
+                className={`group relative block w-full rounded-md py-1.5 pl-3 pr-2 text-left text-[13px] leading-snug transition ${
+                  isActive
+                    ? "bg-[var(--accent-soft)] font-semibold text-navy"
+                    : "text-ink hover:bg-gray-100"
+                }`}
+              >
+                <span
+                  className={`absolute inset-y-1 left-0 w-0.5 rounded-full ${
+                    isActive ? "bg-navy" : "bg-transparent"
+                  }`}
+                />
+                <span className="line-clamp-1 group-hover:line-clamp-none">
+                  {c.number ? (
+                    <span className="mr-1.5 font-serif text-ink-soft">{c.number}</span>
+                  ) : null}
+                  {c.title}
+                </span>
+              </button>
+              {depth === 2 && subs.length > 0 && (
+                <ul className="ml-4 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+                  {subs.map((s) => (
+                    <li key={s.id}>
+                      <button
+                        onClick={() => go(`sec-${s.id}`)}
+                        title={s.title ?? ""}
+                        className="block w-full rounded px-2 py-1 text-left text-xs text-ink-soft hover:bg-gray-100"
+                      >
+                        <span className="line-clamp-1 hover:line-clamp-none">
+                          {s.title}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 
   return (
     <>
-      {/* Escritorio: columna sticky */}
       <aside className="hidden lg:block">
-        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white p-3">
+        <div className="surface-card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto p-4">
           {list}
         </div>
       </aside>
 
-      {/* Móvil: botón + drawer */}
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-4 left-4 z-40 rounded-full bg-navy px-4 py-2 text-sm font-medium text-white shadow-lg lg:hidden"
@@ -95,15 +133,9 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
       </button>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-4 shadow-xl">
-            <button
-              onClick={() => setOpen(false)}
-              className="mb-3 text-sm text-ink-soft"
-            >
+            <button onClick={() => setOpen(false)} className="mb-3 text-sm text-ink-soft">
               ✕ Cerrar
             </button>
             {list}
