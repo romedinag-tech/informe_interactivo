@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DocSearch, type SearchEntry } from "./DocSearch";
 
 export type TocSection = { id: string; title: string | null };
 export type TocChapter = {
@@ -11,7 +12,13 @@ export type TocChapter = {
   sections: TocSection[];
 };
 
-export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
+export function TableOfContents({
+  chapters,
+  searchIndex = [],
+}: {
+  chapters: TocChapter[];
+  searchIndex?: SearchEntry[];
+}) {
   const [open, setOpen] = useState(false); // drawer móvil
   const [active, setActive] = useState<string | null>(null);
   const [depth, setDepth] = useState<1 | 2>(1); // niveles del índice
@@ -46,6 +53,9 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
 
   const list = (
     <nav aria-label="Contenidos">
+      {searchIndex.length > 0 && (
+        <DocSearch index={searchIndex} onNavigate={() => setOpen(false)} />
+      )}
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "var(--muted)" }}>
           Contenidos

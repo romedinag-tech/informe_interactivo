@@ -6,6 +6,7 @@ import { ReportViewer, type ClientAnnotation } from "@/components/report/ReportV
 import { ThemeToggle } from "@/components/viewer/ThemeToggle";
 import { ReadingProgress } from "@/components/viewer/ReadingProgress";
 import { TableOfContents, type TocChapter } from "@/components/viewer/TableOfContents";
+import type { SearchEntry } from "@/components/viewer/DocSearch";
 import { AudioPlayer, type AudioChapter } from "@/components/viewer/AudioPlayer";
 import { DraftWatermark } from "@/components/viewer/DraftWatermark";
 import { TalcaMark } from "@/components/viewer/TalcaMark";
@@ -106,6 +107,20 @@ export default async function ReportPage({
     ),
   }));
 
+  // Índice de búsqueda en cliente (texto de los bloques).
+  const searchIndex: SearchEntry[] = report.chapters.flatMap((ch) =>
+    ch.sections
+      .flatMap((s) => s.blocks)
+      .map((b) => {
+        const c = b.content as { text?: string; caption?: string } | null;
+        const text = c?.text ?? c?.caption ?? "";
+        return typeof text === "string" && text.trim()
+          ? { blockId: b.id, chapter: `${ch.number ? ch.number + ". " : ""}${ch.title}`, text }
+          : null;
+      })
+      .filter((e): e is SearchEntry => e != null)
+  );
+
   const glossary: GlossaryEntry[] = report.glossary.map((g) => ({
     term: g.term,
     definition: g.definition,
@@ -190,7 +205,7 @@ export default async function ReportPage({
       </div>
 
       <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-8 lg:py-8">
-        <TableOfContents chapters={toc} />
+        <TableOfContents chapters={toc} searchIndex={searchIndex} />
         <ReportViewer
           reportId={report.id}
           reportSlug={report.slug}
