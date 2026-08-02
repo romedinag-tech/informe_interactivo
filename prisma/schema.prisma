@@ -3,7 +3,9 @@
 // cada nodo tenga un ID estable al cual anclar observaciones contextuales.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" para desarrollo local; el target RHEL para el runtime de Vercel.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

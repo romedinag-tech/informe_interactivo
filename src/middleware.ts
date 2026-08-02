@@ -1,8 +1,12 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
+import { authConfig } from "@/lib/auth.config";
 
-// Protege todas las rutas de la app salvo login y assets. La autorización fina
-// (por rol / por informe) se hace en cada Server Action y Server Component.
+// Instancia Edge-safe: solo verifica la sesión (JWT), sin Prisma ni bcrypt.
+const { auth } = NextAuth(authConfig);
+
+// Protege todas las rutas salvo login y assets. La autorización fina (por rol /
+// por informe) se hace en cada Server Action y Server Component.
 export default auth((req) => {
   const isLoggedIn = Boolean(req.auth?.user);
   const { pathname } = req.nextUrl;

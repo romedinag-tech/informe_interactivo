@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { authConfig } from "@/lib/auth.config";
 import type { Role } from "@prisma/client";
 
 const credentialsSchema = z.object({
@@ -10,11 +11,9 @@ const credentialsSchema = z.object({
   password: z.string().min(1),
 });
 
+// Configuración COMPLETA (runtime Node): base + proveedor de credenciales.
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -36,27 +35,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: user.role as Role,
         };
       },
     }),
   ],
-  callbacks: {
-    // Embebe el rol y el id en el token JWT.
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role: Role }).role;
-        token.uid = user.id;
-      }
-      return token;
-    },
-    // Expone rol e id en la sesión del cliente/servidor.
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.uid as string;
-        session.user.role = token.role as Role;
-      }
-      return session;
-    },
-  },
 });

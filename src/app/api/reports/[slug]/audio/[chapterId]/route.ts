@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { prisma } from "@/lib/db";
 import { currentUser, getReportAccess } from "@/lib/rbac";
 import {
@@ -15,7 +16,8 @@ import { chapterNarrationText } from "@/lib/chapter-text";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const CACHE_DIR = join(process.cwd(), ".audio-cache");
+// En serverless (Vercel) el cwd es de solo lectura; el temporal sí es escribible.
+const CACHE_DIR = join(tmpdir(), "informes-audio-cache");
 
 export async function GET(
   _req: Request,
@@ -64,13 +66,24 @@ export async function GET(
     );
   }
 
-  // 3) Generar, cachear y servir.
+  // 3) Generar con ElevenLabs.
+  let audio: Buffer;
   try {
-    const audio = await synthesizeSpeech(text, { voiceId, model });
+    audio = await synthesizeSpeech(text, { voiceId, model });
+  } catch (e) {
+    // Falla la API → respaldo del navegador en vez de romper la lectura.
+    return NextResponse.json(
+      { fallback: "browser", reason: String(e).slice(0, 200) },
+      { status: 200 }
+    );
+  }
+
+  // 4) Cachear es best-effort: en serverless el disco es efímero/limitado, pero
+  //    si falla igual servimos el audio ya generado.
+  try {
     await mkdir(CACHE_DIR, { recursive: true });
     const filePath = join(CACHE_DIR, `${textHash}.mp3`);
     await writeFile(filePath, audio);
-
     await prisma.audioAsset.upsert({
       where: { textHash },
       create: {
@@ -84,15 +97,11 @@ export async function GET(
       },
       update: { path: filePath, bytes: audio.length },
     });
-
-    return audioResponse(audio, false);
-  } catch (e) {
-    // Falla la API → respaldo del navegador en vez de romper la lectura.
-    return NextResponse.json(
-      { fallback: "browser", reason: String(e).slice(0, 200) },
-      { status: 200 }
-    );
+  } catch {
+    /* sin caché persistente, pero el audio se entrega igual */
   }
+
+  return audioResponse(audio, false);
 }
 
 function audioResponse(buf: Buffer, cacheHit: boolean) {
