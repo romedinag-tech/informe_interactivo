@@ -26,6 +26,7 @@ const GLOSARIO: {
   { term: "NSE", definition: "Nivel socioeconómico: clasificación de los hogares según ingreso y características, usada para segmentar la demanda.", source: "AIM / CASEN", pronunciation: "ene ese e" },
   { term: "GEH", definition: "Estadístico de bondad de ajuste que compara flujos modelados con observados; valores bajo 5 indican buen ajuste.", source: "WebTAG, UK DfT", pronunciation: "ge e hache" },
   { term: "Plan Maestro", definition: "Instrumento de planificación que ordena las intervenciones de transporte y uso de suelo de un territorio en un horizonte de largo plazo." },
+  { term: "V&R Ltda", definition: "Consultora responsable del presente estudio de transporte y movilidad.", pronunciation: "ve y erre limitada" },
 ];
 
 async function main() {

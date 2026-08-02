@@ -20,6 +20,12 @@ export function AppHeader({ user }: { user: SessionUser }) {
           </span>
         </Link>
         <div className="flex items-center gap-3 text-sm">
+          <Link
+            href="/instrucciones"
+            className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 hover:text-navy"
+          >
+            Instrucciones
+          </Link>
           <span className="hidden text-ink-soft sm:inline">
             {user.name}
             <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-ink">
