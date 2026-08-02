@@ -37,12 +37,15 @@ async function assertCanEditReport(reportId: string): Promise<string> {
   return user.id;
 }
 
-async function reportIdOfBlock(blockId: string): Promise<string> {
+// Devuelve el reportId y RECHAZA si la sección del bloque está bloqueada
+// (conforme entre rondas). Úsese en toda edición de bloque.
+async function assertBlockEditable(blockId: string): Promise<string> {
   const block = await prisma.block.findFirst({
     where: { id: blockId },
-    select: { section: { select: { chapter: { select: { reportId: true } } } } },
+    select: { section: { select: { locked: true, chapter: { select: { reportId: true } } } } },
   });
   if (!block) throw new Error("BLOQUE_INVALIDO");
+  if (block.section.locked) throw new Error("SECCION_BLOQUEADA");
   return block.section.chapter.reportId;
 }
 
@@ -105,7 +108,7 @@ const updateBlockSchema = z.object({
 
 export async function updateBlockContent(input: z.infer<typeof updateBlockSchema>) {
   const { blockId, content } = updateBlockSchema.parse(input);
-  await assertCanEditReport(await reportIdOfBlock(blockId));
+  await assertCanEditReport(await assertBlockEditable(blockId));
   await prisma.block.update({
     where: { id: blockId },
     data: { content: content as Prisma.InputJsonValue },
@@ -114,7 +117,7 @@ export async function updateBlockContent(input: z.infer<typeof updateBlockSchema
 }
 
 export async function deleteBlock(blockId: string) {
-  const reportId = await reportIdOfBlock(blockId);
+  const reportId = await assertBlockEditable(blockId);
   await assertCanEditReport(reportId);
   await prisma.block.delete({ where: { id: blockId } });
   revalidatePath("/reports", "layout");
@@ -122,7 +125,7 @@ export async function deleteBlock(blockId: string) {
 
 /** Mueve un bloque dentro de su sección (intercambia orden con el vecino). */
 export async function moveBlock(blockId: string, direction: "up" | "down") {
-  const reportId = await reportIdOfBlock(blockId);
+  const reportId = await assertBlockEditable(blockId);
   await assertCanEditReport(reportId);
 
   const block = await prisma.block.findUniqueOrThrow({
@@ -156,8 +159,9 @@ export async function addBlock(input: z.infer<typeof addBlockSchema>) {
   const { sectionId, type } = addBlockSchema.parse(input);
   const section = await prisma.section.findUniqueOrThrow({
     where: { id: sectionId },
-    select: { chapter: { select: { reportId: true } } },
+    select: { locked: true, chapter: { select: { reportId: true } } },
   });
+  if (section.locked) throw new Error("SECCION_BLOQUEADA");
   await assertCanEditReport(section.chapter.reportId);
 
   const last = await prisma.block.findFirst({
@@ -190,7 +194,7 @@ const chartSchema = z.object({
 
 export async function convertImageToChart(input: z.infer<typeof chartSchema>) {
   const data = chartSchema.parse(input);
-  await assertCanEditReport(await reportIdOfBlock(data.blockId));
+  await assertCanEditReport(await assertBlockEditable(data.blockId));
   await prisma.block.update({
     where: { id: data.blockId },
     data: {
