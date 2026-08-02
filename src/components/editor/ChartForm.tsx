@@ -84,8 +84,8 @@ export function ChartForm({
   };
 
   return (
-    <div className="rounded-md border border-navy/30 bg-white p-4">
-      <div className="text-sm font-medium text-navy">
+    <div className="surface-card p-4">
+      <div className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
         Reemplazar por gráfico interactivo
       </div>
 
@@ -95,7 +95,7 @@ export function ChartForm({
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as typeof kind)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="field ring-focus mt-1 w-full px-2 py-1.5 text-sm"
           >
             <option value="bar">Barras</option>
             <option value="line">Líneas</option>
@@ -108,7 +108,7 @@ export function ChartForm({
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Figura X — …"
-            className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+            className="field ring-focus mt-1 w-full px-2 py-1.5 text-sm"
           />
           <label className="mt-3 block text-xs font-medium text-ink-soft">
             Datos (CSV: encabezados + filas)
@@ -117,7 +117,7 @@ export function ChartForm({
             value={csv}
             onChange={(e) => setCsv(e.target.value)}
             rows={6}
-            className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 font-mono text-xs"
+            className="field ring-focus mt-1 w-full px-2 py-1.5 font-mono text-xs"
           />
         </div>
 
@@ -125,7 +125,7 @@ export function ChartForm({
           <label className="block text-xs font-medium text-ink-soft">
             Vista previa
           </label>
-          <div className="mt-1 rounded-md border border-gray-100 p-2">
+          <div className="mt-1 rounded-md border border-[color:var(--line)] p-2">
             {previewContent ? (
               <ChartBlock content={previewContent} />
             ) : (
@@ -137,19 +137,16 @@ export function ChartForm({
         </div>
       </div>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
 
       <div className="mt-3 flex justify-end gap-2">
-        <button
-          onClick={onDone}
-          className="rounded-md px-3 py-1.5 text-sm text-ink-soft hover:bg-gray-100"
-        >
+        <button onClick={onDone} className="btn-ghost ring-focus px-3 py-1.5 text-sm">
           Cancelar
         </button>
         <button
           onClick={submit}
           disabled={pending || !previewContent}
-          className="rounded-md bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+          className="btn-primary ring-focus px-3 py-1.5 text-sm disabled:opacity-50"
         >
           {pending ? "Guardando…" : "Crear gráfico"}
         </button>

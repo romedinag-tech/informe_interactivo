@@ -62,7 +62,7 @@ export function ReportEditor({
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl text-navy">{reportTitle}</h1>
+          <h1 className="font-serif text-2xl text-[color:var(--accent)]">{reportTitle}</h1>
           <span className="text-xs text-ink-soft">
             Estado: {statusLabel[status] ?? status}
           </span>
@@ -70,7 +70,7 @@ export function ReportEditor({
         <div className="flex items-center gap-2">
           <Link
             href={`/reports/${reportSlug}`}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-ink hover:bg-gray-50"
+            className="rounded-md border border-[color:var(--line-strong)] px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
           >
             Previsualizar
           </Link>
@@ -78,7 +78,7 @@ export function ReportEditor({
             <button
               onClick={publish}
               disabled={publishing}
-              className="rounded-md bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-60"
+              className="btn-primary ring-focus rounded-md px-3 py-1.5 text-sm disabled:opacity-60"
             >
               {publishing ? "Publicando…" : "Publicar a revisión"}
             </button>
@@ -110,20 +110,20 @@ function ChapterEditor({ chapter }: { chapter: EditChapter }) {
   };
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+    <section className="surface-card p-5">
+      <div className="flex items-center gap-2 border-b border-[color:var(--line)] pb-3">
         <input
           value={number}
           onChange={(e) => setNumber(e.target.value)}
           onBlur={saveMeta}
-          className="w-14 rounded border border-gray-200 px-2 py-1 text-sm"
+          className="w-14 rounded border border-[color:var(--line)] px-2 py-1 text-sm"
           placeholder="N°"
         />
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={saveMeta}
-          className="flex-1 rounded border border-gray-200 px-2 py-1 font-serif text-lg text-navy"
+          className="flex-1 rounded border border-[color:var(--line)] px-2 py-1 font-serif text-lg text-[color:var(--accent)]"
           placeholder="Título del capítulo"
         />
       </div>
@@ -158,7 +158,7 @@ function SectionEditor({ section }: { section: EditSection }) {
         onChange={(e) => setTitle(e.target.value)}
         onBlur={saveTitle}
         placeholder="Título de la sección (opcional)"
-        className="mb-2 w-full rounded border border-transparent px-2 py-1 font-serif text-base text-ink hover:border-gray-200 focus:border-gray-300 focus:outline-none"
+        className="mb-2 w-full rounded border border-transparent px-2 py-1 font-serif text-base text-ink hover:border-[color:var(--line)] focus:border-[color:var(--line-strong)] focus:outline-none"
       />
       <div className="space-y-2">
         {section.blocks.map((b, i) => (
@@ -172,7 +172,7 @@ function SectionEditor({ section }: { section: EditSection }) {
       </div>
       <button
         onClick={add}
-        className="mt-2 text-xs text-navy hover:underline"
+        className="mt-2 text-xs text-[color:var(--accent)] hover:underline"
       >
         + Agregar párrafo
       </button>
@@ -203,7 +203,7 @@ function BlockEditorCard({
   };
 
   return (
-    <div className="group relative rounded-md border border-gray-100 p-3 hover:border-gray-200">
+    <div className="group relative rounded-md border border-[color:var(--line)] p-3 hover:border-[color:var(--line)]">
       <div className="absolute right-2 top-2 hidden gap-1 group-hover:flex">
         <IconBtn label="Subir" disabled={isFirst} onClick={() => move("up")}>
           ↑
@@ -232,7 +232,7 @@ function BlockEditorCard({
             <ChartBlock content={block.content as unknown as ChartContent} />
             <button
               onClick={() => setChartOpen((v) => !v)}
-              className="mt-1 text-xs text-navy hover:underline"
+              className="mt-1 text-xs text-[color:var(--accent)] hover:underline"
             >
               {chartOpen ? "Cerrar" : "Editar datos del gráfico"}
             </button>
@@ -246,7 +246,10 @@ function BlockEditorCard({
 
         {block.type === "IMAGE" && (
           <div>
-            <div className="flex items-center justify-between rounded-md border border-dashed border-amber-300 bg-amber-50 px-3 py-4 text-sm text-amber-800">
+            <div
+              className="flex items-center justify-between rounded-md border border-dashed px-3 py-4 text-sm"
+              style={{ borderColor: "var(--warn-border)", background: "var(--warn-bg)", color: "var(--warn)" }}
+            >
               <span>
                 Gráfico estático del Word
                 {typeof block.content.alt === "string" && block.content.alt
@@ -255,7 +258,7 @@ function BlockEditorCard({
               </span>
               <button
                 onClick={() => setChartOpen((v) => !v)}
-                className="rounded-md bg-navy px-3 py-1.5 text-xs font-medium text-white hover:bg-navy-700"
+                className="btn-primary ring-focus rounded-md px-3 py-1.5 text-xs"
               >
                 {chartOpen ? "Cerrar" : "Reemplazar por gráfico interactivo"}
               </button>
@@ -291,11 +294,11 @@ function TextBlockEditor({ block }: { block: EditBlock }) {
         onChange={(e) => setText(e.target.value)}
         onBlur={save}
         rows={block.type === "PARAGRAPH" ? 3 : 1}
-        className={`w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:border-navy focus:outline-none ${
+        className={`field ring-focus w-full px-2 py-1.5 text-sm ${
           block.type === "HEADING" ? "font-serif font-medium" : ""
         }`}
       />
-      {saved && <span className="text-[10px] text-green-600">guardado ✓</span>}
+      {saved && <span className="text-[10px]" style={{ color: "var(--ok)" }}>guardado ✓</span>}
     </div>
   );
 }
@@ -327,7 +330,7 @@ function TableEditor({ block }: { block: EditBlock }) {
         <thead>
           <tr>
             {columns.map((col, c) => (
-              <th key={c} className="border border-gray-200 p-1">
+              <th key={c} className="border border-[color:var(--line)] p-1">
                 <input
                   value={col}
                   onChange={(e) => setCol(c, e.target.value)}
@@ -341,7 +344,7 @@ function TableEditor({ block }: { block: EditBlock }) {
           {rows.map((row, r) => (
             <tr key={r}>
               {row.map((cell, c) => (
-                <td key={c} className="border border-gray-100 p-1">
+                <td key={c} className="border border-[color:var(--line)] p-1">
                   <input
                     value={String(cell)}
                     onChange={(e) => setCell(r, c, e.target.value)}
@@ -357,15 +360,15 @@ function TableEditor({ block }: { block: EditBlock }) {
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
         placeholder="Pie de tabla (opcional)"
-        className="mt-1 w-full rounded border border-gray-200 px-2 py-1 text-xs"
+        className="mt-1 w-full rounded border border-[color:var(--line)] px-2 py-1 text-xs"
       />
       <div className="mt-2 flex gap-2">
-        <button onClick={addRow} className="text-xs text-navy hover:underline">
+        <button onClick={addRow} className="text-xs text-[color:var(--accent)] hover:underline">
           + Fila
         </button>
         <button
           onClick={save}
-          className="rounded bg-navy px-3 py-1 text-xs font-medium text-white hover:bg-navy-700"
+          className="btn-primary ring-focus rounded px-3 py-1 text-xs"
         >
           Guardar tabla
         </button>
@@ -390,7 +393,7 @@ function IconBtn({
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className="h-6 w-6 rounded border border-gray-200 bg-white text-xs text-ink-soft hover:bg-gray-50 disabled:opacity-30"
+      className="h-6 w-6 rounded border border-[color:var(--line)] bg-[color:var(--surface)] text-xs text-ink-soft hover:bg-[color:var(--surface-2)] disabled:opacity-30"
     >
       {children}
     </button>
