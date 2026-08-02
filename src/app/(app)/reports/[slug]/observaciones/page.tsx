@@ -99,6 +99,7 @@ export default async function ObservacionesPage({
         b.annotations.map((a) => ({
           id: a.id,
           status: a.status,
+          authorId: a.authorId,
           authorName: a.author.name,
           createdAt: a.createdAt.toISOString(),
           body: a.body,
@@ -166,6 +167,7 @@ export default async function ObservacionesPage({
           chapters={panelChapters}
           canEdit={access.canEdit}
           canComment={access.canComment}
+          currentUserId={user.id}
         />
       </div>
     </>

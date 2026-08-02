@@ -6,6 +6,8 @@ import { VoiceInput } from "./VoiceInput";
 import {
   replyToAnnotation,
   setAnnotationStatus,
+  updateAnnotationBody,
+  deleteAnnotation,
 } from "@/app/actions/annotations";
 
 export type PanelReply = {
@@ -19,6 +21,7 @@ export type PanelReply = {
 export type PanelObservation = {
   id: string;
   status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED";
+  authorId: string;
   authorName: string;
   createdAt: string;
   body: string;
@@ -47,10 +50,12 @@ export function ObservationPanel({
   chapters,
   canEdit,
   canComment,
+  currentUserId,
 }: {
   chapters: PanelChapter[];
   canEdit: boolean;
   canComment: boolean;
+  currentUserId: string;
 }) {
   const total = chapters.reduce((n, c) => n + c.observations.length, 0);
 
@@ -80,6 +85,7 @@ export function ObservationPanel({
                   obs={o}
                   canEdit={canEdit}
                   canComment={canComment}
+                  currentUserId={currentUserId}
                 />
               ))}
             </div>
@@ -94,15 +100,45 @@ function ObservationCard({
   obs,
   canEdit,
   canComment,
+  currentUserId,
 }: {
   obs: PanelObservation;
   canEdit: boolean;
   canComment: boolean;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const [reply, setReply] = useState("");
   const [pending, setPending] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(obs.body);
   const meta = statusMeta[obs.status];
+
+  const isOwner = obs.authorId === currentUserId;
+  const canDelete = isOwner || canEdit;
+
+  const saveEdit = async () => {
+    if (!draft.trim()) return;
+    setPending(true);
+    try {
+      await updateAnnotationBody(obs.id, draft.trim());
+      setEditing(false);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!confirm("¿Eliminar esta observación? No se puede deshacer.")) return;
+    setPending(true);
+    try {
+      await deleteAnnotation(obs.id);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
 
   const sendReply = async (isResolution: boolean) => {
     if (!reply.trim()) return;
@@ -139,11 +175,67 @@ function ObservationCard({
 
       {/* Observación del revisor */}
       <div className="mt-3 flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-xs text-ink-soft">
             {obs.authorName} · {new Date(obs.createdAt).toLocaleDateString("es-CL")}
           </div>
-          <p className="mt-1 text-ink">{obs.body}</p>
+          {editing ? (
+            <div className="mt-1">
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={3}
+                autoFocus
+                className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm text-ink focus:border-navy focus:outline-none"
+              />
+              <div className="mt-1 flex gap-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={pending || !draft.trim()}
+                  className="rounded-md bg-navy px-3 py-1 text-xs font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => {
+                    setDraft(obs.body);
+                    setEditing(false);
+                  }}
+                  className="rounded-md px-3 py-1 text-xs text-ink-soft hover:bg-gray-100"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="mt-1 text-ink">{obs.body}</p>
+              {(isOwner || canDelete) && (
+                <div className="mt-1 flex gap-3 text-xs">
+                  {isOwner && (
+                    <button
+                      onClick={() => {
+                        setDraft(obs.body);
+                        setEditing(true);
+                      }}
+                      className="text-navy hover:underline"
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={remove}
+                      disabled={pending}
+                      className="text-red-600 hover:underline disabled:opacity-50"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
         <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${meta.cls}`}>
           {meta.label}

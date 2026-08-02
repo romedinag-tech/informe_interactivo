@@ -31,8 +31,8 @@ Estado tras la sesión autónoma. ✅ hecho · ⏳ pendiente · esfuerzo: 🟢�
 
 ## Pendiente ⏳
 
-- 🟡 **Observaciones editables**: botón para **editar / corregir / eliminar** cada
-  observación del revisor (hoy solo se crean y responden).
+- ✅ **Observaciones editables**: botones **Editar** y **Eliminar** en el panel de
+  observaciones (autor edita/elimina las suyas; el consultor puede eliminar).
 - 🟢 **Mapas temáticos restantes**: colocar el explorador (coropleta) en los demás
   placeholders de mapa, cada uno con su indicador por defecto.
 - 🟢 **Documento congelado adjunto al envío** (opcional): hoy el consultor ve las

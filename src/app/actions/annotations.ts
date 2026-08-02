@@ -45,6 +45,39 @@ export async function createAnnotation(input: z.infer<typeof createSchema>) {
   return { id: annotation.id };
 }
 
+// ── Editar el texto de una observación (solo el autor) ──
+export async function updateAnnotationBody(annotationId: string, body: string) {
+  const user = await requireUser();
+  const text = body.trim();
+  if (!text) throw new Error("VACIO");
+
+  const annotation = await prisma.annotation.findUnique({
+    where: { id: annotationId },
+    select: { authorId: true, reportId: true },
+  });
+  if (!annotation) throw new Error("NO_ENCONTRADO");
+  if (annotation.authorId !== user.id) throw new Error("SIN_PERMISO");
+
+  await prisma.annotation.update({ where: { id: annotationId }, data: { body: text } });
+  revalidatePath("/reports", "layout");
+}
+
+// ── Eliminar una observación (el autor, o el consultor del informe) ──
+export async function deleteAnnotation(annotationId: string) {
+  const user = await requireUser();
+  const annotation = await prisma.annotation.findUnique({
+    where: { id: annotationId },
+    select: { authorId: true, reportId: true },
+  });
+  if (!annotation) throw new Error("NO_ENCONTRADO");
+
+  const access = await getReportAccess(annotation.reportId, user.id);
+  if (annotation.authorId !== user.id && !access.canEdit) throw new Error("SIN_PERMISO");
+
+  await prisma.annotation.delete({ where: { id: annotationId } });
+  revalidatePath("/reports", "layout");
+}
+
 // ── Responder / contrapropuesta del consultor ──
 const replySchema = z.object({
   annotationId: z.string().min(1),
