@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NARRATOR_VOICES, DEFAULT_VOICE_ID } from "@/lib/voices";
 
 export type AudioChapter = { id: string; title: string; text: string };
 
@@ -10,7 +9,7 @@ type Source = "none" | "elevenlabs" | "browser";
 
 const SPEEDS = [1, 1.5, 2] as const;
 
-// Reproductor flotante de narración por capítulo.
+// Reproductor flotante de narración por capítulo (voces alternadas mujer/hombre).
 export function AudioPlayer({
   reportSlug,
   chapters,
@@ -22,7 +21,6 @@ export function AudioPlayer({
   const [status, setStatus] = useState<Status>("idle");
   const [source, setSource] = useState<Source>("none");
   const [open, setOpen] = useState(false);
-  const [voiceId, setVoiceId] = useState<string>(DEFAULT_VOICE_ID);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -47,10 +45,10 @@ export function AudioPlayer({
 
   useEffect(() => cleanup, [cleanup]);
 
-  // Desplaza el documento para "seguir" la narración de un capítulo.
   const scrollToChapter = (i: number) => {
-    const el = document.getElementById(`ch-${chapters[i].id}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .getElementById(`ch-${chapters[i].id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const followProgress = (i: number, progress: number) => {
     if (!autoScrollRef.current) return;
@@ -64,10 +62,7 @@ export function AudioPlayer({
   const speakBrowser = useCallback(
     (text: string, onEnd: () => void) => {
       const synth = window.speechSynthesis;
-      if (!synth) {
-        setStatus("idle");
-        return;
-      }
+      if (!synth) return setStatus("idle");
       synth.cancel();
       const chunks = text.match(/[^.!?]+[.!?]*/g) ?? [text];
       let i = 0;
@@ -91,7 +86,7 @@ export function AudioPlayer({
   );
 
   const playChapter = useCallback(
-    async (i: number, useVoice: string) => {
+    async (i: number) => {
       cleanup();
       if (i < 0 || i >= chapters.length) return;
       setIdx(i);
@@ -99,9 +94,7 @@ export function AudioPlayer({
       if (autoScrollRef.current) scrollToChapter(i);
 
       try {
-        const res = await fetch(
-          `/api/reports/${reportSlug}/audio/${chapters[i].id}?voice=${encodeURIComponent(useVoice)}`
-        );
+        const res = await fetch(`/api/reports/${reportSlug}/audio/${chapters[i].id}`);
         const ct = res.headers.get("Content-Type") ?? "";
         if (ct.includes("audio")) {
           const blob = await res.blob();
@@ -114,7 +107,7 @@ export function AudioPlayer({
             if (audio.duration > 0) followProgress(i, audio.currentTime / audio.duration);
           };
           audio.onended = () => {
-            if (i + 1 < chapters.length) playChapter(i + 1, useVoice);
+            if (i + 1 < chapters.length) playChapter(i + 1);
             else setStatus("idle");
           };
           setSource("elevenlabs");
@@ -122,7 +115,7 @@ export function AudioPlayer({
           setStatus("playing");
         } else {
           speakBrowser(chapters[i].text, () => {
-            if (i + 1 < chapters.length) playChapter(i + 1, useVoice);
+            if (i + 1 < chapters.length) playChapter(i + 1);
             else setStatus("idle");
           });
         }
@@ -160,16 +153,9 @@ export function AudioPlayer({
     setSource("none");
   };
 
-  // Cambiar velocidad en caliente (audio nativo).
   const changeSpeed = (s: (typeof SPEEDS)[number]) => {
     setSpeed(s);
     if (audioRef.current) audioRef.current.playbackRate = s;
-  };
-
-  // Cambiar voz reinicia el capítulo actual con la nueva voz.
-  const changeVoice = (v: string) => {
-    setVoiceId(v);
-    if (status === "playing" || status === "paused") playChapter(idx, v);
   };
 
   if (chapters.length === 0) return null;
@@ -192,15 +178,11 @@ export function AudioPlayer({
       {open && (
         <div className="surface-card fixed bottom-4 right-4 z-40 w-[21rem] max-w-[calc(100vw-2rem)] p-4 shadow-2xl">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                Narración
-                {source === "browser" && (
-                  <span className="ml-1 font-normal normal-case text-amber-600">
-                    (voz del navegador)
-                  </span>
-                )}
-              </div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+              Narración{" "}
+              <span className="font-normal normal-case">
+                {source === "browser" ? "(voz del navegador)" : "· voces alternadas"}
+              </span>
             </div>
             <button
               onClick={() => {
@@ -214,13 +196,12 @@ export function AudioPlayer({
             </button>
           </div>
 
-          {/* Selector de capítulo */}
           <select
             value={idx}
             onChange={(e) => {
               const i = Number(e.target.value);
               setIdx(i);
-              if (status === "playing") playChapter(i, voiceId);
+              if (status === "playing") playChapter(i);
               else if (autoScroll) scrollToChapter(i);
             }}
             className="mt-2 w-full truncate rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-ink"
@@ -233,10 +214,9 @@ export function AudioPlayer({
             ))}
           </select>
 
-          {/* Transporte */}
           <div className="mt-3 flex items-center justify-center gap-2">
             <button
-              onClick={() => playChapter(idx - 1, voiceId)}
+              onClick={() => playChapter(idx - 1)}
               disabled={idx === 0}
               className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 disabled:opacity-30"
               title="Anterior"
@@ -245,9 +225,7 @@ export function AudioPlayer({
             </button>
             {status === "idle" || status === "paused" ? (
               <button
-                onClick={() =>
-                  status === "paused" ? togglePause() : playChapter(idx, voiceId)
-                }
+                onClick={() => (status === "paused" ? togglePause() : playChapter(idx))}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-navy text-white hover:bg-navy-700"
                 title="Reproducir"
               >
@@ -265,7 +243,7 @@ export function AudioPlayer({
               </button>
             )}
             <button
-              onClick={() => playChapter(idx + 1, voiceId)}
+              onClick={() => playChapter(idx + 1)}
               disabled={idx >= chapters.length - 1}
               className="rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 disabled:opacity-30"
               title="Siguiente"
@@ -274,25 +252,14 @@ export function AudioPlayer({
             </button>
           </div>
 
-          {/* Voz + velocidad */}
           <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-            <div className="flex overflow-hidden rounded-full border border-gray-200">
-              {NARRATOR_VOICES.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => changeVoice(v.id)}
-                  className={`px-2.5 py-1 ${voiceId === v.id ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
-                >
-                  {v.label}
-                </button>
-              ))}
-            </div>
+            <span className="text-ink-soft">Velocidad</span>
             <div className="flex overflow-hidden rounded-full border border-gray-200">
               {SPEEDS.map((s) => (
                 <button
                   key={s}
                   onClick={() => changeSpeed(s)}
-                  className={`px-2 py-1 ${speed === s ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
+                  className={`px-2.5 py-1 ${speed === s ? "bg-navy text-white" : "text-ink-soft hover:bg-gray-100"}`}
                 >
                   {s}×
                 </button>
@@ -300,7 +267,6 @@ export function AudioPlayer({
             </div>
           </div>
 
-          {/* Auto-scroll */}
           <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-ink-soft">
             <input
               type="checkbox"

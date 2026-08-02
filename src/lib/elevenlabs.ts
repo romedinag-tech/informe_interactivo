@@ -67,6 +67,30 @@ export async function synthesizeSpeech(
   return Buffer.from(arrayBuffer);
 }
 
+// Identificador del esquema de voces (para la clave de caché).
+export const VOICE_SCHEME =
+  "alt-" + NARRATOR_VOICES.map((v) => v.id.slice(0, 4)).join("-");
+
+// Narración con voces alternadas (segmento a segmento: mujer, hombre, mujer…).
+// Cuesta lo mismo que una sola voz (mismos caracteres). Genera en paralelo para
+// no exceder el tiempo de función y concatena el audio en un solo mp3.
+export async function synthesizeAlternating(
+  segments: string[],
+  opts?: { model?: string; dictLocators?: DictLocator[] }
+): Promise<Buffer> {
+  const clean = segments.map((s) => s.trim()).filter(Boolean);
+  const buffers = await Promise.all(
+    clean.map((seg, i) =>
+      synthesizeSpeech(seg, {
+        voiceId: NARRATOR_VOICES[i % NARRATOR_VOICES.length].id,
+        model: opts?.model,
+        dictLocators: opts?.dictLocators,
+      })
+    )
+  );
+  return Buffer.concat(buffers);
+}
+
 // Crea un diccionario de pronunciación a partir de reglas de "alias" (reemplazo
 // de texto: p.ej. "IMIV" -> "ímiv"). Los alias funcionan con cualquier modelo.
 export async function createPronunciationDictionary(

@@ -249,7 +249,10 @@ model AudioAsset {
   voiceId  String
   model    String
 
-  path     String // ruta del .mp3 en disco (.audio-cache/…)
+  // El mp3 se guarda EN LA BASE (durable) → se genera una sola vez y no se
+  // vuelve a llamar a ElevenLabs, incluso tras redeploys en serverless.
+  data     Bytes?
+  path     String? // (legado) ruta en disco si existiera
   mimeType String @default("audio/mpeg")
   bytes    Int    @default(0)
 

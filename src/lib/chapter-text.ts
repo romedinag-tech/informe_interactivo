@@ -4,10 +4,11 @@ type BlockLike = { type: string; content: Prisma.JsonValue };
 
 // Construye el texto que se narrará para un capítulo: título + párrafos,
 // subtítulos y pies de figuras/tablas (omite datos tabulares crudos).
-export function chapterNarrationText(
+// Segmentos narrables (título + cada párrafo/subtítulo/pie), para alternar voces.
+export function chapterNarrationSegments(
   title: string,
   blocks: BlockLike[]
-): string {
+): string[] {
   const parts: string[] = [title];
   for (const b of blocks) {
     const c = (b.content ?? {}) as Record<string, unknown>;
@@ -18,5 +19,14 @@ export function chapterNarrationText(
         parts.push(c.caption.trim());
     }
   }
-  return parts.join(". ").replace(/\.\./g, ".");
+  return parts;
+}
+
+export function chapterNarrationText(
+  title: string,
+  blocks: BlockLike[]
+): string {
+  return chapterNarrationSegments(title, blocks)
+    .join(". ")
+    .replace(/\.\./g, ".");
 }

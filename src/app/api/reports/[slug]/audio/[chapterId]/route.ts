@@ -1,34 +1,27 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { prisma } from "@/lib/db";
 import { currentUser, getReportAccess } from "@/lib/rbac";
 import {
   audioConfig,
   isElevenLabsConfigured,
-  synthesizeSpeech,
+  synthesizeAlternating,
   createPronunciationDictionary,
-  resolveVoiceId,
+  VOICE_SCHEME,
   type DictLocator,
 } from "@/lib/elevenlabs";
-import { chapterNarrationText } from "@/lib/chapter-text";
+import { chapterNarrationSegments } from "@/lib/chapter-text";
 import { buildPronRules, pronRulesHash } from "@/lib/pronunciation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// En serverless (Vercel) el cwd es de solo lectura; el temporal sí es escribible.
-const CACHE_DIR = join(tmpdir(), "informes-audio-cache");
+export const maxDuration = 60; // segmentos en paralelo; margen para capítulos largos
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ slug: string; chapterId: string }> }
 ) {
   const { slug, chapterId } = await params;
-  const voiceParam = new URL(req.url).searchParams.get("voice");
 
   const user = await currentUser();
   if (!user) return new NextResponse("No autenticado", { status: 401 });
@@ -49,12 +42,11 @@ export async function GET(
   if (!access.canView) return new NextResponse("Sin permiso", { status: 403 });
 
   const blocks = chapter.sections.flatMap((s) => s.blocks);
-  const text = chapterNarrationText(chapter.title, blocks);
-  const voiceId = resolveVoiceId(voiceParam);
+  const segments = chapterNarrationSegments(chapter.title, blocks);
+  const text = segments.join(" ");
   const { model } = audioConfig;
 
   // Diccionario de pronunciación (derivado del glosario del informe).
-  // Se crea una vez y se reutiliza; si cambian las reglas, se regenera.
   const report = await prisma.report.findUnique({
     where: { id: chapter.report.id },
     select: {
@@ -75,10 +67,7 @@ export async function GET(
       let dictId = report.pronunciationDictId;
       if (!dictId || report.pronunciationHash !== hash) {
         try {
-          const created = await createPronunciationDictionary(
-            `informe-${slug}`,
-            rules
-          );
+          const created = await createPronunciationDictionary(`informe-${slug}`, rules);
           dictId = created.id;
           dictVersion = created.versionId;
           await prisma.report.update({
@@ -94,24 +83,20 @@ export async function GET(
         }
       }
       if (dictId && dictVersion) {
-        dictLocators = [
-          { pronunciation_dictionary_id: dictId, version_id: dictVersion },
-        ];
+        dictLocators = [{ pronunciation_dictionary_id: dictId, version_id: dictVersion }];
       }
     }
   }
 
-  // La versión del diccionario entra en la clave de caché: si cambia la
-  // pronunciación, el audio se regenera.
+  // Clave de caché: esquema de voces + modelo + versión del diccionario + texto.
   const textHash = createHash("sha256")
-    .update(`${voiceId}|${model}|${dictVersion}|${text}`)
+    .update(`${VOICE_SCHEME}|${model}|${dictVersion}|${text}`)
     .digest("hex");
 
-  // 1) ¿Está en caché?
+  // 1) ¿Está en la base? (durable: no se vuelve a llamar a ElevenLabs)
   const cached = await prisma.audioAsset.findUnique({ where: { textHash } });
-  if (cached && existsSync(cached.path)) {
-    const buf = await readFile(cached.path);
-    return audioResponse(buf, true);
+  if (cached?.data) {
+    return audioResponse(Buffer.from(cached.data), true);
   }
 
   // 2) Sin ElevenLabs configurado → el cliente usa la voz del navegador.
@@ -122,39 +107,35 @@ export async function GET(
     );
   }
 
-  // 3) Generar con ElevenLabs (con el diccionario de pronunciación si existe).
+  // 3) Generar con voces alternadas (mujer/hombre) + diccionario de pronunciación.
   let audio: Buffer;
   try {
-    audio = await synthesizeSpeech(text, { voiceId, model, dictLocators });
+    audio = await synthesizeAlternating(segments, { model, dictLocators });
   } catch (e) {
-    // Falla la API → respaldo del navegador en vez de romper la lectura.
     return NextResponse.json(
       { fallback: "browser", reason: String(e).slice(0, 200) },
       { status: 200 }
     );
   }
 
-  // 4) Cachear es best-effort: en serverless el disco es efímero/limitado, pero
-  //    si falla igual servimos el audio ya generado.
+  // 4) Guardar en la base (best-effort) para no regenerar nunca más.
+  const bytes = new Uint8Array(audio);
   try {
-    await mkdir(CACHE_DIR, { recursive: true });
-    const filePath = join(CACHE_DIR, `${textHash}.mp3`);
-    await writeFile(filePath, audio);
     await prisma.audioAsset.upsert({
       where: { textHash },
       create: {
         reportId: chapter.report.id,
         chapterId: chapter.id,
         textHash,
-        voiceId,
+        voiceId: VOICE_SCHEME,
         model,
-        path: filePath,
-        bytes: audio.length,
+        data: bytes,
+        bytes: bytes.length,
       },
-      update: { path: filePath, bytes: audio.length },
+      update: { data: bytes, bytes: bytes.length },
     });
   } catch {
-    /* sin caché persistente, pero el audio se entrega igual */
+    /* si falla el guardado, igual servimos el audio */
   }
 
   return audioResponse(audio, false);
@@ -166,7 +147,7 @@ function audioResponse(buf: Buffer, cacheHit: boolean) {
     headers: {
       "Content-Type": "audio/mpeg",
       "Content-Length": String(buf.length),
-      "Cache-Control": "private, max-age=3600",
+      "Cache-Control": "private, max-age=86400",
       "X-Audio-Cache": cacheHit ? "HIT" : "MISS",
     },
   });
