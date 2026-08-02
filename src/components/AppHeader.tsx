@@ -22,7 +22,7 @@ export function AppHeader({ user }: { user: SessionUser }) {
       <div className="mx-auto flex h-11 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link href="/reports" className="ring-focus flex items-center gap-2 rounded text-ink">
-            <BrandMark slot="header" className="h-5 w-5 text-[color:var(--accent)]" />
+            <BrandMark slot="header" className="h-6 w-auto text-[color:var(--accent)]" />
           </Link>
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-medium"

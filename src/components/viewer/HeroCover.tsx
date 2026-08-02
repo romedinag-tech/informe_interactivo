@@ -178,8 +178,19 @@ export function HeroCover({
           </div>
         )}
 
+        {/* Co-branding del proveedor */}
+        <div className="mt-6 flex items-center gap-2">
+          {brand.logos.isotype && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brand.logos.isotype} alt="" aria-hidden className="h-7 w-auto" />
+          )}
+          <span className="text-[11px]" style={{ color: softColor }}>
+            Herramienta provista por {brand.providerShort}
+          </span>
+        </div>
+
         {hero.credit && (
-          <p className="mt-4 text-[10px]" style={{ color: softColor }}>
+          <p className="mt-3 text-[10px]" style={{ color: softColor }}>
             {hero.credit}
           </p>
         )}

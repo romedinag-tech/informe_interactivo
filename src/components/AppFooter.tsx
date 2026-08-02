@@ -1,4 +1,5 @@
 import { brand } from "@/lib/brand";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { APP_VERSION } from "@/lib/version";
 
 // Pie institucional. Separa la marca del PROVEEDOR (quien ofrece la herramienta)
@@ -10,12 +11,15 @@ export function AppFooter() {
       style={{ borderColor: "var(--line)", background: "var(--surface)" }}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1" style={{ color: "var(--faint)" }}>
-          {brand.legal.map((line, i) => (
-            <p key={i} className={i === 0 ? "font-medium text-[color:var(--muted)]" : ""}>
-              {line}
-            </p>
-          ))}
+        <div className="flex items-start gap-3">
+          <BrandMark slot="footer" className="h-9 w-auto shrink-0" showName={false} />
+          <div className="space-y-1" style={{ color: "var(--faint)" }}>
+            {brand.legal.map((line, i) => (
+              <p key={i} className={i === 0 ? "font-medium text-[color:var(--muted)]" : ""}>
+                {line}
+              </p>
+            ))}
+          </div>
         </div>
         <div className="flex flex-col items-start gap-1 sm:items-end" style={{ color: "var(--faint)" }}>
           {brand.client && (

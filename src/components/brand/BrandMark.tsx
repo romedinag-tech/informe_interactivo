@@ -45,6 +45,26 @@ export function BrandMark({
   const theme = useTheme();
   const logo = pickLogo(slot, theme);
 
+  // Header: siempre marca + nombre (la marca es el isotipo, versátil en todo tema).
+  if (slot === "header") {
+    return (
+      <span className="inline-flex items-center gap-2">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt={brand.platformName} className={className} />
+        ) : (
+          <PlatformMark className={className} />
+        )}
+        {showName && (
+          <span className="text-[13px] font-semibold uppercase tracking-[0.14em]">
+            {brand.platformName}
+          </span>
+        )}
+      </span>
+    );
+  }
+
+  // Otros slots: solo el logo (o fallback marca + nombre).
   if (logo) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={logo} alt={brand.platformName} className={className} />;

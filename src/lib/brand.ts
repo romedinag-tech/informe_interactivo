@@ -64,12 +64,10 @@ export const brand: BrandConfig = {
   favicon: "📘",
   // accent: "#1e4d88", // descomentar para forzar acento de marca (valida AA)
   logos: {
-    // Deja aquí las rutas cuando cargues los assets en /public/brand:
-    // lockup: "/brand/vr-lockup.svg",
-    // lockupDark: "/brand/vr-lockup-dark.svg",
-    // vertical: "/brand/vr-vertical.svg",
-    // isotype: "/brand/vr-isotipo.svg",
-    // mono: "/brand/vr-mono.svg",
+    // El isotipo (transparente) es versátil: se ve bien en claro y oscuro. El
+    // lockup tiene texto navy → solo apto para fondos claros.
+    isotype: "/brand/isotipo.png",
+    lockup: "/brand/lockup.png",
   },
   client: {
     name: "Ministerio de Transportes y Telecomunicaciones · SECTRA",
@@ -79,6 +77,11 @@ export const brand: BrandConfig = {
     "Herramienta provista por Inversiones y Asesorías V&R Ltda.",
     "Documento para revisión ministerial. Uso restringido a las partes autorizadas.",
   ],
+  hero: {
+    video: "/brand/hero.mp4",
+    poster: "/brand/hero-poster.jpg",
+    credit: "Video: metraje aéreo de stock con licencia de uso libre.",
+  },
 };
 
 /** Contexto de uso de un logo, para elegir la mejor variante disponible. */
@@ -96,7 +99,8 @@ export function pickLogo(
   const dark = theme === "dark";
   switch (slot) {
     case "header":
-      return (dark && l.lockupDark) || l.lockup || l.isotype || null;
+      // Isotipo primero: es el único versátil en todos los temas.
+      return l.isotype || (dark && l.lockupDark) || l.lockup || null;
     case "cover":
       return l.vertical || l.lockup || l.isotype || null;
     case "isotype":

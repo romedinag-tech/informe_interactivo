@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   title: brand.platformName,
   description:
     "Plataforma de informes técnicos interactivos con revisión ministerial y anotaciones contextuales.",
+  icons: brand.logos.isotype ? { icon: "/brand/icon.png" } : undefined,
 };
 
 // Fija el tema antes del primer render para evitar parpadeo (FOUC).
