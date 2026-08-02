@@ -252,9 +252,13 @@ model Annotation {
 
   // Anclaje fino DENTRO del bloque (opcional). Si es null, la observación
   // aplica al bloque completo (tabla, gráfico, subtítulo).
-  quote      String? // texto exacto seleccionado (para re-anclar si el contenido cambia)
-  rangeStart Int? // offset de caracter inicial dentro del texto del bloque
-  rangeEnd   Int? // offset de caracter final
+  // Selectores redundantes (estilo W3C Web Annotation) para sobrevivir a
+  // ediciones: cita exacta + contexto (prefix/suffix) + posición.
+  quote      String? // TextQuoteSelector.exact
+  prefix     String? // ~40 caracteres antes de la cita (desambigua repeticiones)
+  suffix     String? // ~40 caracteres después de la cita
+  rangeStart Int? // TextPositionSelector.start (offset dentro del texto del bloque)
+  rangeEnd   Int? // TextPositionSelector.end
 
   body     String // el texto de la observación (dictado o tecleado)
   status   AnnotationStatus   @default(OPEN)

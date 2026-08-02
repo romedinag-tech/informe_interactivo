@@ -69,6 +69,8 @@ export default async function ReportPage({
     id: a.id,
     blockId: a.blockId,
     quote: a.quote,
+    prefix: a.prefix,
+    suffix: a.suffix,
     rangeStart: a.rangeStart,
     rangeEnd: a.rangeEnd,
     body: a.body,
