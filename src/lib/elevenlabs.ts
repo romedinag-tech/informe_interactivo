@@ -71,22 +71,43 @@ export async function synthesizeSpeech(
 export const VOICE_SCHEME =
   "alt-" + NARRATOR_VOICES.map((v) => v.id.slice(0, 4)).join("-");
 
+// Límite de solicitudes simultáneas a ElevenLabs (los planes tienen un tope de
+// concurrencia; superarlo da 429 concurrent_limit_exceeded).
+const CONCURRENCY = Number(process.env.ELEVENLABS_CONCURRENCY || 2);
+
+// Mapea con un límite de concurrencia preservando el orden.
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, i: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker())
+  );
+  return results;
+}
+
 // Narración con voces alternadas (segmento a segmento: mujer, hombre, mujer…).
-// Cuesta lo mismo que una sola voz (mismos caracteres). Genera en paralelo para
-// no exceder el tiempo de función y concatena el audio en un solo mp3.
+// Cuesta lo mismo que una sola voz (mismos caracteres). Concatena en un mp3.
 export async function synthesizeAlternating(
   segments: string[],
   opts?: { model?: string; dictLocators?: DictLocator[] }
 ): Promise<Buffer> {
   const clean = segments.map((s) => s.trim()).filter(Boolean);
-  const buffers = await Promise.all(
-    clean.map((seg, i) =>
-      synthesizeSpeech(seg, {
-        voiceId: NARRATOR_VOICES[i % NARRATOR_VOICES.length].id,
-        model: opts?.model,
-        dictLocators: opts?.dictLocators,
-      })
-    )
+  const buffers = await mapLimit(clean, CONCURRENCY, (seg, i) =>
+    synthesizeSpeech(seg, {
+      voiceId: NARRATOR_VOICES[i % NARRATOR_VOICES.length].id,
+      model: opts?.model,
+      dictLocators: opts?.dictLocators,
+    })
   );
   return Buffer.concat(buffers);
 }

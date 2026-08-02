@@ -25,18 +25,13 @@ export function AudioPlayer({
   const [autoScroll, setAutoScroll] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
   const autoScrollRef = useRef(autoScroll);
   autoScrollRef.current = autoScroll;
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.src = "";
-    }
-    if (urlRef.current) {
-      URL.revokeObjectURL(urlRef.current);
-      urlRef.current = null;
+      audioRef.current.removeAttribute("src");
     }
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -93,34 +88,36 @@ export function AudioPlayer({
       setStatus("loading");
       if (autoScrollRef.current) scrollToChapter(i);
 
+      // Reproducción progresiva: el navegador empieza a sonar mientras carga,
+      // en vez de esperar la descarga completa. Si el servidor devuelve el
+      // respaldo JSON (sin ElevenLabs) o hay error, usa la voz del navegador.
+      const url = `/api/reports/${reportSlug}/audio/${chapters[i].id}`;
+      const audio = audioRef.current!;
+      let handled = false;
+      const fallback = () => {
+        if (handled) return;
+        handled = true;
+        speakBrowser(chapters[i].text, () => {
+          if (i + 1 < chapters.length) playChapter(i + 1);
+          else setStatus("idle");
+        });
+      };
+      audio.src = url;
+      audio.playbackRate = speed;
+      audio.ontimeupdate = () => {
+        if (audio.duration > 0) followProgress(i, audio.currentTime / audio.duration);
+      };
+      audio.onended = () => {
+        if (i + 1 < chapters.length) playChapter(i + 1);
+        else setStatus("idle");
+      };
+      audio.onerror = () => fallback();
+      setSource("elevenlabs");
       try {
-        const res = await fetch(`/api/reports/${reportSlug}/audio/${chapters[i].id}`);
-        const ct = res.headers.get("Content-Type") ?? "";
-        if (ct.includes("audio")) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          urlRef.current = url;
-          const audio = audioRef.current!;
-          audio.src = url;
-          audio.playbackRate = speed;
-          audio.ontimeupdate = () => {
-            if (audio.duration > 0) followProgress(i, audio.currentTime / audio.duration);
-          };
-          audio.onended = () => {
-            if (i + 1 < chapters.length) playChapter(i + 1);
-            else setStatus("idle");
-          };
-          setSource("elevenlabs");
-          await audio.play();
-          setStatus("playing");
-        } else {
-          speakBrowser(chapters[i].text, () => {
-            if (i + 1 < chapters.length) playChapter(i + 1);
-            else setStatus("idle");
-          });
-        }
+        await audio.play();
+        if (!handled) setStatus("playing");
       } catch {
-        speakBrowser(chapters[i].text, () => setStatus("idle"));
+        fallback();
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
