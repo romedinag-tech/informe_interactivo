@@ -1,0 +1,20 @@
+Actúa como un Diseñador UI/UX Senior especializado en diseño editorial web y tipografía digital. 
+Necesito que rediseñes la interfaz de este documento interactivo para llevarlo a un nivel visual "premium", 
+moderno y de aspecto ejecutivo, aplicando las siguientes directrices de código CSS/HTML:
+
+1. TIPOGRAFÍA Y ESCALA VISUAL:
+- Utiliza una combinación tipográfica refinada (ej. 'Plus Jakarta Sans' o 'Inter' para interfaz y textos de lectura, y una fuente serif elegante para títulos principales si aplica).
+- Establece una escala modular clara: los títulos H2 y H3 deben diferenciarse drásticamente en peso, tamaño y espaciado (letter-spacing sutil).
+- Limita el ancho del texto de lectura central (max-width: 680px - 720px) centrado dentro de su contenedor para evitar líneas de texto demasiado extensas.
+
+2. CONTENEDORES Y ESTRUCTURA (DISEÑO MODULAR):
+- Elimina los bordes grises simples de 1px. Reemplázalos por tarjetas limpias sobre fondo general sutil (#f8fafc o similar), utilizando tarjetas blancas con bordes sutiles y sombras muy suaves (ej. box-shadow: 0 10.5px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04)).
+- Dale esquinas redondeadas consistentes a todos los bloques y botones (border-radius de 12px o 16px).
+
+3. BARRA LATERAL DE CONTENIDOS:
+- Diseña el índice izquierdo de forma más limpia, añadiendo indicadores visuales discretos (una línea lateral o cambio de tono sutil) para el elemento activo ("1. Introducción"). Si hay muchos ítems, agruparlos visualmente con mejor espaciado (padding vertical más generoso).
+
+4. PALETA DE COLORES Y CONTRASTE:
+- Utiliza una paleta sobria pero sofisticada: blancos puros, grises neutros avanzados para textos secundarios, y un color de acento profesional (un azul marino profundo, un tinto elegante o un verde bosque suave) para los elementos interactivos activos, evitando los tonos planos industriales.
+
+Por favor, actualiza los estilos CSS y la estructura HTML necesaria para que el documento luzca impecable, moderno y sumamente profesional.
