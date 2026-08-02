@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/rbac";
 import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 
 export default async function AppLayout({
   children,
@@ -20,7 +21,10 @@ export default async function AppLayout({
         Saltar al contenido
       </a>
       <AppHeader user={user} />
-      <div id="contenido">{children}</div>
+      <div id="contenido" className="min-h-[calc(100vh-2.75rem)]">
+        {children}
+      </div>
+      <AppFooter />
     </div>
   );
 }

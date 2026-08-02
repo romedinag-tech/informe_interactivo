@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import { brand } from "@/lib/brand";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Informes Interactivos",
+  title: brand.platformName,
   description:
     "Plataforma de informes técnicos interactivos con revisión ministerial y anotaciones contextuales.",
 };

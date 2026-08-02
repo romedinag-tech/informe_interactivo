@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import type { SessionUser } from "@/lib/rbac";
-import { TalcaMark } from "@/components/viewer/TalcaMark";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { APP_VERSION, buildId } from "@/lib/version";
 
 const roleLabel: Record<string, string> = {
@@ -22,10 +22,7 @@ export function AppHeader({ user }: { user: SessionUser }) {
       <div className="mx-auto flex h-11 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link href="/reports" className="ring-focus flex items-center gap-2 rounded text-ink">
-            <TalcaMark className="h-5 w-5 text-[color:var(--accent)]" />
-            <span className="text-[13px] font-semibold uppercase tracking-[0.14em]">
-              Informes Interactivos
-            </span>
+            <BrandMark slot="header" className="h-5 w-5 text-[color:var(--accent)]" />
           </Link>
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-medium"

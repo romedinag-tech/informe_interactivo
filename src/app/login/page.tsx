@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useActionState } from "react";
 import { loginAction, type LoginState } from "./actions";
 import { useSearchParams } from "next/navigation";
+import { brand } from "@/lib/brand";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -58,9 +59,12 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="surface-card w-full max-w-sm p-8">
-        <h1 className="font-serif text-2xl text-ink">Informes Interactivos</h1>
+        <h1 className="font-serif text-2xl text-ink">{brand.platformName}</h1>
         <p className="mt-1 text-sm text-ink-soft">
           Acceso para consultores y revisores ministeriales.
+        </p>
+        <p className="mt-0.5 text-xs" style={{ color: "var(--faint)" }}>
+          Herramienta provista por {brand.providerShort}
         </p>
 
         {/* useSearchParams() requiere Suspense en el build de producción. */}
