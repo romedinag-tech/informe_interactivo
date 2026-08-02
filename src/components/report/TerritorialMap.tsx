@@ -19,12 +19,44 @@ const PALETTES: Record<string, string[]> = {
   div1: ["#b45c4e", "#d9a48f", "#efe9e0", "#8fb3a0", "#2f6b57"],
 };
 
-function quantileBreaks(values: number[], n = 5): number[] {
-  const v = values.filter((x) => typeof x === "number" && isFinite(x)).sort((a, b) => a - b);
-  if (v.length === 0) return [];
-  const breaks: number[] = [];
-  for (let i = 1; i < n; i++) breaks.push(v[Math.floor((i / n) * v.length)]);
-  return breaks;
+// Toma k colores repartidos a lo largo de la paleta (para usar menos clases).
+function samplePalette(palette: string[], k: number): string[] {
+  if (k <= 1) return [palette[palette.length - 1]];
+  if (k >= palette.length) return palette.slice(0, k);
+  const out: string[] = [];
+  for (let i = 0; i < k; i++) out.push(palette[Math.round((i * (palette.length - 1)) / (k - 1))]);
+  return out;
+}
+
+// Clasificación robusta: cuantiles ÚNICOS (nunca tramos repetidos) y, cuando el
+// 0 domina (p. ej. zonas sin colegio en "cobertura escolar"), lo separa en una
+// clase propia y gradúa solo los valores positivos, para que el mapa comunique.
+function classify(
+  values: number[],
+  palette: string[]
+): { breaks: number[]; colors: string[]; min: number; max: number } {
+  const sorted = values.filter((x) => typeof x === "number" && isFinite(x)).sort((a, b) => a - b);
+  if (!sorted.length) return { breaks: [], colors: [palette[palette.length - 1]], min: 0, max: 0 };
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  if (min === max) return { breaks: [], colors: [palette[palette.length - 1]], min, max };
+
+  const zeros = sorted.filter((x) => x === 0).length;
+  const zeroClass = min === 0 && zeros / sorted.length >= 0.15;
+  const pos = zeroClass ? sorted.filter((x) => x > 0) : sorted;
+  const nBins = zeroClass ? palette.length - 1 : palette.length;
+
+  const lo = zeroClass ? 0 : min;
+  const inner: number[] = [];
+  for (let i = 1; i < nBins; i++) {
+    const b = pos[Math.floor((i / nBins) * pos.length)];
+    const prev = inner.length ? inner[inner.length - 1] : lo;
+    if (b > prev && b < max) inner.push(b);
+  }
+  const breaks = zeroClass ? [0, ...inner] : inner;
+  const grad = samplePalette(palette, inner.length + 1);
+  const colors = zeroClass ? ["#d7d9de", ...grad] : grad;
+  return { breaks, colors, min, max };
 }
 function classOf(value: number, breaks: number[]): number {
   let i = 0;
@@ -76,7 +108,11 @@ export function TerritorialMap({
     return () => io.disconnect();
   }, []);
   const [legend, setLegend] = useState<
-    { label: string; unit: string; classes: { color: string; from: number; to: number }[] } | null
+    {
+      label: string;
+      unit: string;
+      classes: { color: string; from: number; to: number; single?: boolean }[];
+    } | null
   >(null);
 
   // Crea el mapa una vez (cuando ya es visible).
@@ -160,14 +196,12 @@ export function TerritorialMap({
     const scale = meta?.[3] ?? "seq";
     const palette = PALETTES[scale] ?? PALETTES.seq;
     const values = data.zonas.features.map((f) => Number((f.properties as Record<string, number>)?.[indicator]));
-    const breaks = quantileBreaks(values);
-    const min = Math.min(...values.filter(isFinite));
-    const max = Math.max(...values.filter(isFinite));
+    const { breaks, colors, min, max } = classify(values, palette);
 
     layer.setStyle((f) => {
       const val = Number((f?.properties as Record<string, number>)?.[indicator]);
-      const c = isFinite(val) ? palette[classOf(val, breaks)] : "#cccccc";
-      return { color: "#ffffff", weight: 0.4, opacity: 0.6, fillColor: c, fillOpacity: 0.75 };
+      const c = isFinite(val) ? colors[classOf(val, breaks)] : "#cccccc";
+      return { color: "#ffffff", weight: 0.4, opacity: 0.6, fillColor: c, fillOpacity: 0.78 };
     });
     layer.eachLayer((l) => {
       const feat = (l as unknown as { feature?: GeoJSON.Feature }).feature;
@@ -178,11 +212,11 @@ export function TerritorialMap({
       );
     });
 
-    const classes = palette.map((color, i) => ({
-      color,
-      from: i === 0 ? min : breaks[i - 1],
-      to: i === palette.length - 1 ? max : breaks[i],
-    }));
+    const classes = colors.map((color, i) => {
+      const from = i === 0 ? min : breaks[i - 1];
+      const to = i === colors.length - 1 ? max : breaks[i];
+      return { color, from, to, single: from === to };
+    });
     setLegend({ label: meta?.[1] ?? indicator, unit: meta?.[2] ?? "", classes });
   }, [indicator, status]);
 
@@ -217,7 +251,7 @@ export function TerritorialMap({
               <div key={i} className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-4 rounded-sm" style={{ background: c.color }} />
                 <span className="text-ink-soft">
-                  {fmt(c.from)} – {fmt(c.to)}
+                  {c.single ? fmt(c.from) : `${fmt(c.from)} – ${fmt(c.to)}`}
                 </span>
               </div>
             ))}
