@@ -123,12 +123,16 @@ export default async function ObservacionesPage({
 
   return (
     <>
-      <div className="no-print border-b border-gray-200 bg-white">
+      <div
+        className="no-print border-b"
+        style={{ background: "var(--surface)", borderColor: "var(--line)" }}
+      >
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-4">
             <Link
               href={`/reports/${report.slug}`}
-              className="text-sm text-navy hover:underline"
+              className="ring-focus rounded text-sm hover:underline"
+              style={{ color: "var(--accent)" }}
             >
               ← Volver
             </Link>
@@ -151,11 +155,11 @@ export default async function ObservacionesPage({
               <span key={i} className="text-ink-soft">
                 {r.user.name}:{" "}
                 {r.submittedAt ? (
-                  <span className="text-green-700">
+                  <span style={{ color: "var(--ok)" }}>
                     enviada el {new Date(r.submittedAt).toLocaleDateString("es-CL")}
                   </span>
                 ) : (
-                  <span className="text-amber-600">en revisión</span>
+                  <span style={{ color: "var(--warn)" }}>en revisión</span>
                 )}
               </span>
             ))}

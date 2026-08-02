@@ -25,9 +25,9 @@ export default async function ReportsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl text-navy">Informes</h1>
+          <h1 className="font-serif text-2xl text-ink">Informes</h1>
           <p className="mt-1 text-sm text-ink-soft">
             {isConsultor(user)
               ? "Todos los informes de la plataforma."
@@ -37,14 +37,14 @@ export default async function ReportsPage() {
         {isConsultor(user) && (
           <Link
             href="/reports/importar"
-            className="rounded-md bg-navy px-4 py-2 text-sm font-medium text-white hover:bg-navy-700"
+            className="btn-primary ring-focus shrink-0 rounded-md px-4 py-2 text-sm"
           >
             + Importar informe (.docx)
           </Link>
         )}
       </div>
 
-      <div className="mt-6 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+      <div className="surface-card mt-6 divide-y divide-[color:var(--line)] overflow-hidden">
         {reports.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-ink-soft">
             No hay informes disponibles.
@@ -53,23 +53,25 @@ export default async function ReportsPage() {
         {reports.map((r) => (
           <div
             key={r.id}
-            className="flex items-center justify-between px-4 py-4 hover:bg-gray-50"
+            className="flex items-center justify-between px-4 py-4 hover:bg-[color:var(--surface-2)]"
+            style={{ borderColor: "var(--line)" }}
           >
-            <Link href={`/reports/${r.slug}`} className="min-w-0 flex-1">
+            <Link href={`/reports/${r.slug}`} className="ring-focus min-w-0 flex-1 rounded">
               <div className="font-medium text-ink">{r.title}</div>
               {r.subtitle && (
                 <div className="text-sm text-ink-soft">{r.subtitle}</div>
               )}
             </Link>
             <div className="flex items-center gap-4 text-sm text-ink-soft">
-              <span>{r._count.annotations} observaciones</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs">
+              <span className="hidden sm:inline">{r._count.annotations} observaciones</span>
+              <span className="badge badge-neutral">
                 {statusLabel[r.status] ?? r.status}
               </span>
               {isConsultor(user) && (
                 <Link
                   href={`/reports/${r.slug}/editar`}
-                  className="rounded-md border border-gray-300 px-3 py-1 text-xs text-navy hover:bg-navy hover:text-white"
+                  className="ring-focus rounded-md border px-3 py-1 text-xs hover:bg-[color:var(--surface-2)]"
+                  style={{ borderColor: "var(--line)", color: "var(--accent)" }}
                 >
                   Editar
                 </Link>

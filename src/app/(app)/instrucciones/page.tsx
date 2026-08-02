@@ -33,7 +33,7 @@ export default async function InstruccionesPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
       <div className="flex items-center gap-3">
-        <TalcaMark className="h-9 w-9 text-navy" />
+        <TalcaMark className="h-9 w-9 text-[color:var(--accent)]" />
         <div>
           <h1 className="font-serif text-2xl text-ink">Instrucciones de uso</h1>
           <p className="text-sm text-ink-soft">
@@ -43,7 +43,7 @@ export default async function InstruccionesPage() {
       </div>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-navy">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--accent)]">
           Lectura
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -69,7 +69,7 @@ export default async function InstruccionesPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-navy">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--accent)]">
           Observaciones (revisores)
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -95,7 +95,7 @@ export default async function InstruccionesPage() {
 
       {consultor && (
         <section className="mt-8">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-navy">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--accent)]">
             Edición (consultor)
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -114,7 +114,7 @@ export default async function InstruccionesPage() {
       <div className="mt-10">
         <Link
           href="/reports"
-          className="rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white hover:bg-navy-700"
+          className="btn-primary ring-focus rounded-lg px-4 py-2 text-sm"
         >
           Ir a los informes
         </Link>

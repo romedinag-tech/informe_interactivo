@@ -124,10 +124,10 @@ export default async function ReportPage({
         className="sticky top-11 z-30 border-b backdrop-blur"
         style={{ background: "color-mix(in srgb, var(--surface) 90%, transparent)", borderColor: "var(--line)" }}
       >
-        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-4 py-2.5">
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-2 px-4 py-2.5 sm:gap-4">
           {/* Identidad del documento (agrupada) */}
           <div className="flex min-w-0 items-center gap-3">
-            <TalcaMark className="h-9 w-9 shrink-0 text-navy" />
+            <TalcaMark className="hidden h-9 w-9 shrink-0 text-[color:var(--accent)] sm:block" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="truncate font-serif text-base font-semibold text-ink md:text-lg">
@@ -147,7 +147,7 @@ export default async function ReportPage({
             {access.canEdit && (
               <Link
                 href={`/reports/${report.slug}/editar`}
-                className="ring-focus rounded-lg border px-3 py-1.5 text-sm font-medium text-ink hover:bg-gray-50"
+                className="ring-focus rounded-lg border px-3 py-1.5 text-sm font-medium text-ink hover:bg-[color:var(--surface-2)]"
                 style={{ borderColor: "var(--line)" }}
               >
                 Editar
@@ -155,15 +155,16 @@ export default async function ReportPage({
             )}
             <Link
               href={`/reports/${report.slug}/observaciones`}
-              className="ring-focus rounded-lg bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700"
+              className="btn-primary ring-focus rounded-lg px-3 py-1.5 text-sm"
             >
-              Observaciones ({annotations.length})
+              <span className="hidden sm:inline">Observaciones</span>
+              <span className="sm:hidden">Obs.</span> ({annotations.length})
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-8 lg:py-8">
         <TableOfContents chapters={toc} />
         <ReportViewer
           reportId={report.id}

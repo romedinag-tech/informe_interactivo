@@ -232,17 +232,19 @@ export function ReportViewer({
                   <h2>{ch.title}</h2>
                 </div>
               )}
-              {ch.sections.map((sec) => (
-                <SectionView
-                  key={sec.id}
-                  section={sec}
-                  byBlock={byBlock}
-                  glossaryIndex={glossaryIndex}
-                  onAnnotateBlock={annotateBlock}
-                  canComment={canComment}
-                  reportSlug={reportSlug}
-                />
-              ))}
+              <div className={isCover ? "" : "space-y-8"}>
+                {ch.sections.map((sec) => (
+                  <SectionView
+                    key={sec.id}
+                    section={sec}
+                    byBlock={byBlock}
+                    glossaryIndex={glossaryIndex}
+                    onAnnotateBlock={annotateBlock}
+                    canComment={canComment}
+                    reportSlug={reportSlug}
+                  />
+                ))}
+              </div>
             </section>
           );
         })}
@@ -454,9 +456,14 @@ function SectionView({
     <div id={`sec-${section.id}`} className="scroll-mt-24">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={open}
+        className="ring-focus -mx-2 mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-[color:var(--surface-2)]"
       >
-        <span className="text-ink-soft transition-transform" style={{ transform: open ? "rotate(90deg)" : "none" }}>
+        <span
+          className="text-ink-soft transition-transform"
+          style={{ transform: open ? "rotate(90deg)" : "none" }}
+          aria-hidden
+        >
           ▸
         </span>
         <h3 className="my-0 font-serif">{section.title}</h3>

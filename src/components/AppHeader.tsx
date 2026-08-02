@@ -12,17 +12,24 @@ const roleLabel: Record<string, string> = {
 
 export function AppHeader({ user }: { user: SessionUser }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/85 backdrop-blur">
+    <header
+      className="sticky top-0 z-40 border-b backdrop-blur"
+      style={{
+        background: "color-mix(in srgb, var(--surface) 85%, transparent)",
+        borderColor: "var(--line)",
+      }}
+    >
       <div className="mx-auto flex h-11 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <Link href="/reports" className="flex items-center gap-2 text-navy">
-            <TalcaMark className="h-5 w-5" />
+          <Link href="/reports" className="ring-focus flex items-center gap-2 rounded text-ink">
+            <TalcaMark className="h-5 w-5 text-[color:var(--accent)]" />
             <span className="text-[13px] font-semibold uppercase tracking-[0.14em]">
               Informes Interactivos
             </span>
           </Link>
           <span
-            className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-ink-soft"
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+            style={{ background: "var(--surface-2)", color: "var(--faint)" }}
             title={`Versión ${APP_VERSION} · build ${buildId()}`}
           >
             v{APP_VERSION} · {buildId()}
@@ -31,7 +38,7 @@ export function AppHeader({ user }: { user: SessionUser }) {
         <div className="flex items-center gap-3 text-sm">
           <Link
             href="/instrucciones"
-            className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 hover:text-navy"
+            className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-[color:var(--surface-2)] hover:text-ink"
           >
             Instrucciones
           </Link>
@@ -50,7 +57,7 @@ export function AppHeader({ user }: { user: SessionUser }) {
               await signOut({ redirectTo: "/login" });
             }}
           >
-            <button className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-gray-100 hover:text-navy">
+            <button className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-[color:var(--surface-2)] hover:text-ink">
               Salir
             </button>
           </form>
