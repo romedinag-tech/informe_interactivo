@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChartBlock } from "./ChartBlock";
+import { DashboardChart, type DashChart } from "./DashboardChart";
 import { VoiceInput } from "@/components/annotations/VoiceInput";
 import { GlossaryTooltip, type GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
 import { createAnnotation } from "@/app/actions/annotations";
@@ -398,6 +399,18 @@ function BlockView({
   }
 
   if (block.type === "CHART") {
+    const raw = block.content as Record<string, unknown>;
+    // Gráfico recreado del dashboard (interactivo, estilo de la página).
+    if (raw._dash) {
+      const dc = raw as unknown as DashChart;
+      return (
+        <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Gráfico: ${dc.titulo ?? dc.tipo}`} onAnnotate={onAnnotateBlock}>
+          <div {...common}>
+            <DashboardChart c={dc} />
+          </div>
+        </BlockShell>
+      );
+    }
     const c = block.content as ChartContent;
     return (
       <BlockShell blockId={block.id} annotated={hasAnn} canComment={canComment} label={`Gráfico: ${c.caption ?? c.kind}`} onAnnotate={onAnnotateBlock}>
