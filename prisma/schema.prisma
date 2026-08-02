@@ -120,6 +120,11 @@ model ReportAssignment {
   // Marca cuándo el revisor envió formalmente sus observaciones al consultor.
   submittedAt DateTime?
 
+  // Pronunciamiento consolidado del revisor sobre el entregable.
+  verdict        ReviewVerdict @default(PENDING)
+  verdictComment String?
+  verdictAt      DateTime?
+
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -197,10 +202,26 @@ model Block {
 // ─────────────────────────────────────────────────────────────
 
 enum AnnotationStatus {
-  OPEN       // observación abierta por el revisor
-  IN_PROGRESS // el consultor la está atendiendo
-  RESOLVED   // resuelta con contrapropuesta aceptada
-  DISMISSED  // descartada (con justificación)
+  OPEN        // Abierta: observación planteada por el revisor
+  IN_PROGRESS // En proceso: el consultor la está atendiendo
+  ANSWERED    // Respondida: el consultor respondió/contrapropuso, espera al revisor
+  RESOLVED    // Resuelta: aceptada e implementada
+  DISMISSED   // Descartada: rechazada con justificación
+}
+
+// Severidad de la observación (para priorizar y filtrar).
+enum AnnotationSeverity {
+  LOW    // Menor / recomendación
+  MEDIUM // Importante
+  HIGH   // Crítica (bloquea conformidad)
+}
+
+// Pronunciamiento consolidado del revisor sobre el entregable (estilo PR review).
+enum ReviewVerdict {
+  PENDING            // aún no se pronuncia
+  CONFORME           // aprobado sin observaciones
+  CON_OBSERVACIONES  // aprobado con observaciones a subsanar
+  RECHAZADO          // rechazado
 }
 
 model Annotation {
@@ -215,8 +236,13 @@ model Annotation {
   rangeStart Int? // offset de caracter inicial dentro del texto del bloque
   rangeEnd   Int? // offset de caracter final
 
-  body   String // el texto de la observación (dictado o tecleado)
-  status AnnotationStatus @default(OPEN)
+  body     String // el texto de la observación (dictado o tecleado)
+  status   AnnotationStatus   @default(OPEN)
+  severity AnnotationSeverity @default(MEDIUM)
+
+  // Justificación al resolver o descartar (argumento de cierre). Se registra
+  // también en el audit trail.
+  resolutionNote String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

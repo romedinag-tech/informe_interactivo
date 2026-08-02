@@ -31,7 +31,7 @@ export type ClientAnnotation = {
   rangeStart: number | null;
   rangeEnd: number | null;
   body: string;
-  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED";
+  status: "OPEN" | "IN_PROGRESS" | "ANSWERED" | "RESOLVED" | "DISMISSED";
   authorId: string;
   authorName: string;
   createdAt: string;
@@ -46,8 +46,9 @@ type Draft = {
 };
 
 const statusMeta: Record<string, { label: string; badge: string }> = {
-  OPEN: { label: "Abierta", badge: "badge-info" },
-  IN_PROGRESS: { label: "En proceso", badge: "badge-warn" },
+  OPEN: { label: "Abierta", badge: "badge-warn" },
+  IN_PROGRESS: { label: "En proceso", badge: "badge-info" },
+  ANSWERED: { label: "Respondida", badge: "badge-info" },
   RESOLVED: { label: "Resuelta", badge: "badge-ok" },
   DISMISSED: { label: "Descartada", badge: "badge-neutral" },
 };

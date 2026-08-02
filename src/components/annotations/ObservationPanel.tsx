@@ -6,9 +6,13 @@ import { VoiceInput } from "./VoiceInput";
 import {
   replyToAnnotation,
   setAnnotationStatus,
+  setAnnotationSeverity,
   updateAnnotationBody,
   deleteAnnotation,
 } from "@/app/actions/annotations";
+
+export type Severity = "LOW" | "MEDIUM" | "HIGH";
+export type ObsStatus = "OPEN" | "IN_PROGRESS" | "ANSWERED" | "RESOLVED" | "DISMISSED";
 
 export type PanelReply = {
   id: string;
@@ -20,7 +24,9 @@ export type PanelReply = {
 
 export type PanelObservation = {
   id: string;
-  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED";
+  status: ObsStatus;
+  severity: Severity;
+  resolutionNote: string | null;
   authorId: string;
   authorName: string;
   createdAt: string;
@@ -37,13 +43,24 @@ export type PanelChapter = {
 };
 
 const statusMeta: Record<string, { label: string; badge: string }> = {
-  OPEN: { label: "Abierta", badge: "badge-info" },
-  IN_PROGRESS: { label: "En proceso", badge: "badge-warn" },
+  OPEN: { label: "Abierta", badge: "badge-warn" },
+  IN_PROGRESS: { label: "En proceso", badge: "badge-info" },
+  ANSWERED: { label: "Respondida", badge: "badge-info" },
   RESOLVED: { label: "Resuelta", badge: "badge-ok" },
   DISMISSED: { label: "Descartada", badge: "badge-neutral" },
 };
 
-const STATUS_ORDER = ["OPEN", "IN_PROGRESS", "RESOLVED", "DISMISSED"] as const;
+const STATUS_ORDER = ["OPEN", "IN_PROGRESS", "ANSWERED", "RESOLVED", "DISMISSED"] as const;
+
+// Observaciones que aún cuentan como "sin resolver" (bloquean la conformidad).
+const UNRESOLVED: ObsStatus[] = ["OPEN", "IN_PROGRESS", "ANSWERED"];
+
+const severityMeta: Record<Severity, { label: string; badge: string }> = {
+  LOW: { label: "Menor", badge: "badge-neutral" },
+  MEDIUM: { label: "Importante", badge: "badge-info" },
+  HIGH: { label: "Crítica", badge: "badge-danger" },
+};
+const SEVERITY_ORDER: Severity[] = ["HIGH", "MEDIUM", "LOW"];
 
 export function ObservationPanel({
   chapters,
@@ -58,17 +75,22 @@ export function ObservationPanel({
 }) {
   const [statusF, setStatusF] = useState<"all" | string>("all");
   const [chapterF, setChapterF] = useState<"all" | string>("all");
+  const [severityF, setSeverityF] = useState<"all" | Severity>("all");
 
   const all = chapters.flatMap((c) => c.observations);
   const total = all.length;
+  const unresolved = all.filter((o) => UNRESOLVED.includes(o.status)).length;
   const countByStatus = (s: string) => all.filter((o) => o.status === s).length;
+  const countBySeverity = (s: Severity) => all.filter((o) => o.severity === s).length;
 
   const visible = chapters
     .filter((ch) => chapterF === "all" || ch.id === chapterF)
     .map((ch) => ({
       ...ch,
       observations: ch.observations.filter(
-        (o) => statusF === "all" || o.status === statusF
+        (o) =>
+          (statusF === "all" || o.status === statusF) &&
+          (severityF === "all" || o.severity === severityF)
       ),
     }))
     .filter((ch) => ch.observations.length > 0);
@@ -78,26 +100,63 @@ export function ObservationPanel({
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="font-serif text-2xl text-ink">Consolidado de observaciones</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {total} {total === 1 ? "observación" : "observaciones"} en total.
+        {total} {total === 1 ? "observación" : "observaciones"} en total
+        {unresolved > 0 && (
+          <>
+            {" · "}
+            <span style={{ color: "var(--warn)" }} className="font-medium">
+              {unresolved} sin resolver
+            </span>
+          </>
+        )}
+        {total > 0 && unresolved === 0 && (
+          <>
+            {" · "}
+            <span style={{ color: "var(--ok)" }} className="font-medium">
+              todas resueltas
+            </span>
+          </>
+        )}
+        .
       </p>
 
       {/* Filtros */}
       {total > 0 && (
-        <div className="no-print mt-5 flex flex-wrap items-center gap-3">
-          <div className="flex flex-wrap gap-1.5">
-            <FilterChip active={statusF === "all"} onClick={() => setStatusF("all")}>
-              Todas ({total})
-            </FilterChip>
-            {STATUS_ORDER.map((s) => {
-              const n = countByStatus(s);
-              if (n === 0) return null;
-              return (
-                <FilterChip key={s} active={statusF === s} onClick={() => setStatusF(s)}>
-                  {statusMeta[s].label} ({n})
-                </FilterChip>
-              );
-            })}
+        <div className="no-print mt-5 space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap gap-1.5">
+              <FilterChip active={statusF === "all"} onClick={() => setStatusF("all")}>
+                Todas ({total})
+              </FilterChip>
+              {STATUS_ORDER.map((s) => {
+                const n = countByStatus(s);
+                if (n === 0) return null;
+                return (
+                  <FilterChip key={s} active={statusF === s} onClick={() => setStatusF(s)}>
+                    {statusMeta[s].label} ({n})
+                  </FilterChip>
+                );
+              })}
+            </div>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--faint)" }}>
+                Severidad
+              </span>
+              <FilterChip active={severityF === "all"} onClick={() => setSeverityF("all")}>
+                Todas
+              </FilterChip>
+              {SEVERITY_ORDER.map((s) => {
+                const n = countBySeverity(s);
+                if (n === 0) return null;
+                return (
+                  <FilterChip key={s} active={severityF === s} onClick={() => setSeverityF(s)}>
+                    {severityMeta[s].label} ({n})
+                  </FilterChip>
+                );
+              })}
+            </div>
           <select
             value={chapterF}
             onChange={(e) => setChapterF(e.target.value)}
@@ -114,6 +173,7 @@ export function ObservationPanel({
                 </option>
               ))}
           </select>
+          </div>
         </div>
       )}
 
@@ -198,10 +258,14 @@ function ObservationCard({
   const [pending, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(obs.body);
+  const [dismissing, setDismissing] = useState(false);
+  const [dismissReason, setDismissReason] = useState("");
   const meta = statusMeta[obs.status];
+  const sev = severityMeta[obs.severity];
 
   const isOwner = obs.authorId === currentUserId;
   const canDelete = isOwner || canEdit;
+  const isReviewer = canComment && !canEdit;
 
   const saveEdit = async () => {
     if (!draft.trim()) return;
@@ -242,10 +306,22 @@ function ObservationCard({
     }
   };
 
-  const changeStatus = async (status: PanelObservation["status"]) => {
+  const changeStatus = async (status: ObsStatus, note?: string) => {
     setPending(true);
     try {
-      await setAnnotationStatus({ annotationId: obs.id, status });
+      await setAnnotationStatus({ annotationId: obs.id, status, note });
+      setDismissing(false);
+      setDismissReason("");
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const changeSeverity = async (severity: Severity) => {
+    setPending(true);
+    try {
+      await setAnnotationSeverity({ annotationId: obs.id, severity });
       router.refresh();
     } finally {
       setPending(false);
@@ -335,8 +411,41 @@ function ObservationCard({
             </>
           )}
         </div>
-        <span className={`badge ${meta.badge} shrink-0`}>{meta.label}</span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className={`badge ${meta.badge}`}>{meta.label}</span>
+          {isOwner ? (
+            <select
+              value={obs.severity}
+              onChange={(e) => changeSeverity(e.target.value as Severity)}
+              disabled={pending}
+              aria-label="Severidad"
+              className="ring-focus rounded-md border px-1.5 py-0.5 text-[11px]"
+              style={{ borderColor: "var(--line)", background: "var(--surface-2)", color: "var(--muted)" }}
+            >
+              {SEVERITY_ORDER.map((s) => (
+                <option key={s} value={s}>
+                  {severityMeta[s].label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className={`badge ${sev.badge}`}>{sev.label}</span>
+          )}
+        </div>
       </div>
+
+      {/* Justificación de cierre (resuelta/descartada) */}
+      {obs.resolutionNote && (obs.status === "DISMISSED" || obs.status === "RESOLVED") && (
+        <div
+          className="mt-2 rounded-md px-3 py-2 text-xs"
+          style={{ background: "var(--surface-2)", color: "var(--muted)" }}
+        >
+          <span className="font-semibold" style={{ color: "var(--faint)" }}>
+            {obs.status === "DISMISSED" ? "Justificación del descarte: " : "Nota de resolución: "}
+          </span>
+          {obs.resolutionNote}
+        </div>
+      )}
 
       {/* Hilo de respuestas / contrapropuestas */}
       {obs.replies.length > 0 && (
@@ -354,60 +463,121 @@ function ObservationCard({
       )}
 
       {/* Acciones */}
-      {canComment && obs.status !== "RESOLVED" && (
+      {canComment && (obs.status === "RESOLVED" || obs.status === "DISMISSED") && (
+        <div className="mt-3 flex items-center gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+          <span className="text-xs" style={{ color: "var(--faint)" }}>
+            Observación {statusMeta[obs.status].label.toLowerCase()}.
+          </span>
+          <button
+            onClick={() => changeStatus("OPEN")}
+            disabled={pending}
+            className="ring-focus ml-auto rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+            style={{ color: "var(--warn)", borderColor: "var(--warn-border)" }}
+          >
+            Reabrir
+          </button>
+        </div>
+      )}
+
+      {canComment && obs.status !== "RESOLVED" && obs.status !== "DISMISSED" && (
         <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
-          <textarea
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            rows={2}
-            placeholder={
-              canEdit
-                ? "Escriba la contrapropuesta o respuesta…"
-                : "Escriba una réplica…"
-            }
-            className="field ring-focus w-full p-2 text-sm"
-          />
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <VoiceInput onAppend={(t) => setReply((p) => (p ? `${p} ${t}` : t))} />
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => sendReply(false)}
-                disabled={pending || !reply.trim()}
-                className="ring-focus rounded-md border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)] disabled:opacity-50"
-                style={{ borderColor: "var(--line)" }}
-              >
-                Responder
-              </button>
-              {canEdit && (
-                <>
-                  <button
-                    onClick={() => sendReply(true)}
-                    disabled={pending || !reply.trim()}
-                    className="btn-primary ring-focus px-3 py-1.5 text-sm"
-                  >
-                    Resolver con contrapropuesta
-                  </button>
-                  {obs.status === "OPEN" && (
+          {dismissing ? (
+            <div>
+              <label className="text-xs font-medium text-ink">
+                Justificación del descarte (obligatoria)
+              </label>
+              <textarea
+                value={dismissReason}
+                onChange={(e) => setDismissReason(e.target.value)}
+                rows={2}
+                autoFocus
+                placeholder="Explique por qué la observación se descarta…"
+                className="field ring-focus mt-1 w-full p-2 text-sm"
+              />
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => changeStatus("DISMISSED", dismissReason.trim())}
+                  disabled={pending || !dismissReason.trim()}
+                  className="ring-focus rounded-md px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                  style={{ background: "var(--danger)" }}
+                >
+                  Confirmar descarte
+                </button>
+                <button
+                  onClick={() => {
+                    setDismissing(false);
+                    setDismissReason("");
+                  }}
+                  className="btn-ghost ring-focus px-3 py-1.5 text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                rows={2}
+                placeholder={
+                  canEdit ? "Escriba la contrapropuesta o respuesta…" : "Escriba una réplica…"
+                }
+                className="field ring-focus w-full p-2 text-sm"
+              />
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <VoiceInput onAppend={(t) => setReply((p) => (p ? `${p} ${t}` : t))} />
+                <div className="flex flex-wrap gap-2">
+                  {isReviewer && obs.status === "ANSWERED" && (
                     <button
-                      onClick={() => changeStatus("IN_PROGRESS")}
+                      onClick={() => changeStatus("RESOLVED")}
                       disabled={pending}
-                      className="ring-focus rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-                      style={{ color: "var(--info)", borderColor: "var(--info-border)" }}
+                      className="ring-focus rounded-md px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                      style={{ background: "var(--ok)" }}
                     >
-                      Marcar en proceso
+                      Aceptar y resolver
                     </button>
                   )}
                   <button
-                    onClick={() => changeStatus("DISMISSED")}
-                    disabled={pending}
-                    className="btn-ghost ring-focus px-3 py-1.5 text-sm disabled:opacity-50"
+                    onClick={() => sendReply(false)}
+                    disabled={pending || !reply.trim()}
+                    className="ring-focus rounded-md border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)] disabled:opacity-50"
+                    style={{ borderColor: "var(--line)" }}
                   >
-                    Descartar
+                    Responder
                   </button>
-                </>
-              )}
-            </div>
-          </div>
+                  {canEdit && (
+                    <>
+                      <button
+                        onClick={() => sendReply(true)}
+                        disabled={pending || !reply.trim()}
+                        className="btn-primary ring-focus px-3 py-1.5 text-sm"
+                      >
+                        Resolver con contrapropuesta
+                      </button>
+                      {obs.status === "OPEN" && (
+                        <button
+                          onClick={() => changeStatus("IN_PROGRESS")}
+                          disabled={pending}
+                          className="ring-focus rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+                          style={{ color: "var(--info)", borderColor: "var(--info-border)" }}
+                        >
+                          Marcar en proceso
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setDismissing(true)}
+                        disabled={pending}
+                        className="btn-ghost ring-focus px-3 py-1.5 text-sm"
+                      >
+                        Descartar
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

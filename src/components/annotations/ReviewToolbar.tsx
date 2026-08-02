@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { submitReview, reopenReview } from "@/app/actions/annotations";
+import { setReviewVerdict } from "@/app/actions/annotations";
 import type { PanelChapter } from "./ObservationPanel";
+
+type Verdict = "PENDING" | "CONFORME" | "CON_OBSERVACIONES" | "RECHAZADO";
+
+const verdictMeta: Record<Verdict, { label: string; badge: string }> = {
+  PENDING: { label: "Sin pronunciarse", badge: "badge-neutral" },
+  CONFORME: { label: "Conforme", badge: "badge-ok" },
+  CON_OBSERVACIONES: { label: "Con observaciones", badge: "badge-warn" },
+  RECHAZADO: { label: "Rechazado", badge: "badge-danger" },
+};
 
 function esc(s: string): string {
   return s
@@ -15,6 +24,7 @@ function esc(s: string): string {
 const statusEs: Record<string, string> = {
   OPEN: "Abierta",
   IN_PROGRESS: "En proceso",
+  ANSWERED: "Respondida",
   RESOLVED: "Resuelta",
   DISMISSED: "Descartada",
 };
@@ -59,7 +69,9 @@ export function ReviewToolbar({
   reportTitle,
   chapters,
   isReviewer,
-  submittedAt,
+  verdict,
+  verdictComment,
+  unresolvedCount,
 }: {
   reportId: string;
   reportSlug: string;
@@ -67,9 +79,15 @@ export function ReviewToolbar({
   chapters: PanelChapter[];
   isReviewer: boolean;
   submittedAt: string | null;
+  verdict: Verdict;
+  verdictComment: string | null;
+  unresolvedCount: number;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [choice, setChoice] = useState<Verdict>("CON_OBSERVACIONES");
+  const [comment, setComment] = useState("");
 
   const downloadWord = () => {
     const html = buildDocHtml(reportTitle, chapters);
@@ -82,71 +100,127 @@ export function ReviewToolbar({
     URL.revokeObjectURL(url);
   };
 
-  const submit = async () => {
-    if (
-      !confirm(
-        "¿Está seguro de enviar sus observaciones al consultor?\n\n¿Confirma que la revisión está terminada? Podrá reabrirla si lo necesita."
-      )
-    )
-      return;
+  const pronounce = async (v: Verdict, c: string) => {
     setPending(true);
     try {
-      await submitReview(reportId);
+      await setReviewVerdict({ reportId, verdict: v, comment: c.trim() || undefined });
+      setOpen(false);
+      setComment("");
       router.refresh();
+    } catch (e) {
+      alert(
+        e instanceof Error && e.message === "HAY_OBSERVACIONES_SIN_RESOLVER"
+          ? "No puede declarar Conforme: quedan observaciones sin resolver."
+          : "No se pudo registrar el pronunciamiento."
+      );
     } finally {
       setPending(false);
     }
   };
 
-  const reopen = async () => {
-    setPending(true);
-    try {
-      await reopenReview(reportId);
-      router.refresh();
-    } finally {
-      setPending(false);
-    }
-  };
+  const vm = verdictMeta[verdict];
 
   return (
-    <div className="no-print flex flex-wrap items-center gap-2">
-      <button
-        onClick={downloadWord}
-        className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
-        style={{ borderColor: "var(--line)" }}
-      >
-        Descargar Word
-      </button>
-      <button
-        onClick={() => window.print()}
-        className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
-        style={{ borderColor: "var(--line)" }}
-      >
-        Imprimir / PDF
-      </button>
+    <div className="no-print flex flex-col items-stretch gap-2 sm:items-end">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={downloadWord}
+          className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
+          style={{ borderColor: "var(--line)" }}
+        >
+          Descargar Word
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="ring-focus rounded-lg border px-3 py-1.5 text-sm text-ink hover:bg-[color:var(--surface-2)]"
+          style={{ borderColor: "var(--line)" }}
+        >
+          Imprimir / PDF
+        </button>
 
-      {isReviewer &&
-        (submittedAt ? (
-          <span className="flex items-center gap-2 text-sm" style={{ color: "var(--ok)" }}>
-            ✓ Enviada el {new Date(submittedAt).toLocaleDateString("es-CL")}
+        {isReviewer && verdict !== "PENDING" && (
+          <span className="flex items-center gap-2 text-sm">
+            <span className={`badge ${vm.badge}`}>{vm.label}</span>
             <button
-              onClick={reopen}
+              onClick={() => pronounce("PENDING", "")}
               disabled={pending}
               className="ring-focus rounded-md px-2 py-1 text-xs underline hover:text-ink disabled:opacity-50"
               style={{ color: "var(--muted)" }}
             >
-              Reabrir
+              Rectificar
             </button>
           </span>
-        ) : (
+        )}
+        {isReviewer && verdict === "PENDING" && (
           <button
-            onClick={submit}
-            disabled={pending}
-            className="btn-primary ring-focus rounded-lg px-3 py-1.5 text-sm disabled:opacity-60"
+            onClick={() => setOpen((v) => !v)}
+            className="btn-primary ring-focus rounded-lg px-3 py-1.5 text-sm"
           >
-            {pending ? "Enviando…" : "Enviar al consultor"}
+            Pronunciarse sobre el entregable
           </button>
-        ))}
+        )}
+      </div>
+
+      {/* Panel de pronunciamiento (estilo revisión de PR) */}
+      {isReviewer && verdict === "PENDING" && open && (
+        <div className="surface-card w-full max-w-md p-4 text-left sm:w-[26rem]">
+          <p className="text-sm font-medium text-ink">Pronunciamiento sobre el entregable</p>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--faint)" }}>
+            {unresolvedCount > 0
+              ? `${unresolvedCount} observación(es) sin resolver — no puede declararse Conforme.`
+              : "Sin observaciones pendientes."}
+          </p>
+          <div className="mt-3 space-y-1.5">
+            {(["CONFORME", "CON_OBSERVACIONES", "RECHAZADO"] as const).map((v) => {
+              const blocked = v === "CONFORME" && unresolvedCount > 0;
+              const active = choice === v;
+              return (
+                <button
+                  key={v}
+                  onClick={() => !blocked && setChoice(v)}
+                  disabled={blocked}
+                  className="ring-focus flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm disabled:opacity-40"
+                  style={{
+                    borderColor: active ? "var(--accent)" : "var(--line)",
+                    background: active ? "var(--accent-soft)" : "transparent",
+                  }}
+                >
+                  <span className={`badge ${verdictMeta[v].badge}`}>{verdictMeta[v].label}</span>
+                  {blocked && (
+                    <span className="text-xs" style={{ color: "var(--faint)" }}>
+                      bloqueado
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={3}
+            placeholder="Comentario del pronunciamiento (recomendado; obligatorio si rechaza)…"
+            className="field ring-focus mt-3 w-full p-2 text-sm"
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button onClick={() => setOpen(false)} className="btn-ghost ring-focus px-3 py-1.5 text-sm">
+              Cancelar
+            </button>
+            <button
+              onClick={() => pronounce(choice, comment)}
+              disabled={pending || (choice === "RECHAZADO" && !comment.trim())}
+              className="btn-primary ring-focus px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              {pending ? "Registrando…" : "Registrar pronunciamiento"}
+            </button>
+          </div>
+        </div>
+      )}
+      {isReviewer && verdict !== "PENDING" && verdictComment && (
+        <p className="max-w-md text-xs" style={{ color: "var(--muted)" }}>
+          “{verdictComment}”
+        </p>
+      )}
     </div>
   );
 }

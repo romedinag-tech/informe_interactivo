@@ -51,12 +51,23 @@ export default async function ObservacionesPage({
   const access = await getReportAccess(report.id, user.id);
   if (!access.canView) redirect("/reports");
 
-  // Estado de envío de la revisión (para el botón "Enviar al consultor").
+  // Estado de envío + pronunciamiento consolidado del revisor.
   const assignment = await prisma.reportAssignment.findUnique({
     where: { reportId_userId: { reportId: report.id, userId: user.id } },
-    select: { submittedAt: true },
+    select: { submittedAt: true, verdict: true, verdictComment: true },
   });
   const isReviewer = access.canComment && !access.canEdit;
+
+  // Observaciones del revisor que aún bloquean la conformidad.
+  const unresolvedCount = isReviewer
+    ? await prisma.annotation.count({
+        where: {
+          reportId: report.id,
+          authorId: user.id,
+          status: { in: ["OPEN", "IN_PROGRESS", "ANSWERED"] },
+        },
+      })
+    : 0;
 
   // Para el consultor: estado de envío de los revisores.
   const reviewerSubs = access.canEdit
@@ -99,6 +110,8 @@ export default async function ObservacionesPage({
         b.annotations.map((a) => ({
           id: a.id,
           status: a.status,
+          severity: a.severity,
+          resolutionNote: a.resolutionNote,
           authorId: a.authorId,
           authorName: a.author.name,
           createdAt: a.createdAt.toISOString(),
@@ -145,6 +158,9 @@ export default async function ObservacionesPage({
             chapters={panelChapters}
             isReviewer={isReviewer}
             submittedAt={assignment?.submittedAt?.toISOString() ?? null}
+            verdict={assignment?.verdict ?? "PENDING"}
+            verdictComment={assignment?.verdictComment ?? null}
+            unresolvedCount={unresolvedCount}
           />
         </div>
       </div>

@@ -13,6 +13,7 @@ const createSchema = z.object({
   quote: z.string().optional(),
   rangeStart: z.number().int().nonnegative().optional(),
   rangeEnd: z.number().int().nonnegative().optional(),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
 });
 
 export async function createAnnotation(input: z.infer<typeof createSchema>) {
@@ -38,6 +39,7 @@ export async function createAnnotation(input: z.infer<typeof createSchema>) {
       quote: data.quote,
       rangeStart: data.rangeStart,
       rangeEnd: data.rangeEnd,
+      severity: data.severity ?? "MEDIUM",
     },
   });
 
@@ -110,9 +112,16 @@ export async function replyToAnnotation(input: z.infer<typeof replySchema>) {
       },
     });
     if (data.isResolution) {
+      // Contrapropuesta que cierra: queda Resuelta.
       await tx.annotation.update({
         where: { id: data.annotationId },
         data: { status: "RESOLVED" },
+      });
+    } else if (access.canEdit) {
+      // El consultor respondió sin cerrar → pasa a Respondida (espera al revisor).
+      await tx.annotation.update({
+        where: { id: data.annotationId },
+        data: { status: "ANSWERED" },
       });
     }
   });
@@ -146,10 +155,11 @@ export async function reopenReview(reportId: string) {
   revalidatePath("/reports", "layout");
 }
 
-// ── Cambiar estado (consultor gestiona el flujo) ──
+// ── Cambiar estado del flujo de revisión ──
 const statusSchema = z.object({
   annotationId: z.string().min(1),
-  status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "DISMISSED"]),
+  status: z.enum(["OPEN", "IN_PROGRESS", "ANSWERED", "RESOLVED", "DISMISSED"]),
+  note: z.string().trim().optional(), // justificación (obligatoria al descartar)
 });
 
 export async function setAnnotationStatus(input: z.infer<typeof statusSchema>) {
@@ -163,12 +173,88 @@ export async function setAnnotationStatus(input: z.infer<typeof statusSchema>) {
   if (!annotation) throw new Error("NO_ENCONTRADO");
 
   const access = await getReportAccess(annotation.reportId, user.id);
-  if (!access.canEdit) throw new Error("SIN_PERMISO");
+  // Consultor gestiona el flujo; el revisor puede reabrir/aceptar.
+  if (!access.canEdit && !access.canComment) throw new Error("SIN_PERMISO");
+  if (data.status === "DISMISSED" && !data.note) throw new Error("JUSTIFICACION_REQUERIDA");
 
   await prisma.annotation.update({
     where: { id: data.annotationId },
-    data: { status: data.status },
+    data: {
+      status: data.status,
+      // Guarda la justificación al descartar/resolver; la limpia al reabrir.
+      resolutionNote:
+        data.status === "DISMISSED" || data.status === "RESOLVED"
+          ? data.note ?? undefined
+          : data.status === "OPEN"
+            ? null
+            : undefined,
+    },
   });
 
   revalidatePath(`/reports`, "layout");
+}
+
+// ── Fijar severidad de una observación (el revisor autor) ──
+const severitySchema = z.object({
+  annotationId: z.string().min(1),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH"]),
+});
+
+export async function setAnnotationSeverity(input: z.infer<typeof severitySchema>) {
+  const user = await requireUser();
+  const data = severitySchema.parse(input);
+
+  const annotation = await prisma.annotation.findUnique({
+    where: { id: data.annotationId },
+    select: { reportId: true, authorId: true },
+  });
+  if (!annotation) throw new Error("NO_ENCONTRADO");
+
+  const access = await getReportAccess(annotation.reportId, user.id);
+  if (annotation.authorId !== user.id && !access.canComment) throw new Error("SIN_PERMISO");
+
+  await prisma.annotation.update({
+    where: { id: data.annotationId },
+    data: { severity: data.severity },
+  });
+  revalidatePath("/reports", "layout");
+}
+
+// ── Pronunciamiento consolidado del revisor (estilo PR review) ──
+const verdictSchema = z.object({
+  reportId: z.string().min(1),
+  verdict: z.enum(["PENDING", "CONFORME", "CON_OBSERVACIONES", "RECHAZADO"]),
+  comment: z.string().trim().optional(),
+});
+
+export async function setReviewVerdict(input: z.infer<typeof verdictSchema>) {
+  const user = await requireUser();
+  const data = verdictSchema.parse(input);
+
+  const access = await getReportAccess(data.reportId, user.id);
+  if (!access.canComment || access.canEdit) throw new Error("SIN_PERMISO"); // solo revisor
+
+  // Bloqueo: no se puede declarar CONFORME con observaciones sin resolver.
+  if (data.verdict === "CONFORME") {
+    const pendientes = await prisma.annotation.count({
+      where: {
+        reportId: data.reportId,
+        authorId: user.id,
+        status: { in: ["OPEN", "IN_PROGRESS", "ANSWERED"] },
+      },
+    });
+    if (pendientes > 0) throw new Error("HAY_OBSERVACIONES_SIN_RESOLVER");
+  }
+
+  await prisma.reportAssignment.update({
+    where: { reportId_userId: { reportId: data.reportId, userId: user.id } },
+    data: {
+      verdict: data.verdict,
+      verdictComment: data.comment ?? null,
+      verdictAt: data.verdict === "PENDING" ? null : new Date(),
+      submittedAt: data.verdict === "PENDING" ? undefined : new Date(),
+    },
+  });
+
+  revalidatePath("/reports", "layout");
 }
