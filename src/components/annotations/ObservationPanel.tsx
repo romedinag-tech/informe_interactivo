@@ -36,15 +36,14 @@ export type PanelChapter = {
   observations: PanelObservation[];
 };
 
-const statusMeta: Record<
-  string,
-  { label: string; cls: string }
-> = {
-  OPEN: { label: "Abierta", cls: "bg-amber-100 text-amber-800" },
-  IN_PROGRESS: { label: "En proceso", cls: "bg-blue-100 text-blue-800" },
-  RESOLVED: { label: "Resuelta", cls: "bg-green-100 text-green-800" },
-  DISMISSED: { label: "Descartada", cls: "bg-gray-100 text-gray-600" },
+const statusMeta: Record<string, { label: string; badge: string }> = {
+  OPEN: { label: "Abierta", badge: "badge-info" },
+  IN_PROGRESS: { label: "En proceso", badge: "badge-warn" },
+  RESOLVED: { label: "Resuelta", badge: "badge-ok" },
+  DISMISSED: { label: "Descartada", badge: "badge-neutral" },
 };
+
+const STATUS_ORDER = ["OPEN", "IN_PROGRESS", "RESOLVED", "DISMISSED"] as const;
 
 export function ObservationPanel({
   chapters,
@@ -57,42 +56,128 @@ export function ObservationPanel({
   canComment: boolean;
   currentUserId: string;
 }) {
-  const total = chapters.reduce((n, c) => n + c.observations.length, 0);
+  const [statusF, setStatusF] = useState<"all" | string>("all");
+  const [chapterF, setChapterF] = useState<"all" | string>("all");
+
+  const all = chapters.flatMap((c) => c.observations);
+  const total = all.length;
+  const countByStatus = (s: string) => all.filter((o) => o.status === s).length;
+
+  const visible = chapters
+    .filter((ch) => chapterF === "all" || ch.id === chapterF)
+    .map((ch) => ({
+      ...ch,
+      observations: ch.observations.filter(
+        (o) => statusF === "all" || o.status === statusF
+      ),
+    }))
+    .filter((ch) => ch.observations.length > 0);
+  const shown = visible.reduce((n, c) => n + c.observations.length, 0);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="font-serif text-2xl text-navy">
-        Consolidado de observaciones
-      </h1>
+      <h1 className="font-serif text-2xl text-ink">Consolidado de observaciones</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {total} observaciones agrupadas por capítulo.
+        {total} {total === 1 ? "observación" : "observaciones"} en total.
       </p>
 
-      <div className="mt-8 space-y-10">
-        {chapters.map((ch) => (
-          <section key={ch.id}>
-            <h2 className="border-b border-gray-200 pb-2 font-serif text-lg text-navy">
-              {ch.number ? `${ch.number}. ` : ""}
-              {ch.title}{" "}
-              <span className="text-sm font-normal text-ink-soft">
-                ({ch.observations.length})
-              </span>
-            </h2>
-            <div className="mt-4 space-y-4">
-              {ch.observations.map((o) => (
-                <ObservationCard
-                  key={o.id}
-                  obs={o}
-                  canEdit={canEdit}
-                  canComment={canComment}
-                  currentUserId={currentUserId}
-                />
+      {/* Filtros */}
+      {total > 0 && (
+        <div className="no-print mt-5 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            <FilterChip active={statusF === "all"} onClick={() => setStatusF("all")}>
+              Todas ({total})
+            </FilterChip>
+            {STATUS_ORDER.map((s) => {
+              const n = countByStatus(s);
+              if (n === 0) return null;
+              return (
+                <FilterChip key={s} active={statusF === s} onClick={() => setStatusF(s)}>
+                  {statusMeta[s].label} ({n})
+                </FilterChip>
+              );
+            })}
+          </div>
+          <select
+            value={chapterF}
+            onChange={(e) => setChapterF(e.target.value)}
+            className="ring-focus ml-auto rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-ink"
+            aria-label="Filtrar por capítulo"
+          >
+            <option value="all">Todos los capítulos</option>
+            {chapters
+              .filter((c) => c.observations.length > 0)
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
               ))}
-            </div>
-          </section>
-        ))}
-      </div>
+          </select>
+        </div>
+      )}
+
+      {shown === 0 ? (
+        <div className="surface-flat mt-8 p-10 text-center">
+          <p className="font-serif text-lg text-ink">
+            {total === 0 ? "Aún no hay observaciones" : "Sin resultados"}
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            {total === 0
+              ? "Las observaciones que el revisor deje sobre el informe aparecerán aquí, agrupadas por capítulo."
+              : "Ninguna observación coincide con el filtro. Ajusta el estado o el capítulo."}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-10">
+          {visible.map((ch) => (
+            <section key={ch.id}>
+              <h2 className="flex items-baseline gap-2 border-b pb-2 font-serif text-lg text-ink" style={{ borderColor: "var(--line)" }}>
+                {ch.title}
+                <span className="text-sm font-normal text-ink-soft">
+                  {ch.observations.length}
+                </span>
+              </h2>
+              <div className="mt-4 space-y-4">
+                {ch.observations.map((o) => (
+                  <ObservationCard
+                    key={o.id}
+                    obs={o}
+                    canEdit={canEdit}
+                    canComment={canComment}
+                    currentUserId={currentUserId}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className="ring-focus rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+      style={
+        active
+          ? { background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }
+          : { color: "var(--muted)", background: "var(--surface)", borderColor: "var(--line)" }
+      }
+    >
+      {children}
+    </button>
   );
 }
 
@@ -167,17 +252,27 @@ function ObservationCard({
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      {/* Contexto original */}
-      <div className="rounded-md border-l-4 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-ink-soft">
+    <div className="surface-flat p-4">
+      {/* Ancla citada (a qué se refiere la observación) */}
+      <div
+        className="rounded-md px-3 py-2 text-sm"
+        style={{ background: "var(--surface-2)", borderLeft: "3px solid var(--accent)", color: "var(--muted)" }}
+      >
+        <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--faint)" }}>
+          Ancla ·
+        </span>
         {obs.contextLabel}
       </div>
 
       {/* Observación del revisor */}
       <div className="mt-3 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="text-xs text-ink-soft">
-            {obs.authorName} · {new Date(obs.createdAt).toLocaleDateString("es-CL")}
+          <div className="text-xs" style={{ color: "var(--faint)" }}>
+            {obs.authorName} ·{" "}
+            {new Date(obs.createdAt).toLocaleString("es-CL", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
           </div>
           {editing ? (
             <div className="mt-1">
@@ -237,9 +332,7 @@ function ObservationCard({
             </>
           )}
         </div>
-        <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${meta.cls}`}>
-          {meta.label}
-        </span>
+        <span className={`badge ${meta.badge} shrink-0`}>{meta.label}</span>
       </div>
 
       {/* Hilo de respuestas / contrapropuestas */}
