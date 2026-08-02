@@ -99,36 +99,63 @@ export default async function ReportPage({
     source: g.source,
   }));
 
+  // Sello de estado del documento (mapea Report.status + observaciones abiertas).
+  const openCount = annotations.filter((a) => a.status === "OPEN").length;
+  const seal = ((): { label: string; cls: string } => {
+    switch (report.status) {
+      case "DRAFT":
+        return { label: "Borrador", cls: "badge-neutral" };
+      case "IN_REVIEW":
+        return openCount > 0
+          ? { label: "Observado", cls: "badge-warn" }
+          : { label: "En revisión", cls: "badge-info" };
+      case "RESOLVED":
+        return { label: "Aprobado", cls: "badge-ok" };
+      default:
+        return { label: "Archivado", cls: "badge-neutral" };
+    }
+  })();
+
   return (
     <>
       <ReadingProgress />
 
-      <div className="sticky top-11 z-30 border-b border-gray-200 bg-white/85 backdrop-blur">
-        <div className="mx-auto grid max-w-[90rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2.5 md:grid-cols-[1fr_auto_1fr]">
-          <div className="hidden items-center md:flex">
-            <TalcaMark className="h-8 w-8 text-navy" />
+      <div
+        className="sticky top-11 z-30 border-b backdrop-blur"
+        style={{ background: "color-mix(in srgb, var(--surface) 90%, transparent)", borderColor: "var(--line)" }}
+      >
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-4 py-2.5">
+          {/* Identidad del documento (agrupada) */}
+          <div className="flex min-w-0 items-center gap-3">
+            <TalcaMark className="h-9 w-9 shrink-0 text-navy" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="truncate font-serif text-base font-semibold text-ink md:text-lg">
+                  {report.title}
+                </h1>
+                <span className={`badge ${seal.cls} shrink-0`}>{seal.label}</span>
+              </div>
+              <p className="truncate text-[11px]" style={{ color: "var(--faint)" }}>
+                {report.subtitle && <span>{report.subtitle} · </span>}
+                <span className="uppercase tracking-wide">Informe {report.slug}</span>
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 md:text-center">
-            <h1 className="truncate font-serif text-lg font-semibold text-ink md:text-xl">
-              {report.title}
-            </h1>
-            {report.subtitle && (
-              <p className="truncate text-xs text-ink-soft">{report.subtitle}</p>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2">
+          {/* Acciones */}
+          <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
             {access.canEdit && (
               <Link
                 href={`/reports/${report.slug}/editar`}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-gray-50"
+                className="ring-focus rounded-lg border px-3 py-1.5 text-sm font-medium text-ink hover:bg-gray-50"
+                style={{ borderColor: "var(--line)" }}
               >
                 Editar
               </Link>
             )}
             <Link
               href={`/reports/${report.slug}/observaciones`}
-              className="rounded-lg bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700"
+              className="ring-focus rounded-lg bg-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-navy-700"
             >
               Observaciones ({annotations.length})
             </Link>
