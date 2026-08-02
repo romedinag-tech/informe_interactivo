@@ -80,12 +80,22 @@ export default async function ReportPage({
     createdAt: a.createdAt.toISOString(),
   }));
 
-  const toc: TocChapter[] = report.chapters.map((ch) => ({
-    id: ch.id,
-    number: ch.number,
-    title: ch.title,
-    sections: ch.sections.map((s) => ({ id: s.id, title: s.title })),
-  }));
+  const toc: TocChapter[] = report.chapters.map((ch) => {
+    // Tiempo estimado de lectura (~200 palabras/min) desde el texto del capítulo.
+    const words = ch.sections
+      .flatMap((s) => s.blocks)
+      .reduce((n, b) => {
+        const c = b.content as { text?: string } | null;
+        return n + (typeof c?.text === "string" ? c.text.trim().split(/\s+/).filter(Boolean).length : 0);
+      }, 0);
+    return {
+      id: ch.id,
+      number: ch.number,
+      title: ch.title,
+      minutes: words > 0 ? Math.max(1, Math.round(words / 200)) : 0,
+      sections: ch.sections.map((s) => ({ id: s.id, title: s.title })),
+    };
+  });
 
   const audioChapters: AudioChapter[] = report.chapters.map((ch) => ({
     id: ch.id,

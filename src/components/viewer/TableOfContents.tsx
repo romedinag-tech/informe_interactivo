@@ -7,6 +7,7 @@ export type TocChapter = {
   id: string;
   number: string | null;
   title: string;
+  minutes?: number;
   sections: TocSection[];
 };
 
@@ -119,7 +120,14 @@ export function TableOfContents({ chapters }: { chapters: TocChapter[] }) {
                   style={{ background: isActive ? "var(--accent)" : "transparent" }}
                   aria-hidden
                 />
-                <span className="line-clamp-1 group-hover:line-clamp-none">{c.title}</span>
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="line-clamp-1 group-hover:line-clamp-none">{c.title}</span>
+                  {c.minutes ? (
+                    <span className="shrink-0 text-[10px] tabular-nums" style={{ color: "var(--faint)" }}>
+                      {c.minutes}′
+                    </span>
+                  ) : null}
+                </span>
               </button>
               {depth === 2 && subs.length > 0 && (
                 <ul className="ml-4 mt-0.5 space-y-0.5 border-l pl-2" style={{ borderColor: "var(--line)" }}>

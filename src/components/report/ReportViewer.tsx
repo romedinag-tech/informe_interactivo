@@ -262,6 +262,10 @@ export function ReportViewer({
                   />
                 ))}
               </div>
+              <ChapterNav
+                prev={chapters[ci - 1]}
+                next={chapters[ci + 1]}
+              />
             </section>
           );
         })}
@@ -821,6 +825,55 @@ export function reanchor(
   }
 
   return null; // huérfana
+}
+
+// Navegación anterior/siguiente entre capítulos.
+function ChapterNav({
+  prev,
+  next,
+}: {
+  prev?: { id: string; title: string };
+  next?: { id: string; title: string };
+}) {
+  if (!prev && !next) return null;
+  const go = (id: string) =>
+    document.getElementById(`ch-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  return (
+    <nav
+      className="no-print mt-10 flex items-stretch justify-between gap-4 border-t pt-4"
+      style={{ borderColor: "var(--line)" }}
+      aria-label="Navegación entre capítulos"
+    >
+      {prev ? (
+        <button
+          onClick={() => go(prev.id)}
+          className="ring-focus flex max-w-[47%] items-center gap-2 rounded-md p-2 text-left text-sm hover:bg-[color:var(--surface-2)]"
+        >
+          <span aria-hidden style={{ color: "var(--accent)" }}>←</span>
+          <span className="min-w-0">
+            <span className="block text-[11px]" style={{ color: "var(--faint)" }}>Anterior</span>
+            <span className="line-clamp-1 text-ink">{prev.title}</span>
+          </span>
+        </button>
+      ) : (
+        <span />
+      )}
+      {next ? (
+        <button
+          onClick={() => go(next.id)}
+          className="ring-focus ml-auto flex max-w-[47%] items-center gap-2 rounded-md p-2 text-right text-sm hover:bg-[color:var(--surface-2)]"
+        >
+          <span className="min-w-0">
+            <span className="block text-[11px]" style={{ color: "var(--faint)" }}>Siguiente</span>
+            <span className="line-clamp-1 text-ink">{next.title}</span>
+          </span>
+          <span aria-hidden style={{ color: "var(--accent)" }}>→</span>
+        </button>
+      ) : (
+        <span />
+      )}
+    </nav>
+  );
 }
 
 function RichText({
