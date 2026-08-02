@@ -11,10 +11,10 @@ export default async function ImportarPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/reports" className="text-sm text-navy hover:underline">
+      <Link href="/reports" className="ring-focus rounded text-sm hover:underline" style={{ color: "var(--accent)" }}>
         ← Volver a informes
       </Link>
-      <h1 className="mt-4 font-serif text-2xl text-navy">Importar informe</h1>
+      <h1 className="mt-4 font-serif text-2xl text-ink">Importar informe</h1>
       <p className="mt-1 text-sm text-ink-soft">
         Sube el documento Word (.docx). Se convertirá en capítulos, secciones y
         bloques editables. Los títulos (Heading&nbsp;1/2) definen la estructura y
@@ -22,10 +22,7 @@ export default async function ImportarPage() {
         interactivas.
       </p>
 
-      <form
-        action={importDocx}
-        className="mt-6 space-y-4 rounded-lg border border-gray-200 bg-white p-6"
-      >
+      <form action={importDocx} className="surface-card mt-6 space-y-4 p-6">
         <div>
           <label className="block text-sm font-medium text-ink">
             Documento Word (.docx)
@@ -35,7 +32,7 @@ export default async function ImportarPage() {
             type="file"
             accept=".docx"
             required
-            className="mt-1 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-navy file:px-3 file:py-2 file:text-white"
+            className="mt-1 block w-full text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-[color:var(--accent)] file:px-3 file:py-2 file:text-[color:var(--accent-contrast)]"
           />
         </div>
         <div>
@@ -47,7 +44,7 @@ export default async function ImportarPage() {
             name="title"
             type="text"
             placeholder="Si se deja vacío, se usa el nombre del archivo"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none"
+            className="field ring-focus mt-1 w-full px-3 py-2 text-sm"
           />
         </div>
         <div>
@@ -57,7 +54,7 @@ export default async function ImportarPage() {
           <input
             name="subtitle"
             type="text"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none"
+            className="field ring-focus mt-1 w-full px-3 py-2 text-sm"
           />
         </div>
 

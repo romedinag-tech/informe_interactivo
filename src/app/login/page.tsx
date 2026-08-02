@@ -23,7 +23,7 @@ function LoginForm() {
           type="email"
           required
           autoComplete="email"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none"
+          className="field ring-focus mt-1 w-full px-3 py-2 text-sm"
         />
       </div>
       <div>
@@ -33,16 +33,20 @@ function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none"
+          className="field ring-focus mt-1 w-full px-3 py-2 text-sm"
         />
       </div>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && (
+        <p className="text-sm" style={{ color: "var(--danger)" }}>
+          {state.error}
+        </p>
+      )}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-navy px-4 py-2 text-sm font-medium text-white hover:bg-navy-700 disabled:opacity-60"
+        className="btn-primary ring-focus w-full rounded-md px-4 py-2 text-sm disabled:opacity-60"
       >
         {pending ? "Ingresando…" : "Ingresar"}
       </button>
@@ -53,8 +57,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="font-serif text-2xl text-navy">Informes Interactivos</h1>
+      <div className="surface-card w-full max-w-sm p-8">
+        <h1 className="font-serif text-2xl text-ink">Informes Interactivos</h1>
         <p className="mt-1 text-sm text-ink-soft">
           Acceso para consultores y revisores ministeriales.
         </p>
