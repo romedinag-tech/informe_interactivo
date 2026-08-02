@@ -482,6 +482,9 @@ body {
 }
 
 /* ── Impresión / exportar a PDF ── */
+@page {
+  margin: 1.6cm;
+}
 @media print {
   header,
   .no-print {
@@ -489,6 +492,12 @@ body {
   }
   body {
     background: #fff;
+  }
+  /* Refuerza la marca de agua en el documento impreso/PDF. */
+  .draft-watermark {
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .print-area {
     display: block;

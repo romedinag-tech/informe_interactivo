@@ -4,6 +4,22 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser, getReportAccess } from "@/lib/rbac";
+import { logAudit } from "@/lib/audit";
+
+const SEVERITY_ES: Record<string, string> = { LOW: "Menor", MEDIUM: "Importante", HIGH: "Crítica" };
+const STATUS_ES: Record<string, string> = {
+  OPEN: "Abierta",
+  IN_PROGRESS: "En proceso",
+  ANSWERED: "Respondida",
+  RESOLVED: "Resuelta",
+  DISMISSED: "Descartada",
+};
+const VERDICT_ES: Record<string, string> = {
+  PENDING: "Sin pronunciarse",
+  CONFORME: "Conforme",
+  CON_OBSERVACIONES: "Con observaciones",
+  RECHAZADO: "Rechazado",
+};
 
 // ── Crear observación (revisor sobre un bloque, con anclaje fino opcional) ──
 const createSchema = z.object({
@@ -43,6 +59,14 @@ export async function createAnnotation(input: z.infer<typeof createSchema>) {
     },
   });
 
+  await logAudit(
+    data.reportId,
+    user,
+    "annotation.create",
+    `Creó una observación (${SEVERITY_ES[data.severity ?? "MEDIUM"]})`,
+    { target: annotation.id, detail: { quote: data.quote ?? null } }
+  );
+
   revalidatePath(`/reports`, "layout");
   return { id: annotation.id };
 }
@@ -77,6 +101,9 @@ export async function deleteAnnotation(annotationId: string) {
   if (annotation.authorId !== user.id && !access.canEdit) throw new Error("SIN_PERMISO");
 
   await prisma.annotation.delete({ where: { id: annotationId } });
+  await logAudit(annotation.reportId, user, "annotation.delete", "Eliminó una observación", {
+    target: annotationId,
+  });
   revalidatePath("/reports", "layout");
 }
 
@@ -126,6 +153,14 @@ export async function replyToAnnotation(input: z.infer<typeof replySchema>) {
     }
   });
 
+  await logAudit(
+    annotation.reportId,
+    user,
+    "annotation.reply",
+    data.isResolution ? "Respondió con una contrapropuesta (resuelve)" : "Respondió la observación",
+    { target: data.annotationId, detail: { isResolution: Boolean(data.isResolution) } }
+  );
+
   revalidatePath(`/reports`, "layout");
 }
 
@@ -168,7 +203,7 @@ export async function setAnnotationStatus(input: z.infer<typeof statusSchema>) {
 
   const annotation = await prisma.annotation.findUnique({
     where: { id: data.annotationId },
-    select: { reportId: true },
+    select: { reportId: true, status: true },
   });
   if (!annotation) throw new Error("NO_ENCONTRADO");
 
@@ -190,6 +225,14 @@ export async function setAnnotationStatus(input: z.infer<typeof statusSchema>) {
             : undefined,
     },
   });
+
+  await logAudit(
+    annotation.reportId,
+    user,
+    "annotation.status",
+    `Cambió el estado: ${STATUS_ES[annotation.status]} → ${STATUS_ES[data.status]}`,
+    { target: data.annotationId, detail: { from: annotation.status, to: data.status, note: data.note ?? null } }
+  );
 
   revalidatePath(`/reports`, "layout");
 }
@@ -216,6 +259,10 @@ export async function setAnnotationSeverity(input: z.infer<typeof severitySchema
   await prisma.annotation.update({
     where: { id: data.annotationId },
     data: { severity: data.severity },
+  });
+  await logAudit(annotation.reportId, user, "annotation.severity", `Fijó la severidad en ${SEVERITY_ES[data.severity]}`, {
+    target: data.annotationId,
+    detail: { severity: data.severity },
   });
   revalidatePath("/reports", "layout");
 }
@@ -255,6 +302,16 @@ export async function setReviewVerdict(input: z.infer<typeof verdictSchema>) {
       submittedAt: data.verdict === "PENDING" ? undefined : new Date(),
     },
   });
+
+  await logAudit(
+    data.reportId,
+    user,
+    "review.verdict",
+    data.verdict === "PENDING"
+      ? "Rectificó su pronunciamiento (vuelve a pendiente)"
+      : `Pronunciamiento: ${VERDICT_ES[data.verdict]}`,
+    { detail: { verdict: data.verdict, comment: data.comment ?? null } }
+  );
 
   revalidatePath("/reports", "layout");
 }

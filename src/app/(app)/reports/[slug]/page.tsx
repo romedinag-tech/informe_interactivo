@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/viewer/ThemeToggle";
 import { ReadingProgress } from "@/components/viewer/ReadingProgress";
 import { TableOfContents, type TocChapter } from "@/components/viewer/TableOfContents";
 import { AudioPlayer, type AudioChapter } from "@/components/viewer/AudioPlayer";
+import { DraftWatermark } from "@/components/viewer/DraftWatermark";
 import { TalcaMark } from "@/components/viewer/TalcaMark";
 import { chapterNarrationText } from "@/lib/chapter-text";
 import type { GlossaryEntry } from "@/components/viewer/GlossaryTooltip";
@@ -116,8 +117,11 @@ export default async function ReportPage({
     }
   })();
 
+  const approved = report.status === "RESOLVED";
+
   return (
     <>
+      {!approved && <DraftWatermark />}
       <ReadingProgress />
 
       <div
@@ -138,6 +142,15 @@ export default async function ReportPage({
               <p className="truncate text-[11px]" style={{ color: "var(--faint)" }}>
                 {report.subtitle && <span>{report.subtitle} · </span>}
                 <span className="uppercase tracking-wide">Informe {report.slug}</span>
+                <span>
+                  {" · "}
+                  Actualizado{" "}
+                  {report.updatedAt.toLocaleDateString("es-CL", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
               </p>
             </div>
           </div>

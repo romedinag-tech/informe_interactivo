@@ -75,8 +75,28 @@ model Report {
   audios      AudioAsset[]
   maps        MapAsset[]
   figures     FigureAsset[]
+  audit       AuditEvent[]
 
   @@index([status])
+}
+
+// Registro de auditoría INMUTABLE (append-only): quién hizo qué y cuándo.
+// No se actualiza ni borra (salvo cascada al eliminar el informe). El nombre
+// del actor se guarda desnormalizado como fotografía del momento.
+model AuditEvent {
+  id        String   @id @default(cuid())
+  reportId  String
+  actorId   String
+  actorName String
+  action    String // p.ej. "annotation.create", "annotation.status", "review.verdict"
+  target    String? // id del objeto afectado (annotationId, etc.)
+  summary   String // descripción legible en español
+  detail    Json? // { from, to, note, severity, verdict, ... }
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, createdAt])
 }
 
 // Geodata de un mapa navegable (zonas GeoJSON + capas + variables). Se carga

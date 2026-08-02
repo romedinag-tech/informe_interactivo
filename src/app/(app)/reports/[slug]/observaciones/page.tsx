@@ -7,6 +7,7 @@ import {
   type PanelChapter,
 } from "@/components/annotations/ObservationPanel";
 import { ReviewToolbar } from "@/components/annotations/ReviewToolbar";
+import { AuditTrail } from "@/components/annotations/AuditTrail";
 import type { BlockContent, TableContent, ChartContent, ImageContent } from "@/types/content";
 
 // Deriva la etiqueta de contexto que se muestra junto a la observación.
@@ -103,6 +104,14 @@ export default async function ObservacionesPage({
     },
   });
 
+  // Traza de auditoría (inmutable) del informe.
+  const auditEvents = await prisma.auditEvent.findMany({
+    where: { reportId: report.id },
+    orderBy: { createdAt: "desc" },
+    take: 300,
+    select: { id: true, actorName: true, action: true, summary: true, createdAt: true },
+  });
+
   const panelChapters: PanelChapter[] = chapters.map((ch) => {
     const observations = ch.sections
       .flatMap((s) => s.blocks)
@@ -189,6 +198,14 @@ export default async function ObservacionesPage({
           canComment={access.canComment}
           currentUserId={user.id}
         />
+        <div className="px-4">
+          <AuditTrail
+            events={auditEvents.map((e) => ({
+              ...e,
+              createdAt: e.createdAt.toISOString(),
+            }))}
+          />
+        </div>
       </div>
     </>
   );
