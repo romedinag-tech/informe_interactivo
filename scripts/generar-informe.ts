@@ -3,7 +3,7 @@
 //   npx tsx scripts/generar-informe.ts <carpeta> [neon]                → crea (reemplaza si existe)
 //   npx tsx scripts/generar-informe.ts <carpeta> [neon] --actualizar   → corrige EN SU LUGAR
 //        (preserva observaciones y versiones; registra una versión nueva)
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { PrismaClient, type Prisma } from "@prisma/client";
 import sharp from "sharp";
@@ -47,6 +47,25 @@ async function optimize(buf: Buffer): Promise<{ buffer: Buffer; contentType: str
 }
 
 type Meta = { slug: string; title: string; subtitle?: string; execSummary?: string; glosario?: Record<string, string>[] };
+
+// Números de figura para los que la carpeta trae un asset nuevo (gráfico/mapa/imagen).
+function providedFigureNumbers(): Set<string> {
+  const s = new Set<string>();
+  if (existsSync(join(dir!, "graficos.json"))) for (const g of rd("graficos.json")) s.add(g.numero);
+  if (existsSync(join(dir!, "mapas.json"))) for (const m of rd("mapas.json")) s.add(m.numero);
+  const figdir = join(dir!, "figuras");
+  if (existsSync(figdir)) for (const f of readdirSync(figdir)) { const m = /figura-(.+)\.png$/i.exec(f); if (m) s.add(m[1]); }
+  return s;
+}
+
+// Número de pie de la figura en la posición bi (mira los siguientes bloques nuevos).
+function figNumAt(blocks: { type: string; content: Record<string, unknown> }[], bi: number): string | null {
+  for (let j = bi + 1; j < blocks.length && j < bi + 3; j++) {
+    const t = clean((blocks[j].content as { text?: string })?.text);
+    if (t) return figKey(t);
+  }
+  return null;
+}
 
 // Crea el informe desde cero (reemplaza si el slug ya existía).
 async function createReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
@@ -94,7 +113,7 @@ async function createReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
 
 // Actualiza el contenido EN SU LUGAR (preserva blockId → observaciones). Empareja
 // por posición (capítulo/sección/bloque). NUNCA borra un bloque con observaciones.
-async function updateReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
+async function updateReport(meta: Meta, parsed: { chapters: ParsedChapter[] }, providedNums: Set<string>) {
   const report = await prisma.report.findUnique({ where: { slug: meta.slug }, select: { id: true } });
   if (!report) throw new Error(`No existe el informe "${meta.slug}" para actualizar. ¿Querías crear (sin --actualizar)?`);
 
@@ -115,7 +134,7 @@ async function updateReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
     include: { sections: { orderBy: { order: "asc" }, include: { blocks: { orderBy: { order: "asc" }, include: { _count: { select: { annotations: true } } } } } } },
   });
 
-  let kept = 0, updated = 0, created = 0, deleted = 0, keptObserved = 0;
+  let updated = 0, created = 0, deleted = 0, keptObserved = 0, preserved = 0;
 
   for (let ci = 0; ci < parsed.chapters.length; ci++) {
     const nc = parsed.chapters[ci];
@@ -154,6 +173,18 @@ async function updateReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
         const nb = ns.blocks[bi];
         const eb = es.blocks[bi];
         if (eb) {
+          // Conserva un gráfico/mapa/figura ya colocado si el docx vuelve a traer
+          // un placeholder de imagen y NO entregas un asset nuevo para ese número.
+          const ec = (eb.content ?? {}) as Record<string, unknown>;
+          const existingIsAsset = eb.type === "CHART" || (eb.type === "IMAGE" && Boolean(ec.src));
+          if (nb.type === "IMAGE" && existingIsAsset) {
+            const num = figNumAt(ns.blocks, bi);
+            if (!num || !providedNums.has(num)) {
+              await prisma.block.update({ where: { id: eb.id }, data: { order: ord + 1 } });
+              preserved++;
+              continue;
+            }
+          }
           await prisma.block.update({ where: { id: eb.id }, data: { order: ord + 1, type: nb.type, content: nb.content as Prisma.InputJsonValue } });
           updated++;
         } else {
@@ -187,7 +218,7 @@ async function updateReport(meta: Meta, parsed: { chapters: ParsedChapter[] }) {
     if (obs === 0) await prisma.chapter.delete({ where: { id: ec.id } });
   }
 
-  console.log(`  Bloques: ${updated} actualizados, ${created} nuevos, ${deleted} eliminados (sin obs.), ${keptObserved} conservados con observaciones.`);
+  console.log(`  Bloques: ${updated} actualizados, ${preserved} gráficos/mapas/figuras conservados, ${created} nuevos, ${deleted} eliminados (sin obs.), ${keptObserved} conservados con observaciones.`);
   return { id: report.id };
 }
 
@@ -277,7 +308,7 @@ async function main() {
 
   let reportId: string;
   if (doUpdate) {
-    ({ id: reportId } = await updateReport(meta, parsed));
+    ({ id: reportId } = await updateReport(meta, parsed, providedFigureNumbers()));
   } else {
     ({ id: reportId } = await createReport(meta, parsed));
   }
