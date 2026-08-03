@@ -168,3 +168,43 @@ ruta autenticada. No hace falta que estén en el `.docx`.
    `node scripts/pregenerate-audio.mjs <slug> [neon]`.
 
 Determinista y reutilizable para cualquier ciudad. Cero raspado de dashboards.
+
+---
+
+## Corregir y re-subir un informe existente (nueva versión)
+
+Cuando ya hay observaciones y quieres subir una **corrección** del mismo estudio,
+**NO** uses el modo crear (borraría el informe y sus observaciones). Usa:
+
+```bash
+npx tsx scripts/generar-informe.ts <carpeta> [neon] --actualizar
+```
+
+Qué hace `--actualizar`:
+
+1. Actualiza el contenido **en su lugar** (empareja por posición capítulo/sección/
+   bloque y conserva el `blockId`) → **las observaciones sobreviven**.
+2. **Nunca borra un bloque que tenga observaciones** (si el nuevo documento lo
+   quita, lo conserva).
+3. Re-resuelve gráficos/mapas/figuras por número (toma tus `graficos.json` etc.
+   actualizados).
+4. **Registra una versión nueva** (2.0, 3.0…): snapshot + **re-ancla** todas las
+   observaciones y marca las **huérfanas** (las que su texto ancla ya no existe).
+   Verás el diff en `/reports/<slug>/versiones`.
+5. Regenera **solo el audio de los capítulos que cambiaron**:
+   `node scripts/pregenerate-audio.mjs <slug> [neon]` (los demás quedan HIT, sin re-gasto).
+
+⚠️ **Cuidados:**
+- El emparejamiento es **por posición**. Correcciones de *contenido* (arreglar
+  texto, cambiar un número, reemplazar un gráfico) preservan todo. Si **reordenas o
+  insertas capítulos/secciones enteros** en medio, algunas observaciones pueden
+  quedar **huérfanas** (no se pierden: quedan marcadas "Ancla perdida" en el panel).
+  Para reestructuraciones grandes, conviene editar en el **editor web** (que también
+  registra versión) en vez de re-subir el docx.
+- Mantén el mismo **slug** en `informe.json` (así sabe qué informe actualizar).
+- Corre `npm run build` antes del push si tocaste código (no hace falta si solo
+  cambian datos).
+
+**Alternativa sin re-subir docx:** editar en `/reports/<slug>/editar` y pulsar
+**"Registrar nueva versión"** en `/reports/<slug>/versiones` — hace lo mismo
+(snapshot + re-anclaje + versión) sobre los cambios hechos en la UI.

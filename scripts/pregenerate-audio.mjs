@@ -1,7 +1,9 @@
 // Pre-genera y GUARDA el audio de todos los capítulos de un informe, para que
 // cada reproducción sea instantánea (HIT desde la base, sin lag ni re-gasto).
 // Replica exactamente la lógica del endpoint (voces alternadas + diccionario).
-// Uso: node scripts/pregenerate-audio.mjs [neon]
+// Solo genera los capítulos NUEVOS o CAMBIADOS (los demás quedan HIT) → sirve
+// también tras corregir un informe: re-genera solo lo que cambió.
+// Uso: node scripts/pregenerate-audio.mjs <slug> [neon]
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
@@ -14,13 +16,14 @@ const NARRATOR_VOICES = [
 const VOICE_SCHEME = "alt-" + NARRATOR_VOICES.map((v) => v.id.slice(0, 4)).join("-");
 const MODEL = process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2";
 const MAX_CHARS = 5000;
-const SLUG = "prediagnostico-talca";
+const SLUG = process.argv[2];
+if (!SLUG) throw new Error("Uso: node scripts/pregenerate-audio.mjs <slug> [neon]");
 
 try { process.loadEnvFile(".env"); } catch {}
 const API_KEY = process.env.ELEVENLABS_API_KEY;
 if (!API_KEY) throw new Error("Falta ELEVENLABS_API_KEY en .env");
 
-const useNeon = process.argv[2] === "neon";
+const useNeon = process.argv[3] === "neon";
 const envFile = useNeon ? ".env.production.local" : ".env";
 const dbUrl = readFileSync(envFile, "utf8").match(/^DATABASE_URL=["']?(.+?)["']?\s*$/m)?.[1];
 if (!dbUrl) throw new Error(`No encontré DATABASE_URL en ${envFile}`);

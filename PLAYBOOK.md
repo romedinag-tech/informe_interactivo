@@ -1,8 +1,15 @@
 # PLAYBOOK — De cero a un informe interactivo en producción
 
-Rastro completo del proceso para **automatizar la creación de un informe nuevo** y
-**evitar los errores** ya encontrados. Insumos de partida: un **Word (`.docx`)**, un
-**dashboard (`.html`)** que lo acompaña, y (opcional) los **datos puros** de los gráficos.
+> **⚠️ PROCESO CANÓNICO ACTUALIZADO → ver `GENERACION.md`.** Hoy un informe se arma
+> (o corrige) con **un solo comando** (`scripts/generar-informe.ts`) desde una carpeta
+> declarativa (docx + `graficos.json` + `mapas.json` + `figuras/`), usando el **número
+> de pie "Figura X-Y"** como llave. **Ya NO se raspa el dashboard HTML** (era frágil:
+> duplicó un mapa, eligió mal una variable). Este PLAYBOOK conserva el **detalle
+> histórico**, el **stack**, y la **tabla de trampas** (sigue vigente y creciendo).
+
+Rastro completo del proceso, los errores encontrados y los cuidados. Insumos de
+partida hoy: un **Word (`.docx`)** + los **datos de cada gráfico/mapa como archivos**
+(no el dashboard).
 
 ---
 
@@ -101,32 +108,39 @@ flowchart TD
 | 10 | Lag al reproducir | Genera al momento / descarga completa | **Pre-generar** + reproducción progresiva (`audio.src` directo) |
 | 11 | `git commit -m @'...'@` no commitea | Here-string dentro de `if {}` en PowerShell | Usar `-m "..." -m "..."` |
 | 12 | Función de audio se corta en Vercel | Timeout serverless | `export const maxDuration = 60` |
+| 13 | **Re-subir un docx corregido borra las observaciones** | El modo CREAR hace `deleteMany` por slug (borra+recrea → cascada borra anotaciones/versiones/audio) | Usar **`--actualizar`**: actualiza en su lugar, preserva `blockId`, registra versión y re-ancla |
+| 14 | `pregenerate-audio` no genera el 2° informe | Tenía el **slug hardcodeado** (Talca) | Ahora toma slug: `node scripts/pregenerate-audio.mjs <slug> [neon]` |
+| 15 | Un revisor abre un estudio no asignado por URL | `getReportAccess` caía al rol global | Visibilidad por **asignación explícita** (`ReportAssignment`); sin ella no hay acceso salvo ADMIN |
+| 16 | Voz de la intro con acento de España / se re-gastaba | Voz del navegador variable + no cacheada | Intro = ElevenLabs **cacheado** (voz `ELEVENLABS_INTRO_VOICE_ID`) con timestamps para el resaltado |
+| 17 | Observaciones quedan huérfanas tras corregir | Se reordenaron/insertaron capítulos en medio (emparejamiento por posición) | Para reestructuras grandes, editar en el editor web; las huérfanas se marcan, no se pierden |
 
 ---
 
-## 🚀 Receta rápida para un informe NUEVO
+## 🚀 Receta rápida (motor único — detalle en `GENERACION.md`)
 
 ```bash
-# 0. Deja los insumos en Insumos/<Caso>/ (docx + dashboard.html)
-# 1. Base local
-npm run db:local          # (en otra terminal)
+# --- INFORME NUEVO ---
+# 0. Arma la carpeta declarativa (copia plantilla_informe/): informe.json + informe.docx
+#    + graficos.json (o CSV → node scripts/csv-a-graficos.mjs <carpeta>) + mapas.json + geo/ + figuras/
+# 1. Local
+npm run db:local                                  # (otra terminal) Postgres embebido
 npm run db:push && npm run db:seed
-# 2. Importar el informe + glosario (adaptar import-<caso>.ts)
-npx tsx scripts/import-<caso>.ts
-# 3. Colocar gráficos del dashboard
-node scripts/place-dashboard-charts.mjs
-# 4. Pre-generar audio (opcional en local)
-node scripts/pregenerate-audio.mjs
-# 5. Verificar local
-npm run build && npm run dev
-# 6. Producción
-node scripts/migrate-neon.mjs               # esquema+datos a Neon
-node scripts/place-dashboard-charts.mjs neon
-node scripts/pregenerate-audio.mjs neon
-git add -A && git commit -m "..." && git push   # Vercel despliega solo
+npx tsx scripts/generar-informe.ts <carpeta>      # docx + gráficos + mapas + figuras + versión 1.0
+node scripts/pregenerate-audio.mjs <slug>         # audio (opcional en local; cuesta créditos)
+npm run build                                      # verificar antes de subir
+# 2. Producción (Neon + Vercel)
+npx prisma db push                                # solo si cambió el esquema (contra Neon; ver .env.production.local)
+npx tsx scripts/generar-informe.ts <carpeta> neon
+node scripts/pregenerate-audio.mjs <slug> neon
+node scripts/pregenerate-intro.ts <slug> neon     # audio del resumen ejecutivo (si tiene execSummary)
+git add -A && git commit -m "..." && git push     # Vercel despliega solo
+# 3. Acceso: entra como admin (/admin) y habilita el estudio a los revisores/consultores.
+
+# --- CORREGIR UN INFORME EXISTENTE (nueva versión, preserva observaciones) ---
+npx tsx scripts/generar-informe.ts <carpeta> neon --actualizar
+node scripts/pregenerate-audio.mjs <slug> neon    # regenera solo los capítulos cambiados
 ```
 
-> **Pendiente de generalizar:** hoy los scripts `import-talca`, `place-dashboard-charts`,
-> `pregenerate-audio` y el mapeo gráfico→capítulo son específicos de Talca. El siguiente
-> paso de automatización es parametrizarlos por `--caso <slug>` para que un informe nuevo
-> sea un solo comando.
+> **Estado:** el motor `generar-informe.ts` ya es genérico (crear y actualizar).
+> Pendiente menor: generalizar las **capas de punto** de mapas (hoy reconoce
+> `siniestros`/`colegios`) y la **UI del toggle de bloqueo** de secciones en el editor.
