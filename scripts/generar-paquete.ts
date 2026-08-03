@@ -44,9 +44,14 @@ async function optimize(buf: Buffer): Promise<{ buffer: Buffer; contentType: str
   try {
     let img = sharp(buf, { failOn: "none", unlimited: true });
     const m = await img.metadata();
-    if ((m.width || 0) > 1600) img = img.resize({ width: 1600, withoutEnlargement: true });
+    // Gráficos y mapas tienen texto y líneas finas: se mantienen en PNG (nítido)
+    // a 2000px. Solo las MUY pesadas (fotográficas, p.ej. satélite) van a JPEG q90.
+    if ((m.width || 0) > 2000) img = img.resize({ width: 2000, withoutEnlargement: true });
     const png = await img.clone().png({ compressionLevel: 9 }).toBuffer();
-    if (png.length > 1_200_000) { const jpg = await img.clone().jpeg({ quality: 85, mozjpeg: true }).toBuffer(); if (jpg.length < png.length) return { buffer: jpg, contentType: "image/jpeg" }; }
+    if (png.length > 2_500_000) {
+      const jpg = await img.clone().jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+      if (jpg.length < png.length) return { buffer: jpg, contentType: "image/jpeg" };
+    }
     return { buffer: png.length < buf.length ? png : buf, contentType: "image/png" };
   } catch { return { buffer: buf, contentType: "image/png" }; }
 }
