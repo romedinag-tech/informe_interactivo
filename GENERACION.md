@@ -101,9 +101,25 @@ Excel/pandas: encabezados = `labels`, columnas = `series`.
 Reglas: `dona` y `barras` (1 serie) usan `data`. `barras_h`, `barras_apiladas`,
 `linea` usan `series`. `barras_linea` usa `serie_barra` + `serie_linea`.
 
-> Alternativa cómoda: si prefieres CSV, deja `graficos/grafico-9-1.csv` (1ª fila =
-> labels) + una fila en `graficos.json` con solo `numero/tipo/titulo/unidad/fuente`;
-> `scripts/csv-a-graficos.mjs` los fusiona.
+> **Alternativa CSV (planilla):** en vez de escribir `graficos.json` a mano, deja
+> un CSV por gráfico en `graficos/grafico-<numero>.csv` y un `graficos-meta.json`
+> con el tipo/título de cada uno; luego corre `node scripts/csv-a-graficos.mjs <carpeta>`
+> y genera el `graficos.json`. Detecta separador (`;`, `,` o tab) y decimales con
+> coma (formato Excel es-CL). El CSV: 1ª fila = encabezado (1ª celda categoría,
+> resto = nombres de series), filas siguientes = etiqueta + valores. Con 2 columnas
+> es 1 serie (dona/barras); con más, varias series (apiladas/línea).
+>
+> ```
+> # grafico-9-1.csv (dona)        # grafico-9-2.csv (apiladas)
+> categoria;valor                 quintil;Auto;TP;No motorizado
+> Auto;49,6                        Q1;20;45;35
+> TP;22,9                          Q2;35;38;27
+> ```
+> ```json
+> // graficos-meta.json
+> { "9-1": { "tipo": "dona", "titulo": "Partición modal", "unidad": "%" },
+>   "9-2": { "tipo": "barras_apiladas", "titulo": "Partición por quintil", "unidad": "%" } }
+> ```
 
 ## `mapas.json` — mapas navegables (coropletas + capas de puntos)
 

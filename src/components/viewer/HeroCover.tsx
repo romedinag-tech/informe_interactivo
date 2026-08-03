@@ -41,12 +41,14 @@ export function HeroCover({
   subtitle,
   eyebrow,
   summary,
+  reportSlug,
 }: {
   title: string;
   subtitle?: string | null;
   eyebrow?: string | null;
   summary?: string | null;
   summaryDraft?: boolean;
+  reportSlug: string;
 }) {
   const reduce = usePrefersReducedMotion();
   const hero = brand.hero ?? {};
@@ -67,6 +69,8 @@ export function HeroCover({
   const [active, setActive] = useState(-1);
   const [speaking, setSpeaking] = useState(false);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const charTimesRef = useRef<number[]>([]);
 
   // Carga la voz latinoamericana (las voces del navegador llegan async).
   useEffect(() => {
@@ -81,19 +85,36 @@ export function HeroCover({
 
   const stop = () => {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+    }
     setSpeaking(false);
     setActive(-1);
   };
   useEffect(() => () => stop(), []);
 
-  const play = () => {
+  // Resalta la palabra según el tiempo del MP3 (marcas por carácter).
+  const highlightByTime = (t: number) => {
+    const times = charTimesRef.current;
+    if (times.length === 0) return;
+    let idx = 0;
+    for (let i = 0; i < offsets.length; i++) {
+      const ct = times[offsets[i]];
+      if (ct != null && ct <= t) idx = i;
+    }
+    setActive(idx);
+  };
+
+  // Respaldo: voz del navegador (latinoamericana) con resaltado por onboundary.
+  const playBrowser = () => {
     if (!summary || typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(summary);
     const voice = voiceRef.current ?? pickLatamSpanishVoice();
     if (voice) {
       u.voice = voice;
-      u.lang = voice.lang; // p. ej. es-CL / es-419 / es-US (nunca es-ES si hay alternativa)
+      u.lang = voice.lang;
     } else {
       u.lang = "es-419";
     }
@@ -104,16 +125,37 @@ export function HeroCover({
       for (let i = 0; i < offsets.length; i++) if (offsets[i] <= ci) idx = i;
       setActive(idx);
     };
-    u.onend = () => {
-      setSpeaking(false);
-      setActive(-1);
-    };
-    u.onerror = () => {
-      setSpeaking(false);
-      setActive(-1);
-    };
+    u.onend = () => { setSpeaking(false); setActive(-1); };
+    u.onerror = () => { setSpeaking(false); setActive(-1); };
     setSpeaking(true);
     window.speechSynthesis.speak(u);
+  };
+
+  // Principal: MP3 cacheado de ElevenLabs (voz controlada, sin acento español,
+  // se genera una sola vez). Si no está disponible, cae a la voz del navegador.
+  const play = async () => {
+    if (!summary) return;
+    setSpeaking(true);
+    try {
+      const res = await fetch(`/api/reports/${reportSlug}/intro-audio`);
+      const j = await res.json();
+      if (j.audioBase64) {
+        charTimesRef.current = Array.isArray(j.charStartTimes) ? j.charStartTimes : [];
+        const bytes = Uint8Array.from(atob(j.audioBase64), (c) => c.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+        const audio = audioRef.current ?? new Audio();
+        audioRef.current = audio;
+        audio.src = url;
+        audio.ontimeupdate = () => highlightByTime(audio.currentTime);
+        audio.onended = () => { setSpeaking(false); setActive(-1); URL.revokeObjectURL(url); };
+        audio.onerror = () => { URL.revokeObjectURL(url); playBrowser(); };
+        await audio.play();
+        return;
+      }
+    } catch {
+      /* cae al respaldo */
+    }
+    playBrowser();
   };
 
   const onMedia = hasMedia; // texto claro sobre media; tokens sobre fondo estático

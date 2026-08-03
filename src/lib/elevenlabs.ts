@@ -67,6 +67,47 @@ export async function synthesizeSpeech(
   return Buffer.from(arrayBuffer);
 }
 
+// Síntesis con marcas de tiempo por carácter (para resaltar el texto mientras
+// se reproduce el MP3 cacheado). Devuelve el audio + el tiempo de inicio de cada
+// carácter del texto de entrada.
+export async function synthesizeWithTimestamps(
+  text: string,
+  opts?: { voiceId?: string; model?: string; dictLocators?: DictLocator[] }
+): Promise<{ audio: Buffer; charStartTimes: number[] }> {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error("ELEVENLABS_NO_CONFIGURADO");
+  const voiceId = opts?.voiceId ?? audioConfig.voiceId;
+  const model = opts?.model ?? audioConfig.model;
+  const input = text.slice(0, MAX_CHARS);
+
+  const res = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`,
+    {
+      method: "POST",
+      headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: input,
+        model_id: model,
+        voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.15 },
+        ...(opts?.dictLocators?.length
+          ? { pronunciation_dictionary_locators: opts.dictLocators }
+          : {}),
+      }),
+    }
+  );
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`ELEVENLABS_ERROR ${res.status}: ${detail.slice(0, 300)}`);
+  }
+  const data = (await res.json()) as {
+    audio_base64: string;
+    alignment?: { character_start_times_seconds?: number[] };
+  };
+  const audio = Buffer.from(data.audio_base64, "base64");
+  const charStartTimes = data.alignment?.character_start_times_seconds ?? [];
+  return { audio, charStartTimes };
+}
+
 // Identificador del esquema de voces (para la clave de caché).
 export const VOICE_SCHEME =
   "alt-" + NARRATOR_VOICES.map((v) => v.id.slice(0, 4)).join("-");

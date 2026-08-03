@@ -376,6 +376,10 @@ model AudioAsset {
   mimeType String @default("audio/mpeg")
   bytes    Int    @default(0)
 
+  // Tiempos de inicio por carácter (ElevenLabs with-timestamps) para el
+  // resaltado sincronizado del resumen. null = sin alineación.
+  alignment Json?
+
   createdAt DateTime @default(now())
 
   report  Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)

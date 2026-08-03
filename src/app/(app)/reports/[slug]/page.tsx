@@ -221,6 +221,7 @@ export default async function ReportPage({
           eyebrow={brand.client?.name ?? "Informe técnico"}
           summary={report.execSummary}
           summaryDraft={report.execSummaryDraft}
+          reportSlug={report.slug}
         />
       </div>
 
