@@ -8,10 +8,9 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 
-// --- Config (idéntica al servidor) ---
+// --- Config (idéntica al servidor: ver src/lib/voices.ts) ---
 const NARRATOR_VOICES = [
-  { id: "EXAVITQu4vr4xnSDxMaL" },
-  { id: "JBFqnCBsd6RMkjVDRZzb" },
+  { id: "ClNifCEVq1smkl4M3aTk" },
 ];
 const VOICE_SCHEME = "alt-" + NARRATOR_VOICES.map((v) => v.id.slice(0, 4)).join("-");
 const MODEL = process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2";
