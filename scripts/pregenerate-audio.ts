@@ -51,7 +51,7 @@ async function main() {
   let done = 0, skip = 0;
   for (const ch of report.chapters) {
     const blocks = ch.sections.flatMap((s) => s.blocks);
-    const segments = chapterNarrationSegments(ch.title, blocks as { type: string; content: unknown }[]);
+    const segments = chapterNarrationSegments(ch.title, blocks);
     const text = segments.join(" ");
     const textHash = createHash("sha256").update(`${VOICE_SCHEME}|${model}|${dictVersion}|${text}`).digest("hex");
 
