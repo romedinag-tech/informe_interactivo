@@ -69,6 +69,10 @@ async function main() {
   const parsed = await parseDocx(readFileSync(CFG.docx));
   const images = await extractDocxImages(CFG.docx);
 
+  // Omite la portada (Introducción/metadata) y el índice: el hero es la portada
+  // y la app tiene su propio índice. El número editorial va en el título.
+  const useCh = parsed.chapters.filter((ch) => !/^\s*(introducci[oó]n|[ií]ndice de contenidos?)/i.test(clean(ch.title)));
+
   // Figuras del docx en orden + su tipo/variable desde secciones_relato (completo).
   const srFigs = (kind === "completo" ? rj("secciones_relato.json").flatMap((s: any) => s.figuras || []) : []) as any[];
 
@@ -80,7 +84,7 @@ async function main() {
       execSummary: null, execSummaryDraft: true,
       assignments: { create: [{ userId: consultor.id, role: "CONSULTOR" }, ...(revisor ? [{ userId: revisor.id, role: "REVISOR" as const }] : []), ...(admin ? [{ userId: admin.id, role: "ADMIN" as const }] : [])] },
       glossary: { create: GLOSARIO.map((g) => ({ term: g.term, definition: g.definition, source: g.source ?? null, pronunciation: g.pronunciation ?? null })) },
-      chapters: { create: parsed.chapters.map((ch, ci) => ({ order: ci + 1, number: ch.number, title: ch.title,
+      chapters: { create: useCh.map((ch, ci) => ({ order: ci + 1, number: null, title: ch.title,
         sections: { create: ch.sections.map((sec, si) => ({ order: si + 1, title: sec.title, collapsedByDefault: /supuesto|brecha|alcance|anexo/i.test(sec.title ?? ""),
           blocks: { create: sec.blocks.map((b, bi) => ({ order: bi + 1, type: b.type, content: b.content as Prisma.InputJsonValue })) } })) } })) },
     }, select: { id: true },
@@ -128,7 +132,7 @@ async function main() {
   await prisma.reportVersion.create({ data: { reportId: report.id, number: 1, label: "1.0", note: "Versión inicial", createdById: consultor.id, snapshot: snapshot as unknown as Prisma.InputJsonValue } });
 
   console.log(`\n✓ /reports/${slug} — ${CFG.title}`);
-  console.log(`  Capítulos: ${parsed.chapters.length} · Figuras: ${fi} → ${nMap} mapas interactivos, ${nImg} imágenes estáticas, ${nMiss} sin imagen`);
+  console.log(`  Capítulos: ${useCh.length} (omitidos portada/índice) · Figuras: ${fi} → ${nMap} mapas interactivos, ${nImg} imágenes estáticas, ${nMiss} sin imagen`);
   console.log(`  Imágenes en docx: ${images.length} · figuras en secciones_relato: ${srFigs.length}`);
 }
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

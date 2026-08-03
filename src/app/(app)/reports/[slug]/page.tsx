@@ -100,14 +100,16 @@ export default async function ReportPage({
     };
   });
 
-  const audioChapters: AudioChapter[] = report.chapters.map((ch) => ({
-    id: ch.id,
-    title: `${ch.number ? ch.number + ". " : ""}${ch.title}`,
-    text: chapterNarrationText(
-      ch.title,
-      ch.sections.flatMap((s) => s.blocks)
-    ),
-  }));
+  // La narración omite la portada (metadata) y el índice: son redundantes con
+  // el hero y el índice de la app, y alargan el audio sin aportar.
+  const esPortadaOIndice = (t: string) => /^\s*(introducci[oó]n|[ií]ndice de contenidos?)/i.test(t);
+  const audioChapters: AudioChapter[] = report.chapters
+    .filter((ch) => !esPortadaOIndice(ch.title))
+    .map((ch) => ({
+      id: ch.id,
+      title: `${ch.number ? ch.number + ". " : ""}${ch.title}`,
+      text: chapterNarrationText(ch.title, ch.sections.flatMap((s) => s.blocks)),
+    }));
 
   // Índice de búsqueda en cliente (texto de los bloques).
   const searchIndex: SearchEntry[] = report.chapters.flatMap((ch) =>
