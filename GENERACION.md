@@ -165,7 +165,7 @@ ruta autenticada. No hace falta que estén en el `.docx`.
    `graficos.json` → gráfico · `mapas.json` → mapa · `figuras/figura-N.png` → imagen.
 4. Crea la **versión base 1.0** (snapshot) para el diff futuro.
 5. Deja el informe listo. El **audio** se pre-genera aparte (cuesta créditos):
-   `node scripts/pregenerate-audio.mjs <slug> [neon]`.
+   `npx tsx scripts/pregenerate-audio.ts <slug> [neon]`.
 
 Determinista y reutilizable para cualquier ciudad. Cero raspado de dashboards.
 
@@ -192,7 +192,7 @@ Qué hace `--actualizar`:
    observaciones y marca las **huérfanas** (las que su texto ancla ya no existe).
    Verás el diff en `/reports/<slug>/versiones`.
 5. Regenera **solo el audio de los capítulos que cambiaron**:
-   `node scripts/pregenerate-audio.mjs <slug> [neon]` (los demás quedan HIT, sin re-gasto).
+   `npx tsx scripts/pregenerate-audio.ts <slug> [neon]` (los demás quedan HIT, sin re-gasto).
 
 ⚠️ **Cuidados:**
 - El emparejamiento es **por posición**. Correcciones de *contenido* (arreglar

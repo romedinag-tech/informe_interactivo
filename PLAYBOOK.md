@@ -76,7 +76,7 @@ flowchart TD
 - **Pronunciación**: diccionario de ElevenLabs generado desde el glosario (`add-from-rules`); su versión entra en la clave de caché.
 - **Voces alternadas** mujer/hombre por segmento (`synthesizeAlternating`) con **límite de concurrencia**.
 - **Caché durable en la base** (`AudioAsset.data` Bytes) → se genera una vez, no re-gasta.
-- **Pre-generar** todo: `node scripts/pregenerate-audio.mjs [neon]` → cada reproducción es HIT instantáneo.
+- **Pre-generar** todo: `npx tsx scripts/pregenerate-audio.ts [neon]` → cada reproducción es HIT instantáneo.
 
 ### Fase 7 · Revisión y exportación
 - Anotaciones contextuales (teclado y voz), consolidador por capítulo.
@@ -109,7 +109,7 @@ flowchart TD
 | 11 | `git commit -m @'...'@` no commitea | Here-string dentro de `if {}` en PowerShell | Usar `-m "..." -m "..."` |
 | 12 | Función de audio se corta en Vercel | Timeout serverless | `export const maxDuration = 60` |
 | 13 | **Re-subir un docx corregido borra las observaciones** | El modo CREAR hace `deleteMany` por slug (borra+recrea → cascada borra anotaciones/versiones/audio) | Usar **`--actualizar`**: actualiza en su lugar, preserva `blockId`, registra versión y re-ancla |
-| 14 | `pregenerate-audio` no genera el 2° informe | Tenía el **slug hardcodeado** (Talca) | Ahora toma slug: `node scripts/pregenerate-audio.mjs <slug> [neon]` |
+| 14 | `pregenerate-audio` no genera el 2° informe | Tenía el **slug hardcodeado** (Talca) | Ahora toma slug: `npx tsx scripts/pregenerate-audio.ts <slug> [neon]` |
 | 15 | Un revisor abre un estudio no asignado por URL | `getReportAccess` caía al rol global | Visibilidad por **asignación explícita** (`ReportAssignment`); sin ella no hay acceso salvo ADMIN |
 | 16 | Voz de la intro con acento de España / se re-gastaba | Voz del navegador variable + no cacheada | Intro = ElevenLabs **cacheado** (voz `ELEVENLABS_INTRO_VOICE_ID`) con timestamps para el resaltado |
 | 17 | Observaciones quedan huérfanas tras corregir | Se reordenaron/insertaron capítulos en medio (emparejamiento por posición) | Para reestructuras grandes, editar en el editor web; las huérfanas se marcan, no se pierden |
@@ -126,19 +126,19 @@ flowchart TD
 npm run db:local                                  # (otra terminal) Postgres embebido
 npm run db:push && npm run db:seed
 npx tsx scripts/generar-informe.ts <carpeta>      # docx + gráficos + mapas + figuras + versión 1.0
-node scripts/pregenerate-audio.mjs <slug>         # audio (opcional en local; cuesta créditos)
+npx tsx scripts/pregenerate-audio.ts <slug>         # audio (opcional en local; cuesta créditos)
 npm run build                                      # verificar antes de subir
 # 2. Producción (Neon + Vercel)
 npx prisma db push                                # solo si cambió el esquema (contra Neon; ver .env.production.local)
 npx tsx scripts/generar-informe.ts <carpeta> neon
-node scripts/pregenerate-audio.mjs <slug> neon
+npx tsx scripts/pregenerate-audio.ts <slug> neon
 node scripts/pregenerate-intro.ts <slug> neon     # audio del resumen ejecutivo (si tiene execSummary)
 git add -A && git commit -m "..." && git push     # Vercel despliega solo
 # 3. Acceso: entra como admin (/admin) y habilita el estudio a los revisores/consultores.
 
 # --- CORREGIR UN INFORME EXISTENTE (nueva versión, preserva observaciones) ---
 npx tsx scripts/generar-informe.ts <carpeta> neon --actualizar
-node scripts/pregenerate-audio.mjs <slug> neon    # regenera solo los capítulos cambiados
+npx tsx scripts/pregenerate-audio.ts <slug> neon    # regenera solo los capítulos cambiados
 ```
 
 > **Estado:** el motor `generar-informe.ts` ya es genérico (crear y actualizar).

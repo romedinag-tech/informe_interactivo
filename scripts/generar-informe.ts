@@ -326,7 +326,7 @@ async function main() {
 
   console.log(`\n✓ Informe /reports/${meta.slug}`);
   console.log(`  Capítulos: ${parsed.chapters.length} · Gráficos: ${fig.nChart} · Mapas: ${fig.nMap} · Figuras: ${fig.nFig} · Placeholders sin asset: ${fig.nPh}`);
-  console.log(`\n  Audio (opcional, cuesta créditos; solo re-genera lo cambiado): node scripts/pregenerate-audio.mjs ${meta.slug} ${useNeon ? "neon" : ""}`);
+  console.log(`\n  Audio (opcional, cuesta créditos; solo re-genera lo cambiado): npx tsx scripts/pregenerate-audio.ts ${meta.slug} ${useNeon ? "neon" : ""}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
