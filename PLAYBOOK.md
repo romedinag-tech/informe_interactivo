@@ -113,6 +113,18 @@ flowchart TD
 | 15 | Un revisor abre un estudio no asignado por URL | `getReportAccess` caía al rol global | Visibilidad por **asignación explícita** (`ReportAssignment`); sin ella no hay acceso salvo ADMIN |
 | 16 | Voz de la intro con acento de España / se re-gastaba | Voz del navegador variable + no cacheada | Intro = ElevenLabs **cacheado** (voz `ELEVENLABS_INTRO_VOICE_ID`) con timestamps para el resaltado |
 | 17 | Observaciones quedan huérfanas tras corregir | Se reordenaron/insertaron capítulos en medio (emparejamiento por posición) | Para reestructuras grandes, editar en el editor web; las huérfanas se marcan, no se pierden |
+| 18 | **Deploy de Vercel falla por un error de tipos en un `.mjs`/`.ts` de `scripts/`** | `next build` typechea TODO el `tsconfig` (`**/*.ts`), scripts incluidos | **Siempre `npm run build` completo antes de cada push** (no solo `tsc`); ver regla obligatoria abajo |
+| 19 | Un `tsc`/build "pasa" pero en verdad falló | Piping `tsc \| head`/`\| tail` devuelve el exit de `head`, **enmascara** el error | Correr el check SIN pipe, o capturar `${PIPESTATUS[0]}`; nunca leer `$?` después de un pipe a `head` |
+
+---
+
+## 🔒 REGLA OBLIGATORIA antes de cada `git push`
+
+1. `npx tsc --noEmit` **y** `npm run build`, ambos con **exit 0 REAL** (sin `| head`/`| tail`
+   que enmascaran el código de salida; si necesitas ver el final, usa `> log 2>&1; echo $?; tail log`).
+2. `scripts/` cuenta: un error de tipos ahí **tumba el deploy de Vercel** igual que en `src/`.
+3. Recién ahí, `git commit` + `git push`. Un push con build roto deja Vercel en rojo
+   (el sitio sigue vivo con el deploy bueno anterior, pero el cambio no llega).
 
 ---
 
