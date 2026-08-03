@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { requireUser, isConsultor } from "@/lib/rbac";
+import { requireUser, isConsultor, isAdmin } from "@/lib/rbac";
 
 const statusLabel: Record<string, string> = {
   DRAFT: "Borrador",
@@ -12,11 +12,9 @@ const statusLabel: Record<string, string> = {
 export default async function ReportsPage() {
   const user = await requireUser();
 
-  // Consultor/Admin ven todo; el revisor sólo los informes que le fueron asignados.
+  // Visibilidad por asignación: cada usuario ve solo sus estudios; el Admin ve todos.
   const reports = await prisma.report.findMany({
-    where: isConsultor(user)
-      ? undefined
-      : { assignments: { some: { userId: user.id } } },
+    where: isAdmin(user) ? undefined : { assignments: { some: { userId: user.id } } },
     orderBy: { updatedAt: "desc" },
     include: {
       _count: { select: { annotations: true } },

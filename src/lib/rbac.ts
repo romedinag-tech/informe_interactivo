@@ -44,10 +44,12 @@ export async function requireRole(...roles: Role[]): Promise<SessionUser> {
 export const isConsultor = (u: { role: Role }) =>
   u.role === "CONSULTOR" || u.role === "ADMIN";
 export const isRevisor = (u: { role: Role }) => u.role === "REVISOR";
+export const isAdmin = (u: { role: Role }) => u.role === "ADMIN";
 
 /**
- * Permiso efectivo sobre un informe. Combina el rol global con la asignación
- * específica del informe (ReportAssignment).
+ * Permiso efectivo sobre un informe. La VISIBILIDAD se controla por asignación
+ * explícita (ReportAssignment): sin asignación no hay acceso, salvo ADMIN global
+ * (ve y gestiona todo). Así, la lista y el acceso por URL quedan alineados.
  */
 export async function getReportAccess(reportId: string, userId: string) {
   const [assignment, user] = await Promise.all([
@@ -58,11 +60,14 @@ export async function getReportAccess(reportId: string, userId: string) {
   ]);
 
   const globalAdmin = user?.role === "ADMIN";
-  const effectiveRole = assignment?.role ?? (globalAdmin ? "ADMIN" : user?.role);
+  // Sin asignación y sin ser admin → sin rol efectivo → sin acceso.
+  const effectiveRole = assignment?.role ?? (globalAdmin ? "ADMIN" : null);
 
   const canEdit = effectiveRole === "CONSULTOR" || effectiveRole === "ADMIN";
   const canComment = Boolean(effectiveRole); // cualquier rol asignado puede comentar
-  const canView = Boolean(effectiveRole) || globalAdmin;
+  const canView = Boolean(effectiveRole);
+  // Puede gestionar accesos del informe quien lo edita (consultor asignado o admin).
+  const canManage = canEdit;
 
-  return { effectiveRole, canView, canEdit, canComment };
+  return { effectiveRole, canView, canEdit, canComment, canManage };
 }

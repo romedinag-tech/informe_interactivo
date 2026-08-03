@@ -35,6 +35,18 @@ async function main() {
     },
   });
 
+  // Administrador: ve todos los estudios y gestiona los accesos por usuario.
+  await prisma.user.upsert({
+    where: { email: "admin@demo.cl" },
+    update: { role: "ADMIN" },
+    create: {
+      email: "admin@demo.cl",
+      name: "Administrador V&R",
+      passwordHash: pass,
+      role: "ADMIN",
+    },
+  });
+
   // El informe de ejemplo se retiró (ya no se usa). Se limpia si quedara.
   await prisma.report.deleteMany({ where: { slug: "estudio-transporte-demo" } });
 

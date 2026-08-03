@@ -33,6 +33,14 @@ export function AppHeader({ user }: { user: SessionUser }) {
           </span>
         </div>
         <div className="flex items-center gap-3 text-sm">
+          {(user.role === "ADMIN" || user.role === "CONSULTOR") && (
+            <Link
+              href="/admin"
+              className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-[color:var(--surface-2)] hover:text-ink"
+            >
+              Accesos
+            </Link>
+          )}
           <Link
             href="/instrucciones"
             className="ring-focus rounded-md px-2 py-1 text-ink-soft hover:bg-[color:var(--surface-2)] hover:text-ink"
