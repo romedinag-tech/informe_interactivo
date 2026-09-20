@@ -1,0 +1,2105 @@
+{
+"generado": "2026-09-19T21:47:36-03:00",
+"archivos": {
+".audio-cache/21bbf53df004aa5f0983d6d3bdbd34f8b702306076f0ed0d72da11c6d3b907be.mp3": [
+474427,
+1785636937
+],
+".env": [
+409,
+1785636795
+],
+".env.example": [
+880,
+1785634821
+],
+".env.production.local": [
+373,
+1785639027
+],
+".gitignore": [
+469,
+1785637354
+],
+".next/BUILD_ID": [
+21,
+1788364607
+],
+".next/app-build-manifest.json": [
+6312,
+1788364589
+],
+".next/app-path-routes-manifest.json": [
+914,
+1788364603
+],
+".next/build-manifest.json": [
+995,
+1788364589
+],
+".next/cache/.previewinfo": [
+262,
+1788364494
+],
+".next/cache/.rscinfo": [
+102,
+1788364493
+],
+".next/cache/.tsbuildinfo": [
+156229,
+1788364596
+],
+".next/cache/next-devtools-config.json": [
+2,
+1785633979
+],
+".next/cache/webpack/client-development/0.pack.gz": [
+46753,
+1785678498
+],
+".next/cache/webpack/client-development/1.pack.gz": [
+10823935,
+1785682541
+],
+".next/cache/webpack/client-development/10.pack.gz": [
+7858741,
+1785682550
+],
+".next/cache/webpack/client-development/11.pack.gz": [
+454319,
+1785682549
+],
+".next/cache/webpack/client-development/12.pack.gz": [
+22857,
+1785682549
+],
+".next/cache/webpack/client-development/13.pack.gz": [
+70532,
+1785640955
+],
+".next/cache/webpack/client-development/2.pack.gz": [
+514164,
+1785682549
+],
+".next/cache/webpack/client-development/3.pack.gz": [
+240715,
+1785678507
+],
+".next/cache/webpack/client-development/4.pack.gz": [
+9791,
+1785637910
+],
+".next/cache/webpack/client-development/5.pack.gz": [
+401117,
+1785682549
+],
+".next/cache/webpack/client-development/6.pack.gz": [
+1268,
+1785636855
+],
+".next/cache/webpack/client-development/7.pack.gz": [
+1958,
+1785678507
+],
+".next/cache/webpack/client-development/8.pack.gz": [
+4761,
+1785682549
+],
+".next/cache/webpack/client-development/9.pack.gz": [
+2739111,
+1785682550
+],
+".next/cache/webpack/client-development/index.pack.gz": [
+256709,
+1785682549
+],
+".next/cache/webpack/client-development/index.pack.gz.old": [
+247281,
+1785682540
+],
+".next/cache/webpack/client-production/0.pack": [
+55857663,
+1788364590
+],
+".next/cache/webpack/client-production/1.pack": [
+2014868,
+1785681730
+],
+".next/cache/webpack/client-production/10.pack": [
+1140947,
+1785702828
+],
+".next/cache/webpack/client-production/11.pack": [
+1336653,
+1785714580
+],
+".next/cache/webpack/client-production/12.pack": [
+2255151,
+1785790478
+],
+".next/cache/webpack/client-production/13.pack": [
+356795,
+1785790903
+],
+".next/cache/webpack/client-production/14.pack": [
+1077891,
+1785685042
+],
+".next/cache/webpack/client-production/15.pack": [
+10392,
+1785791095
+],
+".next/cache/webpack/client-production/16.pack": [
+82649,
+1785789011
+],
+".next/cache/webpack/client-production/17.pack": [
+2236,
+1785717002
+],
+".next/cache/webpack/client-production/18.pack": [
+1369,
+1785717002
+],
+".next/cache/webpack/client-production/19.pack": [
+170951,
+1785788234
+],
+".next/cache/webpack/client-production/2.pack": [
+1746758,
+1785717002
+],
+".next/cache/webpack/client-production/20.pack": [
+2236,
+1785717882
+],
+".next/cache/webpack/client-production/21.pack": [
+2312,
+1785787361
+],
+".next/cache/webpack/client-production/22.pack": [
+2312,
+1785790903
+],
+".next/cache/webpack/client-production/23.pack": [
+2312,
+1785788234
+],
+".next/cache/webpack/client-production/24.pack": [
+104330,
+1785789011
+],
+".next/cache/webpack/client-production/25.pack": [
+98139,
+1785790478
+],
+".next/cache/webpack/client-production/26.pack": [
+2312,
+1785791095
+],
+".next/cache/webpack/client-production/3.pack": [
+8730029,
+1785688369
+],
+".next/cache/webpack/client-production/4.pack": [
+6062487,
+1785785975
+],
+".next/cache/webpack/client-production/5.pack": [
+1150945,
+1785685800
+],
+".next/cache/webpack/client-production/6.pack": [
+1118064,
+1785686914
+],
+".next/cache/webpack/client-production/7.pack": [
+15640295,
+1785688369
+],
+".next/cache/webpack/client-production/8.pack": [
+1832100,
+1785789011
+],
+".next/cache/webpack/client-production/9.pack": [
+1112823,
+1785692101
+],
+".next/cache/webpack/client-production/index.pack": [
+7913354,
+1788364590
+],
+".next/cache/webpack/client-production/index.pack.old": [
+7985262,
+1785791095
+],
+".next/cache/webpack/edge-server-development/0.pack.gz": [
+1186363,
+1785682538
+],
+".next/cache/webpack/edge-server-development/1.pack.gz": [
+1015597,
+1785637873
+],
+".next/cache/webpack/edge-server-development/2.pack.gz": [
+9505,
+1785637939
+],
+".next/cache/webpack/edge-server-development/3.pack.gz": [
+2445888,
+1785682538
+],
+".next/cache/webpack/edge-server-development/4.pack.gz": [
+20157,
+1785682538
+],
+".next/cache/webpack/edge-server-development/5.pack.gz": [
+412294,
+1785637995
+],
+".next/cache/webpack/edge-server-development/6.pack.gz": [
+15732,
+1785682538
+],
+".next/cache/webpack/edge-server-development/index.pack.gz": [
+90008,
+1785682538
+],
+".next/cache/webpack/edge-server-development/index.pack.gz.old": [
+90019,
+1785637995
+],
+".next/cache/webpack/edge-server-production/0.pack": [
+22512218,
+1788364563
+],
+".next/cache/webpack/edge-server-production/1.pack": [
+116428,
+1785682613
+],
+".next/cache/webpack/edge-server-production/index.pack": [
+2059513,
+1788364563
+],
+".next/cache/webpack/edge-server-production/index.pack.old": [
+2059543,
+1785682613
+],
+".next/cache/webpack/server-development/0.pack.gz": [
+468297,
+1785682540
+],
+".next/cache/webpack/server-development/1.pack.gz": [
+824937,
+1785682540
+],
+".next/cache/webpack/server-development/10.pack.gz": [
+7263,
+1785678505
+],
+".next/cache/webpack/server-development/11.pack.gz": [
+234006,
+1785640955
+],
+".next/cache/webpack/server-development/12.pack.gz": [
+2000,
+1785678505
+],
+".next/cache/webpack/server-development/13.pack.gz": [
+54254,
+1785682548
+],
+".next/cache/webpack/server-development/14.pack.gz": [
+1771,
+1785682540
+],
+".next/cache/webpack/server-development/15.pack.gz": [
+2132,
+1785682548
+],
+".next/cache/webpack/server-development/2.pack.gz": [
+59290,
+1785682548
+],
+".next/cache/webpack/server-development/3.pack.gz": [
+3281271,
+1785682549
+],
+".next/cache/webpack/server-development/4.pack.gz": [
+302505,
+1785638061
+],
+".next/cache/webpack/server-development/5.pack.gz": [
+239040,
+1785637997
+],
+".next/cache/webpack/server-development/5.pack.gz_": [
+15866,
+1785678570
+],
+".next/cache/webpack/server-development/6.pack.gz": [
+19785364,
+1785682550
+],
+".next/cache/webpack/server-development/7.pack.gz": [
+4447070,
+1785682549
+],
+".next/cache/webpack/server-development/8.pack.gz": [
+23502,
+1785682548
+],
+".next/cache/webpack/server-development/9.pack.gz": [
+8709,
+1785682540
+],
+".next/cache/webpack/server-development/index.pack.gz": [
+441984,
+1785682548
+],
+".next/cache/webpack/server-development/index.pack.gz.old": [
+424857,
+1785682540
+],
+".next/cache/webpack/server-production/0.pack": [
+130195459,
+1788364556
+],
+".next/cache/webpack/server-production/1.pack": [
+1874400,
+1785789005
+],
+".next/cache/webpack/server-production/10.pack": [
+1098079,
+1785787355
+],
+".next/cache/webpack/server-production/11.pack": [
+140802,
+1785704441
+],
+".next/cache/webpack/server-production/12.pack": [
+3497178,
+1785788408
+],
+".next/cache/webpack/server-production/13.pack": [
+1071345,
+1785790457
+],
+".next/cache/webpack/server-production/14.pack": [
+180123,
+1785716992
+],
+".next/cache/webpack/server-production/15.pack": [
+1455584,
+1785789005
+],
+".next/cache/webpack/server-production/16.pack": [
+336831,
+1785704619
+],
+".next/cache/webpack/server-production/17.pack": [
+40597483,
+1785791084
+],
+".next/cache/webpack/server-production/18.pack": [
+6355300,
+1785789005
+],
+".next/cache/webpack/server-production/19.pack": [
+946883,
+1785790457
+],
+".next/cache/webpack/server-production/2.pack": [
+1359714,
+1785683100
+],
+".next/cache/webpack/server-production/20.pack": [
+25020564,
+1785790457
+],
+".next/cache/webpack/server-production/3.pack": [
+1102393,
+1785791084
+],
+".next/cache/webpack/server-production/4.pack": [
+5409310,
+1785643598
+],
+".next/cache/webpack/server-production/5.pack": [
+1055803,
+1785703393
+],
+".next/cache/webpack/server-production/6.pack": [
+10766748,
+1785688359
+],
+".next/cache/webpack/server-production/7.pack": [
+1120130,
+1785690650
+],
+".next/cache/webpack/server-production/8.pack": [
+6885362,
+1785789005
+],
+".next/cache/webpack/server-production/9.pack": [
+1125585,
+1785704441
+],
+".next/cache/webpack/server-production/index.pack": [
+17389088,
+1788364556
+],
+".next/cache/webpack/server-production/index.pack.old": [
+17872418,
+1785791084
+],
+".next/diagnostics/build-diagnostics.json": [
+93,
+1788364608
+],
+".next/diagnostics/framework.json": [
+38,
+1788364494
+],
+".next/export-marker.json": [
+111,
+1788364614
+],
+".next/images-manifest.json": [
+905,
+1788364614
+],
+".next/next-minimal-server.js.nft.json": [
+6461,
+1788364624
+],
+".next/next-server.js.nft.json": [
+41783,
+1788364624
+],
+".next/package.json": [
+20,
+1788364494
+],
+".next/prerender-manifest.json": [
+1597,
+1788364614
+],
+".next/react-loadable-manifest.json": [
+475,
+1788364589
+],
+".next/required-server-files.json": [
+9162,
+1788364607
+],
+".next/routes-manifest.json": [
+4402,
+1788364614
+],
+".next/server/app-paths-manifest.json": [
+1142,
+1788364562
+],
+".next/server/app/(app)/admin/page.js": [
+27416,
+1788364553
+],
+".next/server/app/(app)/admin/page.js.nft.json": [
+4769,
+1788364624
+],
+".next/server/app/(app)/admin/page_client-reference-manifest.js": [
+11620,
+1788364589
+],
+".next/server/app/(app)/instrucciones/page.js": [
+22164,
+1788364553
+],
+".next/server/app/(app)/instrucciones/page.js.nft.json": [
+4719,
+1788364624
+],
+".next/server/app/(app)/instrucciones/page_client-reference-manifest.js": [
+11598,
+1788364589
+],
+".next/server/app/(app)/reports/[slug]/editar/page.js": [
+669263,
+1788364553
+],
+".next/server/app/(app)/reports/[slug]/editar/page.js.nft.json": [
+5208,
+1788364624
+],
+".next/server/app/(app)/reports/[slug]/editar/page_client-reference-manifest.js": [
+13542,
+1788364589
+],
+".next/server/app/(app)/reports/[slug]/observaciones/page.js": [
+39735,
+1788364553
+],
+".next/server/app/(app)/reports/[slug]/observaciones/page.js.nft.json": [
+5208,
+1788364624
+],
+".next/server/app/(app)/reports/[slug]/observaciones/page_client-reference-manifest.js": [
+13492,
+1788364589
+],
+".next/server/app/(app)/reports/[slug]/page.js": [
+106492,
+1788364553
+],
+".next/server/app/(app)/reports/[slug]/page.js.nft.json": [
+5057,
+1788364624
+],
+".next/server/app/(app)/reports/[slug]/page_client-reference-manifest.js": [
+13238,
+1788364589
+],
+".next/server/app/(app)/reports/[slug]/versiones/page.js": [
+30458,
+1788364553
+],
+".next/server/app/(app)/reports/[slug]/versiones/page.js.nft.json": [
+5177,
+1788364624
+],
+".next/server/app/(app)/reports/[slug]/versiones/page_client-reference-manifest.js": [
+13341,
+1788364589
+],
+".next/server/app/(app)/reports/importar/page.js": [
+672029,
+1788364553
+],
+".next/server/app/(app)/reports/importar/page.js.nft.json": [
+4917,
+1788364624
+],
+".next/server/app/(app)/reports/importar/page_client-reference-manifest.js": [
+11837,
+1788364589
+],
+".next/server/app/(app)/reports/page.js": [
+18681,
+1788364553
+],
+".next/server/app/(app)/reports/page.js.nft.json": [
+4719,
+1788364624
+],
+".next/server/app/(app)/reports/page_client-reference-manifest.js": [
+11574,
+1788364589
+],
+".next/server/app/_not-found.html": [
+7103,
+1788364612
+],
+".next/server/app/_not-found.meta": [
+207,
+1788364612
+],
+".next/server/app/_not-found.rsc": [
+3926,
+1788364612
+],
+".next/server/app/_not-found/page.js": [
+17649,
+1788364553
+],
+".next/server/app/_not-found/page.js.nft.json": [
+3868,
+1788364624
+],
+".next/server/app/_not-found/page_client-reference-manifest.js": [
+11555,
+1788364589
+],
+".next/server/app/api/auth/[...nextauth]/route.js": [
+8689,
+1788364553
+],
+".next/server/app/api/auth/[...nextauth]/route.js.nft.json": [
+4767,
+1788364624
+],
+".next/server/app/api/auth/[...nextauth]/route_client-reference-manifest.js": [
+11583,
+1788364589
+],
+".next/server/app/api/reports/[slug]/audio/[chapterId]/route.js": [
+15814,
+1788364553
+],
+".next/server/app/api/reports/[slug]/audio/[chapterId]/route.js.nft.json": [
+5139,
+1788364624
+],
+".next/server/app/api/reports/[slug]/audio/[chapterId]/route_client-reference-manifest.js": [
+11613,
+1788364589
+],
+".next/server/app/api/reports/[slug]/figure/[blockId]/route.js": [
+10378,
+1788364553
+],
+".next/server/app/api/reports/[slug]/figure/[blockId]/route.js.nft.json": [
+5139,
+1788364624
+],
+".next/server/app/api/reports/[slug]/figure/[blockId]/route_client-reference-manifest.js": [
+11611,
+1788364589
+],
+".next/server/app/api/reports/[slug]/intro-audio/route.js": [
+14140,
+1788364553
+],
+".next/server/app/api/reports/[slug]/intro-audio/route.js.nft.json": [
+4953,
+1788364624
+],
+".next/server/app/api/reports/[slug]/intro-audio/route_client-reference-manifest.js": [
+11600,
+1788364589
+],
+".next/server/app/api/reports/[slug]/map/[key]/route.js": [
+10202,
+1788364553
+],
+".next/server/app/api/reports/[slug]/map/[key]/route.js.nft.json": [
+5139,
+1788364624
+],
+".next/server/app/api/reports/[slug]/map/[key]/route_client-reference-manifest.js": [
+11597,
+1788364589
+],
+".next/server/app/login.html": [
+7049,
+1788364612
+],
+".next/server/app/login.meta": [
+175,
+1788364612
+],
+".next/server/app/login.rsc": [
+4130,
+1788364612
+],
+".next/server/app/login/page.js": [
+23265,
+1788364553
+],
+".next/server/app/login/page.js.nft.json": [
+4450,
+1788364624
+],
+".next/server/app/login/page_client-reference-manifest.js": [
+11601,
+1788364589
+],
+".next/server/app/page.js": [
+20105,
+1788364553
+],
+".next/server/app/page.js.nft.json": [
+4285,
+1788364624
+],
+".next/server/app/page_client-reference-manifest.js": [
+11441,
+1788364589
+],
+".next/server/chunks/205.js": [
+399138,
+1788364553
+],
+".next/server/chunks/350.js": [
+407807,
+1788364553
+],
+".next/server/chunks/381.js": [
+11208,
+1788364553
+],
+".next/server/chunks/537.js": [
+148489,
+1788364553
+],
+".next/server/chunks/570.js": [
+131663,
+1788364553
+],
+".next/server/chunks/575.js": [
+223584,
+1788364553
+],
+".next/server/chunks/611.js": [
+69183,
+1788364553
+],
+".next/server/chunks/643.js": [
+274986,
+1788364553
+],
+".next/server/chunks/677.js": [
+10587,
+1788364553
+],
+".next/server/chunks/709.js": [
+74753,
+1788364553
+],
+".next/server/chunks/837.js": [
+44300,
+1788364553
+],
+".next/server/edge-runtime-webpack.js": [
+1504,
+1788364562
+],
+".next/server/edge-runtime-webpack.js.map": [
+6132,
+1788364562
+],
+".next/server/functions-config-manifest.json": [
+278,
+1788364607
+],
+".next/server/interception-route-rewrite-manifest.js": [
+48,
+1788364562
+],
+".next/server/middleware-build-manifest.js": [
+921,
+1788364589
+],
+".next/server/middleware-manifest.json": [
+1068,
+1788364562
+],
+".next/server/middleware-react-loadable-manifest.js": [
+439,
+1788364589
+],
+".next/server/next-font-manifest.js": [
+106,
+1788364589
+],
+".next/server/next-font-manifest.json": [
+77,
+1788364589
+],
+".next/server/pages-manifest.json": [
+128,
+1788364614
+],
+".next/server/pages/404.html": [
+7103,
+1788364612
+],
+".next/server/pages/500.html": [
+2007,
+1788364612
+],
+".next/server/pages/_app.js": [
+3361,
+1788364553
+],
+".next/server/pages/_app.js.nft.json": [
+509,
+1788364624
+],
+".next/server/pages/_document.js": [
+373,
+1788364553
+],
+".next/server/pages/_document.js.nft.json": [
+3908,
+1788364624
+],
+".next/server/pages/_error.js": [
+79977,
+1788364553
+],
+".next/server/pages/_error.js.nft.json": [
+3906,
+1788364624
+],
+".next/server/server-reference-manifest.js": [
+13005,
+1788364553
+],
+".next/server/server-reference-manifest.json": [
+11618,
+1788364553
+],
+".next/server/src/middleware.js": [
+273810,
+1788364562
+],
+".next/server/src/middleware.js.map": [
+979282,
+1788364562
+],
+".next/server/webpack-runtime.js": [
+1563,
+1788364553
+],
+".next/static/WtHHOq_ocCH4AJ1ViNTod/_buildManifest.js": [
+818,
+1788364589
+],
+".next/static/WtHHOq_ocCH4AJ1ViNTod/_ssgManifest.js": [
+80,
+1788364614
+],
+".next/static/chunks/139.8d54880d25bc452f.js": [
+744,
+1788364589
+],
+".next/static/chunks/195-1f57324012b7a134.js": [
+37887,
+1788364589
+],
+".next/static/chunks/239-509970e1eacc97c1.js": [
+399165,
+1788364589
+],
+".next/static/chunks/255-fd23c1ca0966ed5f.js": [
+174042,
+1788364589
+],
+".next/static/chunks/4bd1b696-409494caf8c83275.js": [
+173024,
+1788364589
+],
+".next/static/chunks/619-f072ac750404f9da.js": [
+8563,
+1788364589
+],
+".next/static/chunks/646.c2c67a3e35c59670.js": [
+5465,
+1788364589
+],
+".next/static/chunks/app/(app)/admin/page-735392b63dbe8788.js": [
+5788,
+1788364589
+],
+".next/static/chunks/app/(app)/instrucciones/page-1604d9899a93ac48.js": [
+188,
+1788364589
+],
+".next/static/chunks/app/(app)/layout-136769bd0e3400f2.js": [
+2927,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/[slug]/editar/page-c714487ad8168918.js": [
+13554,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/[slug]/observaciones/page-040b5ef9b64afa36.js": [
+20176,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/[slug]/page-5015788cffedf567.js": [
+53000,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/[slug]/versiones/page-e48def4c346b47e5.js": [
+2643,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/importar/page-16a03d1325784348.js": [
+589,
+1788364589
+],
+".next/static/chunks/app/(app)/reports/page-1604d9899a93ac48.js": [
+188,
+1788364589
+],
+".next/static/chunks/app/_not-found/page-84b9374404356be4.js": [
+2680,
+1788364589
+],
+".next/static/chunks/app/api/auth/[...nextauth]/route-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/app/api/reports/[slug]/audio/[chapterId]/route-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/app/api/reports/[slug]/figure/[blockId]/route-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/app/api/reports/[slug]/intro-audio/route-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/app/api/reports/[slug]/map/[key]/route-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/app/layout-41a33006f6cf1713.js": [
+605,
+1788364589
+],
+".next/static/chunks/app/login/page-34ac8f760a7444e4.js": [
+3732,
+1788364589
+],
+".next/static/chunks/app/page-113245763fca61a8.js": [
+152,
+1788364589
+],
+".next/static/chunks/d0deef33.a515038d95242dd3.js": [
+148504,
+1788364589
+],
+".next/static/chunks/framework-35bf239ac782ce4d.js": [
+181584,
+1788364589
+],
+".next/static/chunks/main-app-441d55fe3e35d311.js": [
+569,
+1788364589
+],
+".next/static/chunks/main-d19860ca5a2cb7f1.js": [
+122602,
+1788364589
+],
+".next/static/chunks/pages/_app-0d6ce27712411be2.js": [
+921,
+1788364589
+],
+".next/static/chunks/pages/_error-a8479a8c7bc399cf.js": [
+5676,
+1788364589
+],
+".next/static/chunks/polyfills-42372ed130431b0a.js": [
+112594,
+1788364589
+],
+".next/static/chunks/webpack-e1727e589b83e2c1.js": [
+3631,
+1788364589
+],
+".next/static/css/55693049b062c6a3.css": [
+10611,
+1788364589
+],
+".next/static/css/f2aaa95c63884724.css": [
+39124,
+1788364589
+],
+".next/static/media/19cfc7226ec3afaa-s.woff2": [
+19044,
+1788364589
+],
+".next/static/media/21350d82a1f187e9-s.woff2": [
+18744,
+1788364589
+],
+".next/static/media/3d165c286d94e27c-s.woff2": [
+18108,
+1788364589
+],
+".next/static/media/591e43f23f51e5a5-s.woff2": [
+42056,
+1788364589
+],
+".next/static/media/7c21074d9bafed1b-s.woff2": [
+20084,
+1788364589
+],
+".next/static/media/8e9860b6e62d6359-s.woff2": [
+85272,
+1788364589
+],
+".next/static/media/916860560b9a2bc2-s.woff2": [
+13440,
+1788364589
+],
+".next/static/media/97ac91773d3121b2-s.p.woff2": [
+50924,
+1788364589
+],
+".next/static/media/ba9851c3c22cd980-s.woff2": [
+25844,
+1788364589
+],
+".next/static/media/c5fe6dc8356a8c31-s.woff2": [
+11272,
+1788364589
+],
+".next/static/media/df0a9ae256c0569c-s.woff2": [
+10280,
+1788364589
+],
+".next/static/media/e4af272ccee01ff0-s.p.woff2": [
+48432,
+1788364589
+],
+".next/static/media/e54d16b9f2c4535b-s.woff2": [
+36500,
+1788364589
+],
+".next/static/media/layers-2x.9859cd12.png": [
+1259,
+1788364589
+],
+".next/static/media/layers.ef6db872.png": [
+696,
+1788364589
+],
+".next/static/media/marker-icon.d577052a.png": [
+1466,
+1788364589
+],
+".next/trace": [
+1178511,
+1788364624
+],
+".next/types/app/(app)/admin/page.ts": [
+3781,
+1788364553
+],
+".next/types/app/(app)/instrucciones/page.ts": [
+3805,
+1788364553
+],
+".next/types/app/(app)/reports/[slug]/editar/page.ts": [
+3841,
+1788364553
+],
+".next/types/app/(app)/reports/[slug]/observaciones/page.ts": [
+3862,
+1788364553
+],
+".next/types/app/(app)/reports/[slug]/page.ts": [
+3814,
+1788364553
+],
+".next/types/app/(app)/reports/[slug]/versiones/page.ts": [
+3850,
+1788364553
+],
+".next/types/app/(app)/reports/importar/page.ts": [
+3820,
+1788364553
+],
+".next/types/app/(app)/reports/page.ts": [
+3787,
+1788364553
+],
+".next/types/app/api/auth/[...nextauth]/route.ts": [
+8810,
+1788364553
+],
+".next/types/app/api/reports/[slug]/audio/[chapterId]/route.ts": [
+8864,
+1788364553
+],
+".next/types/app/api/reports/[slug]/figure/[blockId]/route.ts": [
+8861,
+1788364553
+],
+".next/types/app/api/reports/[slug]/intro-audio/route.ts": [
+8840,
+1788364553
+],
+".next/types/app/api/reports/[slug]/map/[key]/route.ts": [
+8840,
+1788364553
+],
+".next/types/app/layout.ts": [
+3745,
+1788364553
+],
+".next/types/app/login/page.ts": [
+3757,
+1788364553
+],
+".next/types/app/page.ts": [
+3733,
+1788364553
+],
+".next/types/cache-life.d.ts": [
+5863,
+1788364553
+],
+".next/types/package.json": [
+18,
+1788364553
+],
+".next/types/routes.d.ts": [
+2894,
+1788364494
+],
+".next/types/validator.ts": [
+8059,
+1788364494
+],
+"BACKLOG.md": [
+3147,
+1785685009
+],
+"BASE_DE_CONOCIMIENTO.md": [
+17363,
+1788364392
+],
+"CLAUDE.md": [
+5828,
+1789865236
+],
+"GENERACION.md": [
+9239,
+1785790345
+],
+"Insumos/Logo VyR vertical.jpeg": [
+128400,
+1776644058
+],
+"Insumos/Plan de Talca/20613247-uhd_3840_2160_60fps.mp4": [
+65563895,
+1785703483
+],
+"Insumos/Plan de Talca/Dashboard_Diagnostico_Talca.html": [
+17437441,
+1785634642
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/Informe Ejecutivo_STU_Talca-Maule.pdf": [
+8660249,
+1785737835
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/Informe Final.pdf": [
+112067794,
+1785737842
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/Informe PAC Talca-Maule.pdf": [
+5214563,
+1785737835
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/Informe de Difusión EOD Hogares Talca Maule.pdf": [
+3215364,
+1785737833
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/PROCEDENCIA.txt": [
+682,
+1785779312
+],
+"Insumos/Plan de Talca/Estudios previos/SECTRA - Plan de Transporte Talca y Maule 2024/Presentación Resultados EOD Talca y Maule.pdf": [
+1603537,
+1785737833
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/1 Informes/Informe_Ejecutivo_Prediagnostico_Talca.docx": [
+1655574,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/1 Informes/Informe_Ejecutivo_Prediagnostico_Talca.pdf": [
+698339,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/1 Informes/Sintesis_Prediagnostico_Talca.docx": [
+16998072,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/1 Informes/Sintesis_Prediagnostico_Talca.pdf": [
+3619993,
+1785785770
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/CE_densidad_consolidada.png": [
+91038,
+1785785456
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/CE_evolucion.png": [
+160306,
+1785785495
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/CE_perfil_demografico.png": [
+110983,
+1785785454
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/CE_perfil_nse.png": [
+193440,
+1785785452
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/CG_carga.png": [
+175104,
+1785785502
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/MO_caminata.png": [
+210904,
+1785785499
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/MO_ciclos.png": [
+205426,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/MO_dependencia_empleo.png": [
+204056,
+1785785455
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/MO_tp.png": [
+201750,
+1785785501
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/SG_colegios_criticos.png": [
+601338,
+1785785505
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/SG_tendencia_siniestros.png": [
+301137,
+1785785506
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_avaluo.png": [
+154779,
+1785785459
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_casa_depto_anio.png": [
+108965,
+1785785453
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_composicion.png": [
+151521,
+1785785397
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_densif_expansion.png": [
+114922,
+1785785454
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_forma_urbana.png": [
+175844,
+1785785451
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_m2pp_uso.png": [
+171059,
+1785785450
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_stock_poblacion.png": [
+127984,
+1785785452
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/US_stock_tasa_comparada.png": [
+318581,
+1785785512
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_distancia_modo.png": [
+196236,
+1785785467
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_gen_atr.png": [
+552067,
+1785785498
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_modal.png": [
+176023,
+1785785497
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_modal_quintil.png": [
+121164,
+1785785466
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_periodo.png": [
+124520,
+1785785419
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_proposito.png": [
+124646,
+1785785420
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_proposito_periodo.png": [
+175680,
+1785785471
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_sustitucion_equidad.png": [
+196722,
+1785785472
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/PNG/VJ_tiempo_modo.png": [
+124404,
+1785785421
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/CE_densidad_consolidada.svg": [
+55344,
+1785785456
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/CE_evolucion.svg": [
+78999,
+1785785496
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/CE_perfil_demografico.svg": [
+61841,
+1785785454
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/CE_perfil_nse.svg": [
+95073,
+1785785452
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/CG_carga.svg": [
+81614,
+1785785503
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/MO_caminata.svg": [
+88048,
+1785785499
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/MO_ciclos.svg": [
+87023,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/MO_dependencia_empleo.svg": [
+90220,
+1785785455
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/MO_tp.svg": [
+88031,
+1785785502
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/SG_colegios_criticos.svg": [
+939123,
+1785785505
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/SG_tendencia_siniestros.svg": [
+112873,
+1785785507
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_avaluo.svg": [
+72916,
+1785785460
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_casa_depto_anio.svg": [
+68057,
+1785785453
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_composicion.svg": [
+69994,
+1785785398
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_densif_expansion.svg": [
+56951,
+1785785454
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_forma_urbana.svg": [
+83607,
+1785785451
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_m2pp_uso.svg": [
+80210,
+1785785450
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_stock_poblacion.svg": [
+65433,
+1785785453
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/US_stock_tasa_comparada.svg": [
+110295,
+1785785512
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_distancia_modo.svg": [
+86364,
+1785785468
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_gen_atr.svg": [
+402525,
+1785785498
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_modal.svg": [
+79171,
+1785785497
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_modal_quintil.svg": [
+74583,
+1785785466
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_periodo.svg": [
+56286,
+1785785419
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_proposito.svg": [
+58258,
+1785785420
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_proposito_periodo.svg": [
+87359,
+1785785472
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_sustitucion_equidad.svg": [
+83276,
+1785785473
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Graficos/SVG/VJ_tiempo_modo.svg": [
+60544,
+1785785421
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/LEEME_mapas.md": [
+2020,
+1785785716
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/CE_cobertura_escolar.png": [
+406659,
+1785785462
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/CE_densidad.png": [
+667134,
+1785785416
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/CE_nse_bajo.png": [
+397666,
+1785785463
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/F0_area_estudio.png": [
+4562715,
+1785517751
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/MO_caminata_map.png": [
+370068,
+1785785429
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/MO_ciclos_map.png": [
+325852,
+1785785436
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/OF_ciclovias.png": [
+224100,
+1785785445
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/OF_red.png": [
+291487,
+1785519846
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/SG_accidentes.png": [
+354569,
+1785785430
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/SG_conflictos_colegios.png": [
+379401,
+1785785493
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_actividades_clave.png": [
+630926,
+1785785480
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_crecimiento_zona.png": [
+353398,
+1785785447
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_mixtura.png": [
+362139,
+1785785448
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_usos_preferentes.png": [
+396788,
+1785785409
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_valor_suelo.png": [
+606587,
+1785785484
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/US_valor_zonal.png": [
+389829,
+1785785459
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/VJ_atraccion_neta.png": [
+412931,
+1785785461
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/VJ_curva_horaria_proposito.png": [
+559624,
+1785785508
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/VJ_gravitacion.png": [
+115364,
+1785785476
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe completo/Mapas/PNG/VJ_lineas_deseo.png": [
+450362,
+1785785424
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/CE_densidad_consolidada.png": [
+91038,
+1785785456
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/SG_colegios_criticos.png": [
+601338,
+1785785505
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/SG_tendencia_siniestros.png": [
+301137,
+1785785506
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/US_m2pp_uso.png": [
+171059,
+1785785450
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/US_stock_tasa_comparada.png": [
+318581,
+1785785512
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/VJ_modal_quintil.png": [
+121164,
+1785785466
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/PNG/VJ_sustitucion_equidad.png": [
+196722,
+1785785472
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/CE_densidad_consolidada.svg": [
+55344,
+1785785456
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/SG_colegios_criticos.svg": [
+939123,
+1785785505
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/SG_tendencia_siniestros.svg": [
+112873,
+1785785507
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/US_m2pp_uso.svg": [
+80210,
+1785785450
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/US_stock_tasa_comparada.svg": [
+110295,
+1785785512
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/VJ_modal_quintil.svg": [
+74583,
+1785785466
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Graficos/SVG/VJ_sustitucion_equidad.svg": [
+83276,
+1785785473
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/2 Figuras/Informe ejecutivo/Mapas/LEEME_mapas.md": [
+2020,
+1785785716
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/Dashboard_Diagnostico_Talca.html": [
+17568051,
+1785785500
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/area_estudio.geojson": [
+61981,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/capa_colegios_criticos.json": [
+1548,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/capa_siniestros.json": [
+446412,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/indicadores_completos.json": [
+40550,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/kpis.json": [
+1132,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/lineas_deseo.json": [
+4530,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/secciones_relato.json": [
+19375,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/series_graficos.json": [
+4251,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/variables_mapa.json": [
+2155,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/datos/zonas.geojson": [
+127301,
+1785785619
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/librerias/chart.umd.min.js": [
+205399,
+1785620137
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/librerias/leaflet.css": [
+14806,
+1785620137
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/librerias/leaflet.js": [
+147552,
+1785620137
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/3 Dashboard/librerias/tema-goro.css": [
+7435,
+1785620137
+],
+"Insumos/Plan de Talca/Nuevos informes de prediagnostico de Talca/LEEME.md": [
+7864,
+1785785737
+],
+"Insumos/Plan de Talca/Sintesis_Prediagnostico_Talca.docx": [
+16902043,
+1785632884
+],
+"Insumos/logo horizontal.png": [
+1159864,
+1781789604
+],
+"Insumos/solo simbolo.png": [
+901328,
+1781789587
+],
+"PLAYBOOK.md": [
+11686,
+1788364349
+],
+"PROYECTO.md": [
+6098,
+1786843665
+],
+"README.md": [
+6565,
+1785644746
+],
+"audio al informe.md": [
+2942,
+1785633714
+],
+"docker-compose.yml": [
+460,
+1785633808
+],
+"estandar del informe.md": [
+2300,
+1785632545
+],
+"insumos de partida.md": [
+1763,
+1785632991
+],
+"mejora grafica.txt": [
+2050,
+1785642415
+],
+"next-env.d.ts": [
+268,
+1785633980
+],
+"next.config.mjs": [
+279,
+1785632329
+],
+"package-lock.json": [
+151636,
+1785682232
+],
+"package.json": [
+1436,
+1785682232
+],
+"plantilla_informe/LEEME.md": [
+953,
+1785714420
+],
+"plantilla_informe/graficos.json": [
+1133,
+1785714439
+],
+"plantilla_informe/informe.json": [
+1042,
+1785714429
+],
+"plantilla_informe/mapas.json": [
+547,
+1785714446
+],
+"postcss.config.mjs": [
+157,
+1785632340
+],
+"prisma/schema.prisma": [
+14250,
+1785716765
+],
+"prisma/seed.ts": [
+2361,
+1785717676
+],
+"public/brand/hero-poster.jpg": [
+284388,
+1785704291
+],
+"public/brand/hero.mp4": [
+2927586,
+1785704289
+],
+"public/brand/icon.png": [
+78029,
+1785704200
+],
+"public/brand/isotipo.png": [
+240352,
+1785704200
+],
+"public/brand/lockup.png": [
+146428,
+1785704201
+],
+"scripts/create-baseline-version.mjs": [
+1777,
+1785703216
+],
+"scripts/csv-a-graficos.mjs": [
+3277,
+1785716645
+],
+"scripts/generar-informe.ts": [
+17636,
+1785790345
+],
+"scripts/generar-paquete.ts": [
+9587,
+1785788541
+],
+"scripts/import-talca.ts": [
+4576,
+1785644323
+],
+"scripts/limpiar-audio-obsoleto.ts": [
+2663,
+1788364303
+],
+"scripts/migrate-neon.mjs": [
+1493,
+1785638088
+],
+"scripts/pg.mjs": [
+2204,
+1785635313
+],
+"scripts/place-dashboard-charts.mjs": [
+6027,
+1785680402
+],
+"scripts/place-figures.mjs": [
+5859,
+1785689372
+],
+"scripts/place-map.mjs": [
+4066,
+1785682451
+],
+"scripts/place-thematic-maps.mjs": [
+4889,
+1785684922
+],
+"scripts/pregenerate-audio.ts": [
+4506,
+1788362562
+],
+"scripts/pregenerate-intro.ts": [
+2742,
+1785717058
+],
+"scripts/prep-brand-assets.mjs": [
+2601,
+1785704193
+],
+"scripts/reclaim-figure.mjs": [
+4583,
+1785689899
+],
+"scripts/set-exec-summary.mjs": [
+1826,
+1785702702
+],
+"scripts/set-pronunciations.mjs": [
+1521,
+1785640877
+],
+"src/app/(app)/admin/page.tsx": [
+1951,
+1785717799
+],
+"src/app/(app)/instrucciones/page.tsx": [
+5040,
+1785687876
+],
+"src/app/(app)/layout.tsx": [
+869,
+1785690601
+],
+"src/app/(app)/reports/[slug]/editar/page.tsx": [
+1442,
+1785633493
+],
+"src/app/(app)/reports/[slug]/observaciones/page.tsx": [
+6846,
+1785703288
+],
+"src/app/(app)/reports/[slug]/page.tsx": [
+9143,
+1785788384
+],
+"src/app/(app)/reports/[slug]/versiones/page.tsx": [
+6709,
+1785703344
+],
+"src/app/(app)/reports/importar/page.tsx": [
+2515,
+1785687984
+],
+"src/app/(app)/reports/page.tsx": [
+2966,
+1785717720
+],
+"src/app/actions/admin.ts": [
+3274,
+1785717744
+],
+"src/app/actions/annotations.ts": [
+11120,
+1785692345
+],
+"src/app/actions/reports.ts": [
+8326,
+1785703598
+],
+"src/app/actions/versions.ts": [
+4080,
+1785703197
+],
+"src/app/api/auth/[...nextauth]/route.ts": [
+131,
+1785632415
+],
+"src/app/api/reports/[slug]/audio/[chapterId]/route.ts": [
+4981,
+1785678439
+],
+"src/app/api/reports/[slug]/figure/[blockId]/route.ts": [
+1370,
+1785689096
+],
+"src/app/api/reports/[slug]/intro-audio/route.ts": [
+3730,
+1785716895
+],
+"src/app/api/reports/[slug]/map/[key]/route.ts": [
+1165,
+1785682260
+],
+"src/app/globals.css": [
+13526,
+1785692744
+],
+"src/app/layout.tsx": [
+1413,
+1785704364
+],
+"src/app/login/actions.ts": [
+733,
+1785632453
+],
+"src/app/login/page.tsx": [
+2349,
+1785690625
+],
+"src/app/page.tsx": [
+286,
+1785632444
+],
+"src/components/AppFooter.tsx": [
+1449,
+1785704382
+],
+"src/components/AppHeader.tsx": [
+2733,
+1785717811
+],
+"src/components/SubmitButton.tsx": [
+538,
+1785687993
+],
+"src/components/admin/AdminAccess.tsx": [
+6902,
+1785717786
+],
+"src/components/annotations/AuditTrail.tsx": [
+1429,
+1785691931
+],
+"src/components/annotations/ObservationPanel.tsx": [
+20669,
+1785703282
+],
+"src/components/annotations/ReviewToolbar.tsx": [
+8340,
+1785691531
+],
+"src/components/annotations/VoiceInput.tsx": [
+3124,
+1785687340
+],
+"src/components/brand/BrandMark.tsx": [
+2874,
+1785704342
+],
+"src/components/editor/ChartForm.tsx": [
+4917,
+1785688287
+],
+"src/components/editor/ReportEditor.tsx": [
+12194,
+1785688249
+],
+"src/components/report/ChartBlock.tsx": [
+2727,
+1785632565
+],
+"src/components/report/DashboardChart.tsx": [
+7167,
+1785686862
+],
+"src/components/report/PublishVersionButton.tsx": [
+2398,
+1785703330
+],
+"src/components/report/ReportViewer.tsx": [
+26393,
+1785788098
+],
+"src/components/report/TerritorialMap.tsx": [
+11165,
+1785689777
+],
+"src/components/viewer/AudioPlayer.tsx": [
+13294,
+1785692887
+],
+"src/components/viewer/DocSearch.tsx": [
+3073,
+1785692707
+],
+"src/components/viewer/DraftWatermark.tsx": [
+912,
+1785691992
+],
+"src/components/viewer/GlossaryTooltip.tsx": [
+1422,
+1785687318
+],
+"src/components/viewer/HeroCover.tsx": [
+9986,
+1785716940
+],
+"src/components/viewer/ReadingProgress.tsx": [
+952,
+1785687400
+],
+"src/components/viewer/TableOfContents.tsx": [
+7196,
+1785692726
+],
+"src/components/viewer/TalcaMark.tsx": [
+1249,
+1785643336
+],
+"src/components/viewer/ThemeToggle.tsx": [
+1938,
+1785685974
+],
+"src/lib/anchor.ts": [
+2964,
+1785702987
+],
+"src/lib/audit.ts": [
+781,
+1785691844
+],
+"src/lib/auth.config.ts": [
+1086,
+1785637863
+],
+"src/lib/auth.ts": [
+1264,
+1785637871
+],
+"src/lib/brand.ts": [
+4341,
+1785704331
+],
+"src/lib/chapter-text.ts": [
+2128,
+1785788185
+],
+"src/lib/db.ts": [
+441,
+1785632386
+],
+"src/lib/docx.ts": [
+4907,
+1785633301
+],
+"src/lib/elevenlabs.ts": [
+6515,
+1785716819
+],
+"src/lib/pronunciation.ts": [
+762,
+1785640798
+],
+"src/lib/rbac.ts": [
+2596,
+1785717700
+],
+"src/lib/snapshot.ts": [
+3170,
+1785703170
+],
+"src/lib/version.ts": [
+456,
+1785685918
+],
+"src/lib/voices.ts": [
+575,
+1785788935
+],
+"src/middleware.ts": [
+982,
+1785637878
+],
+"src/types/content.ts": [
+1311,
+1785634945
+],
+"src/types/next-auth.d.ts": [
+444,
+1785632398
+],
+"tailwind.config.ts": [
+1473,
+1785643211
+],
+"tsconfig.json": [
+576,
+1785632324
+],
+"tsconfig.tsbuildinfo": [
+144039,
+1788362591
+]
+}
+}

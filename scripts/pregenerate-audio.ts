@@ -48,8 +48,14 @@ async function main() {
     if (dictId && dictVersion) dictLocators = [{ pronunciation_dictionary_id: dictId, version_id: dictVersion }];
   }
 
-  let done = 0, skip = 0;
+  // Mismos capítulos que sirve el reproductor: omite portada e índice, para no
+  // gastar créditos en audio que nunca se reproduce. Debe calzar con el filtro
+  // `esPortadaOIndice` de src/app/(app)/reports/[slug]/page.tsx.
+  const esPortadaOIndice = (t: string) => /^\s*(introducci[oó]n|[ií]ndice de contenidos?)/i.test(t);
+
+  let done = 0, skip = 0, front = 0;
   for (const ch of report.chapters) {
+    if (esPortadaOIndice(ch.title)) { front++; process.stdout.write("–"); continue; }
     const blocks = ch.sections.flatMap((s) => s.blocks);
     const segments = chapterNarrationSegments(ch.title, blocks);
     const text = segments.join(" ");
@@ -67,7 +73,7 @@ async function main() {
     });
     done++; process.stdout.write("✓");
   }
-  console.log(`\n${useNeon ? "NEON" : "LOCAL"}: generados ${done}, ya estaban ${skip}. Audio cargado (voz ${VOICE_SCHEME}).`);
+  console.log(`\n${useNeon ? "NEON" : "LOCAL"}: generados ${done}, ya estaban ${skip}, omitidos portada/índice ${front}. Audio cargado (voz ${VOICE_SCHEME}).`);
   await prisma.$disconnect();
 }
 main().catch((e) => { console.error("\n", String(e).slice(0, 300)); process.exit(1); });

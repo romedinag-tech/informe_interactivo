@@ -115,6 +115,7 @@ flowchart TD
 | 17 | Observaciones quedan huérfanas tras corregir | Se reordenaron/insertaron capítulos en medio (emparejamiento por posición) | Para reestructuras grandes, editar en el editor web; las huérfanas se marcan, no se pierden |
 | 18 | **Deploy de Vercel falla por un error de tipos en un `.mjs`/`.ts` de `scripts/`** | `next build` typechea TODO el `tsconfig` (`**/*.ts`), scripts incluidos | **Siempre `npm run build` completo antes de cada push** (no solo `tsc`); ver regla obligatoria abajo |
 | 19 | Un `tsc`/build "pasa" pero en verdad falló | Piping `tsc \| head`/`\| tail` devuelve el exit de `head`, **enmascara** el error | Correr el check SIN pipe, o capturar `${PIPESTATUS[0]}`; nunca leer `$?` después de un pipe a `head` |
+| 20 | **Un informe existente re-genera audio y RE-FACTURA en ElevenLabs en cada reproducción** | Cambiar `VOICE_SCHEME` (voz) o el texto de narración cambia el `textHash` → el caché viejo (p. ej. `alt-EXAV-JBFq`) ya no calza → cada play llama a ElevenLabs. Le pasó al Talca original al unificar la voz a LatAm | **Pre-generar CADA informe existente bajo el esquema nuevo** (`pregenerate-audio.ts <slug> [neon]`) — escribe directo a la base, sin deploy, y deja HIT permanente. Limpiar el caché obsoleto con `limpiar-audio-obsoleto.ts`. El pre-generador ya omite portada/índice (calza con el reproductor) para no gastar créditos de más |
 
 ---
 
