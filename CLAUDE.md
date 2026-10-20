@@ -13,9 +13,12 @@ carpeta declarativa o desde el paquete de entrega V&R. En vivo: Talca original
 (`prediagnostico-talca`, referencia) + paquete V&R (`-completo`, `-ejecutivo`), con
 mapas interactivos, figuras nítidas y audio latinoamericano cacheado (HIT permanente).
 Segundo cerebro documentado (`PROYECTO.md` + `BASE_DE_CONOCIMIENTO.md`).
-Última actividad: 2026-08-03 (último commit); 6 archivos sin commitear de esta sesión
-(fix de facturación de audio + docs del segundo cerebro). Sin encargos abiertos; no
-registrado en el orquestador.
+Última actividad: 2026-09-19 (commit `9d08136`: fin de re-facturación del audio del
+Talca original + segundo cerebro + columna vertebral v2); árbol limpio, pusheado a
+`main`. Conforme en el índice maestro v2. **Registrada en el orquestador** como
+`informes_interactivos` (tipo herramienta, 2026-10-20), para que el hub le pueda encargar
+publicar entregables de los motores como informes interactivos (p. ej. el prediagnóstico de
+Talca). Reporta anotando en el libro cuando publique algo; no la vigila el vigía. Sin encargos abiertos.
 
 ## Entradas y salidas
 **Produce:** informes interactivos en vivo, que consume la contraparte técnica de
@@ -58,7 +61,7 @@ Informe nuevo: `npx tsx scripts/generar-informe.ts <carpeta> [neon]` (o
 `npx tsc --noEmit` **y** `npm run build` con exit 0 real. Deploy: push a `main`
 (Vercel despliega solo). Comandos y reglas duras completas: manual abajo, `GENERACION.md`, `PLAYBOOK.md`.
 
-<!-- columna-vertebral: ultima_actualizacion=2026-09-19 commit=c4d4ad4 -->
+<!-- columna-vertebral: ultima_actualizacion=2026-10-20 commit=9d08136 -->
 
 ---
 

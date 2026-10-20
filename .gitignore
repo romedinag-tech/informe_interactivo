@@ -40,3 +40,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# recados del hub (orquestador) — carpeta del proyecto ajena al repo
+/_hub_encargos
