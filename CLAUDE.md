@@ -45,9 +45,11 @@ la app en línea, no archivos en disco).
   (`pregenerate-audio.ts <slug> neon`; escribe directo a Neon, sin deploy → la
   facturación se detiene al instante). Caché obsoleto se limpia con
   `limpiar-audio-obsoleto.ts` (dry-run por defecto). Detalle: `PLAYBOOK.md` #20.
+  Consulta reproducible (cifras de control): `consultas/2026-10_re-facturacion-audio-elevenlabs-talca-original/`.
 - 2026-08-03 — Un `tsc`/build con pipe a `head`/`tail` **enmascara el exit code** → un
   build roto llegó a Vercel. Correr `npx tsc --noEmit` **y** `npm run build` con exit 0
-  real antes de cada push; `scripts/*` cuenta para el build. Detalle: `PLAYBOOK.md` #18-19.
+  real antes de cada push; `scripts/*` cuenta para el build. `consultas/` está excluida del
+  `tsconfig` para que los scripts de análisis no tumben el deploy. Detalle: `PLAYBOOK.md` #18-19.
 - 2026-08-03 — El modo CREAR de `generar-informe.ts` es **destructivo** (`deleteMany`
   por slug: borra observaciones/versiones/audio). Para corregir un informe con
   observaciones: `--actualizar`. Detalle: `PLAYBOOK.md` #13.
@@ -61,7 +63,7 @@ Informe nuevo: `npx tsx scripts/generar-informe.ts <carpeta> [neon]` (o
 `npx tsc --noEmit` **y** `npm run build` con exit 0 real. Deploy: push a `main`
 (Vercel despliega solo). Comandos y reglas duras completas: manual abajo, `GENERACION.md`, `PLAYBOOK.md`.
 
-<!-- columna-vertebral: ultima_actualizacion=2026-10-20 commit=9d08136 -->
+<!-- columna-vertebral: ultima_actualizacion=2026-10-20 commit=9e4178c -->
 
 ---
 
