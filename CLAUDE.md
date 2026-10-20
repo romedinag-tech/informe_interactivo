@@ -18,7 +18,10 @@ Talca original + segundo cerebro + columna vertebral v2); árbol limpio, pushead
 `main`. Conforme en el índice maestro v2. **Registrada en el orquestador** como
 `informes_interactivos` (tipo herramienta, 2026-10-20), para que el hub le pueda encargar
 publicar entregables de los motores como informes interactivos (p. ej. el prediagnóstico de
-Talca). Reporta anotando en el libro cuando publique algo; no la vigila el vigía. Sin encargos abiertos.
+Talca). Reporta anotando en el libro cuando publique algo; no la vigila el vigía.
+**Encargo abierto del hub** (`informes_interactivos.revision-local`, plazo 2026-10-22): modo de
+**revisión local** del visor —sin audio, sin Vercel, sin Postgres; almacenamiento en archivos en la
+carpeta del estudio— + skill `informe-revision`, piloto Talca. Ver `_hub_encargos/2026-10-20_revision_local.md`.
 
 ## Entradas y salidas
 **Produce:** informes interactivos en vivo, que consume la contraparte técnica de
