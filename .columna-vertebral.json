@@ -1,5 +1,5 @@
 {
-"generado": "2026-10-20T20:46:36-03:00",
+"generado": "2026-10-21T13:56:09-03:00",
 "archivos": {
 ".audio-cache/21bbf53df004aa5f0983d6d3bdbd34f8b702306076f0ed0d72da11c6d3b907be.mp3": [
 474427,
@@ -26,12 +26,12 @@
 1785685009
 ],
 "BASE_DE_CONOCIMIENTO.md": [
-17363,
-1788364392
+19605,
+1792601710
 ],
 "CLAUDE.md": [
-6669,
-1792539971
+7716,
+1792601663
 ],
 "GENERACION.md": [
 9239,
@@ -713,6 +713,14 @@
 4583,
 1785689899
 ],
+"scripts/revision-local.ts": [
+11006,
+1792600353
+],
+"scripts/revision-parse.ts": [
+3761,
+1792597083
+],
 "scripts/set-exec-summary.mjs": [
 1826,
 1785702702
@@ -720,6 +728,10 @@
 "scripts/set-pronunciations.mjs": [
 1521,
 1785640877
+],
+"scripts/transcribe.py": [
+1982,
+1792599592
 ],
 "src/app/(app)/admin/page.tsx": [
 1951,
@@ -957,6 +969,18 @@
 2596,
 1785717700
 ],
+"src/lib/revision/parse.ts": [
+9784,
+1792597638
+],
+"src/lib/revision/rounds.ts": [
+3714,
+1792600292
+],
+"src/lib/revision/viewer-html.ts": [
+16534,
+1792600402
+],
 "src/lib/snapshot.ts": [
 3170,
 1785703170
@@ -990,8 +1014,8 @@
 1792539824
 ],
 "tsconfig.tsbuildinfo": [
-144070,
-1789865664
+139991,
+1792600520
 ]
 }
 }

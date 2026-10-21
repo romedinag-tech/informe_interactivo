@@ -1,13 +1,15 @@
-// Genera el HTML autocontenido del VISOR DE REVISIÓN interna a partir del modelo
-// parseado. Sirve para leer el informe y dejar observaciones ancladas por cita.
-// Las imágenes se sirven aparte (`/img/<n>`), no se incrustan. El cliente guarda
-// las observaciones vía `POST /observacion`. Sin audio (eso es la Etapa 3).
+// Render del VISOR DE REVISIÓN interna (estructura + estilos + anclaje). Piezas
+// COMPARTIDAS por el modo servidor (`renderReviewHtml`, imágenes servidas en `/img/N`,
+// persistencia vía POST) y el modo OFFLINE (`offline-html.ts`, imágenes como data: URI,
+// persistencia en localStorage). Lo único que cambia entre modos es la fuente de las
+// imágenes y el script de cliente; todo lo demás (CSS, bloques, composer) se reusa.
 
 import type { ReviewDoc, ReviewBlock } from "./parse";
 
 export type ReviewMeta = { informe: string; version: string; ronda: number };
+export type ImgOpts = { imgSrc: (index: number) => string; lazy: boolean };
 
-const esc = (s: string): string =>
+export const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function tableHtml(columns: string[], rows: string[][]): string {
@@ -16,18 +18,19 @@ function tableHtml(columns: string[], rows: string[][]): string {
   return `<table class="cuadro-tabla"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
 
-function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }): string {
+function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }, io: ImgOpts): string {
   const anchorData = `data-bid="${bid}" data-ch="${esc(ctx.ch)}" data-sec="${esc(ctx.sec)}"`;
+  const lazy = io.lazy ? ' loading="lazy"' : "";
   switch (b.type) {
     case "HEADING":
-      return `<h3 class="subt" data-bid="${bid}">${esc(b.text)}</h3>`;
+      return `<h3 class="subt" id="h-${bid.replace(/\./g, "-")}" data-bid="${bid}">${esc(b.text)}</h3>`;
     case "PARAGRAPH":
       return `<p class="block texto" ${anchorData} data-tipo="texto">${esc(b.text)}</p>`;
     case "TABLE":
       return `<div class="block tabla" ${anchorData} data-tipo="texto"><div class="obs-btn-wrap"><button class="obs-btn" data-bid="${bid}">+ observar</button></div>${tableHtml(b.columns, b.rows)}</div>`;
     case "FIGURE": {
       const cap = b.rotulo ? `<figcaption><b>${esc(b.rotulo)}.</b> ${esc(b.titulo)}${b.fuente ? `<span class="fuente">${esc(b.fuente)}</span>` : ""}</figcaption>` : "";
-      const img = b.image ? `<img src="/img/${b.image.index}" alt="${esc(b.rotulo || "figura")}" loading="lazy">` : "";
+      const img = b.image ? `<img src="${io.imgSrc(b.image.index)}" alt="${esc(b.rotulo || "figura")}"${lazy}>` : "";
       return `<figure class="block figura" ${anchorData} data-tipo="figura" data-rotulo="${esc(b.rotulo)}" data-codigo="${esc(b.codigo ?? "")}" data-secarch="${esc(b.seccionArchivo ?? "")}"><div class="obs-btn-wrap"><button class="obs-btn" data-bid="${bid}">+ observar figura</button></div>${img}${cap}</figure>`;
     }
     case "CUADRO": {
@@ -37,32 +40,31 @@ function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }
   }
 }
 
-export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
-  const contentChapters = doc.chapters.filter((c) => !c.frontMatter);
+// Construye el índice (TOC) y el cuerpo del documento (capítulos de contenido).
+export function renderBodyToc(doc: ReviewDoc, io: ImgOpts): { toc: string; body: string } {
   const toc: string[] = [];
   const body: string[] = [];
-
-  contentChapters.forEach((ch, ci) => {
+  const tocEntry = (lvl: number, id: string, text: string) =>
+    toc.push(`<a class="toc-ch toc-l${lvl}" data-lvl="${lvl}" href="#${id}">${esc(text)}</a>`);
+  doc.chapters.filter((c) => !c.frontMatter).forEach((ch, ci) => {
     const chId = `ch-${ci}`;
-    toc.push(`<a class="toc-ch" href="#${chId}">${esc(ch.title)}</a>`);
+    tocEntry(1, chId, ch.title);
     body.push(`<section class="chapter" id="${chId}"><h1>${esc(ch.title)}</h1>`);
     ch.sections.forEach((sec, si) => {
       const secTitle = sec.title ?? "";
-      if (secTitle) body.push(`<h2 class="sec" id="${chId}-s${si}">${esc(secTitle)}</h2>`);
+      if (secTitle) { body.push(`<h2 class="sec" id="${chId}-s${si}">${esc(secTitle)}</h2>`); tocEntry(2, `${chId}-s${si}`, secTitle); }
       sec.blocks.forEach((b, bi) => {
-        body.push(blockHtml(b, `${ci}.${si}.${bi}`, { ch: ch.title, sec: secTitle }));
+        const bid = `${ci}.${si}.${bi}`;
+        if (b.type === "HEADING") tocEntry(Math.min(b.level, 4), `h-${ci}-${si}-${bi}`, b.text);
+        body.push(blockHtml(b, bid, { ch: ch.title, sec: secTitle }, io));
       });
     });
     body.push(`</section>`);
   });
+  return { toc: toc.join("\n"), body: body.join("\n") };
+}
 
-  const data = { informe: meta.informe, version: meta.version, ronda: meta.ronda };
-
-  return `<!DOCTYPE html>
-<html lang="es"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Revisión · ${esc(meta.informe)} · ${esc(meta.version)}</title>
-<style>
+export const STYLES = `
   :root{ --ink:#1b2430; --muted:#5b6774; --line:#d7dee7; --soft:#eef3f8; --navy:#0E3358; --accent:#1D4E7A; --warn:#E07B2E; --bg:#f3f5f8; --card:#fff; }
   *{box-sizing:border-box} html,body{margin:0}
   body{font:16px/1.65 -apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
@@ -70,8 +72,16 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:20px 14px;border-right:1px solid var(--line);background:var(--card)}
   nav.toc .brand{font-weight:700;color:var(--navy);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
   nav.toc .ver{color:var(--muted);font-size:12px;margin:2px 0 14px}
-  .toc-ch{display:block;padding:6px 8px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:13.5px}
+  .toc-ch{display:block;padding:5px 8px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:13.5px}
   .toc-ch:hover{background:var(--soft)}
+  .toc-ch.toc-l1{font-weight:600;color:var(--navy);margin-top:6px}
+  .toc-ch.toc-l2{padding-left:18px;font-size:12.5px}
+  .toc-ch.toc-l3{padding-left:30px;font-size:12px;color:var(--muted)}
+  .toc-ch.toc-l4{padding-left:42px;font-size:11.5px;color:var(--muted)}
+  .toc-levels{display:flex;gap:4px;margin:4px 0 12px;align-items:center}
+  .toc-levels span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+  .toc-levels button{font:600 11px Segoe UI;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer;color:var(--muted)}
+  .toc-levels button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
   main{padding:34px 40px 120px;max-width:820px;min-width:0}
   main h1{font:600 26px/1.25 Georgia,serif;color:var(--navy);margin:34px 0 6px}
   main h2.sec{font:600 19px/1.3 Georgia,serif;color:var(--accent);margin:26px 0 4px}
@@ -90,9 +100,11 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   .obs-btn{font:600 12px Segoe UI;border:1px solid var(--navy);color:var(--navy);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer}
   .obs-btn:hover{background:var(--navy);color:#fff}
   .anchored{background:#fde8d4;border-bottom:2px solid var(--warn);cursor:pointer}
-  /* panel */
   aside.obs{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;border-left:1px solid var(--line);background:var(--card);padding:18px 16px}
   aside.obs h2{font:700 13px Segoe UI;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 12px}
+  aside.obs .acts{display:flex;gap:8px;margin:0 0 12px}
+  aside.obs .acts button{font:600 12px Segoe UI;border:1px solid var(--navy);color:var(--navy);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer}
+  aside.obs .warnbar{font-size:12px;color:#b3261e;background:#fdeceb;border:1px solid #f3c2bd;border-radius:8px;padding:6px 8px;margin-bottom:10px;display:none}
   .obs-item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
   .obs-item .tag{font:600 10.5px Segoe UI;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--accent);border-radius:6px;padding:1px 7px}
   .obs-item .tag.figura{background:var(--warn)} .obs-item .tag.cuadro{background:#2d7d5a}
@@ -107,7 +119,6 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   .orphan-tag{font:600 10px Segoe UI;color:var(--warn)}
   .obs-item .resp{font-size:12.5px;color:#2d7d5a;border-left:3px solid #2d7d5a;padding-left:8px;margin:6px 0}
   .empty{color:var(--muted);font-size:13px}
-  /* composer */
   #composer{position:fixed;z-index:50;display:none;width:340px;left:50%;top:110px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(14,51,88,.18);padding:12px}
   #composer .cita{font-size:12.5px;color:var(--muted);font-style:italic;border-left:3px solid var(--warn);padding-left:8px;margin-bottom:8px;max-height:84px;overflow:auto}
   #composer textarea{width:100%;min-height:72px;border:1px solid var(--line);border-radius:8px;padding:8px;font:14px inherit;resize:vertical}
@@ -120,17 +131,26 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   #rec-status{font-size:12px;color:var(--muted)}
   .obs-item audio{width:100%;margin-top:6px;height:30px}
   .obs-item .voz{color:var(--warn)}
-  #sel-btn{position:absolute;z-index:40;display:none;transform:translate(-50%,-120%)}
-</style></head>
+  #sel-btn{position:absolute;z-index:40;display:none;transform:translate(-50%,-120%)}`;
+
+// Esqueleto de página compartido. `acts` son botones extra del panel (export offline),
+// `dataScript` las constantes inline, `clientScript` la lógica del modo.
+export function renderPage(meta: ReviewMeta, tb: { toc: string; body: string }, dataScript: string, clientScript: string, acts = "", warnbar = false): string {
+  return `<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisión · ${esc(meta.informe)} · ${esc(meta.version)}</title>
+<style>${STYLES}</style></head>
 <body>
 <div class="wrap">
   <nav class="toc">
     <div class="brand">Revisión interna</div>
     <div class="ver">${esc(meta.informe)} · ${esc(meta.version)} · ronda ${meta.ronda}</div>
-    ${toc.join("\n")}
+    <div class="toc-levels"><span>Índice</span><button data-setlvl="1">1</button><button data-setlvl="2">2</button><button data-setlvl="3">3</button><button data-setlvl="4">4</button></div>
+    ${tb.toc}
   </nav>
-  <main id="doc">${body.join("\n")}</main>
-  <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2><div id="obs-sum" class="obs-sum"></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
+  <main id="doc">${tb.body}</main>
+  <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2>${warnbar ? '<div class="warnbar" id="warnbar"></div>' : ""}${acts}<div id="obs-sum" class="obs-sum"></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
 </div>
 <button id="sel-btn" class="obs-btn">+ observar</button>
 <div id="composer">
@@ -139,52 +159,47 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   <div class="rec-row"><button id="comp-rec" type="button">🎤 Dictar</button><span id="rec-status"></span></div>
   <div class="row"><button id="comp-cancel">Cancelar</button><button class="save" id="comp-save">Guardar</button></div>
 </div>
-<script>const META=${JSON.stringify(data)};${CLIENT_JS}</script>
+<script>${dataScript}${TOC_JS}${clientScript}</script>
 </body></html>`;
 }
 
-// ── JS del cliente (anclaje + composer + panel) ──────────────────────────────
-const CLIENT_JS = String.raw`
+// Selector de nivel del índice (compartido por ambos modos; sólo toca el DOM).
+const TOC_JS = String.raw`(function(){var nav=document.querySelector('nav.toc');if(!nav)return;var btns=nav.querySelectorAll('.toc-levels button');function set(mx){nav.querySelectorAll('.toc-ch').forEach(function(a){a.style.display=(+a.dataset.lvl<=mx)?'block':'none';});btns.forEach(function(b){b.classList.toggle('on',+b.dataset.setlvl===mx);});}btns.forEach(function(b){b.addEventListener('click',function(){set(+b.dataset.setlvl);});});set(2);})();`;
+
+export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
+  const tb = renderBodyToc(doc, { imgSrc: (i) => `/img/${i}`, lazy: true });
+  return renderPage(meta, tb, `const META=${JSON.stringify(meta)};`, SERVER_JS);
+}
+
+// ── JS del cliente MODO SERVIDOR (anclaje + composer + panel + fetch) ─────────
+const SERVER_JS = String.raw`
 let pending=null, observaciones=[], audioId=null, transcripcion=null, mediaRec=null, chunks=[];
 const $=(s)=>document.querySelector(s);
-
 function blockOf(node){ while(node && node.nodeType!==1) node=node.parentNode; return node? node.closest('.block'):null; }
 function offsetInBlock(block, container, off){ const r=document.createRange(); r.selectNodeContents(block); r.setEnd(container, off); return r.toString().length; }
-
-// Selección de texto → botón flotante.
 document.addEventListener('mouseup',(e)=>{
   if(e.target.closest('#composer')||e.target.closest('.obs-btn')) return;
-  const sel=window.getSelection(); const txt=sel.toString().trim();
-  const btn=$('#sel-btn');
+  const sel=window.getSelection(); const txt=sel.toString().trim(); const btn=$('#sel-btn');
   if(!txt||txt.length<3){ btn.style.display='none'; return; }
   const block=blockOf(sel.anchorNode);
   if(!block||block.dataset.tipo!=='texto'){ btn.style.display='none'; return; }
   const rng=sel.getRangeAt(0); const rect=rng.getBoundingClientRect();
-  btn.style.left=(rect.left+rect.width/2+window.scrollX)+'px';
-  btn.style.top=(rect.top+window.scrollY)+'px';
-  btn.style.display='block';
-  const full=block.textContent;
-  const start=offsetInBlock(block, rng.startContainer, rng.startOffset);
+  btn.style.left=(rect.left+rect.width/2+window.scrollX)+'px'; btn.style.top=(rect.top+window.scrollY)+'px'; btn.style.display='block';
+  const full=block.textContent; const start=offsetInBlock(block, rng.startContainer, rng.startOffset);
   pending={ tipo:'texto', ch:block.dataset.ch, sec:block.dataset.sec, rotulo:'', codigo:'', seccionArchivo:'',
     cita:txt, prefijo:full.slice(Math.max(0,start-40),start), sufijo:full.slice(start+txt.length,start+txt.length+40) };
 });
-
 $('#sel-btn').addEventListener('click',()=>{ $('#sel-btn').style.display='none'; openComposer(pending); });
-
-// Botones "+ observar" de figura/cuadro/tabla.
 document.querySelectorAll('.obs-btn[data-bid]').forEach(b=>b.addEventListener('click',()=>{
   const block=b.closest('.block'); const tipo=block.dataset.tipo;
   const cita = tipo==='texto' ? block.textContent.trim().slice(0,160) : (block.dataset.rotulo||'');
   openComposer({ tipo, ch:block.dataset.ch, sec:block.dataset.sec, rotulo:block.dataset.rotulo||'', codigo:block.dataset.codigo||'', seccionArchivo:block.dataset.secarch||'', cita, prefijo:'', sufijo:'' });
 }));
-
 function openComposer(p){ pending=p; audioId=null; transcripcion=null; resetRec();
   $('#comp-cita').textContent=(p.rotulo? p.rotulo+'. ':'')+'«'+p.cita+'»'; $('#comp-text').value='';
   $('#composer').style.display='block'; $('#comp-text').focus(); }
 function resetRec(){ const b=$('#comp-rec'); b.classList.remove('rec'); b.textContent='🎤 Dictar'; $('#rec-status').textContent=''; mediaRec=null; chunks=[]; }
 $('#comp-cancel').addEventListener('click',()=>{ if(mediaRec&&mediaRec.state==='recording') mediaRec.stop(); $('#composer').style.display='none'; });
-
-// Dictado por voz: graba en el navegador, transcribe LOCAL en el servidor (faster-whisper).
 $('#comp-rec').addEventListener('click',async()=>{
   const b=$('#comp-rec');
   if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); return; }
@@ -200,12 +215,10 @@ $('#comp-rec').addEventListener('click',async()=>{
     mediaRec.start(); b.classList.add('rec'); b.textContent='⏹ Detener'; $('#rec-status').textContent='grabando…';
   }catch(e){ $('#rec-status').textContent='sin micrófono: '+e.message; }
 });
-
 $('#comp-save').addEventListener('click',async()=>{ const texto=$('#comp-text').value.trim(); if(!texto) return;
   const obs={...pending, texto, origen: audioId? 'voz':'escrito', audioId, transcripcion};
   const r=await fetch('/observacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obs)});
   observaciones=await r.json(); $('#composer').style.display='none'; renderObs(); });
-
 async function load(){ observaciones=await (await fetch('/observaciones')).json(); renderObs(); }
 function renderObs(){ $('#obs-count').textContent=observaciones.length;
   const by=(e)=>observaciones.filter(o=>(o.estado||'pendiente')===e).length;
