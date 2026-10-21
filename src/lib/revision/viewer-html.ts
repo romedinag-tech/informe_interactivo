@@ -117,6 +117,8 @@ export const STYLES = `
   aside.obs h2{font:700 13px Segoe UI;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 12px}
   aside.obs .acts{display:flex;gap:8px;margin:0 0 12px}
   aside.obs .acts button{font:600 12px Segoe UI;border:1px solid var(--navy);color:var(--navy);background:var(--card);border-radius:8px;padding:5px 10px;cursor:pointer}
+  aside.obs .acts button:hover{background:var(--accent-soft)}
+  aside.obs .imp-status{font-size:11px;color:var(--muted);margin:-6px 0 10px;min-height:1px}
   aside.obs .warnbar{font-size:12px;color:#b3261e;background:#fdeceb;border:1px solid #f3c2bd;border-radius:8px;padding:6px 8px;margin-bottom:10px;display:none}
   .obs-item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
   .obs-item .tag{font:600 10.5px Segoe UI;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--accent);border-radius:6px;padding:1px 7px}

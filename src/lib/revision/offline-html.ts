@@ -9,7 +9,7 @@ import { renderBodyToc, renderPage, type ReviewMeta } from "./viewer-html";
 export function renderOfflineHtml(doc: ReviewDoc, meta: ReviewMeta, dataUris: string[]): string {
   // Offline: imágenes incrustadas (sin lazy, para que se dibujen al abrir con file://).
   const tb = renderBodyToc(doc, { imgSrc: (i) => dataUris[i] ?? "", lazy: false });
-  const acts = `<div class="acts"><button id="btn-export">⤓ Exportar observaciones</button></div>`;
+  const acts = `<div class="acts"><button id="btn-export">⤓ Exportar</button><button id="btn-import">⤒ Importar</button><input id="imp-file" type="file" accept="application/json,.json" multiple hidden></div><div id="imp-status" class="imp-status"></div>`;
   const dataScript = `const META=${JSON.stringify(meta)};`;
   return renderPage(meta, tb, dataScript, OFFLINE_JS, acts, true);
 }
@@ -88,11 +88,35 @@ function renderObs(){ $('#obs-count').textContent=observaciones.length;
   L.querySelectorAll('.del').forEach(b=>b.addEventListener('click',()=>{ observaciones=observaciones.filter(o=>o.id!==b.dataset.id); saveLS(); renderObs(); }));
 }
 
+function stamp(){ var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes()); }
 $('#btn-export').addEventListener('click',()=>{
   const payload={ informe:META.informe, version_revisada:META.version, ronda:META.ronda, origen:'offline', exportado:new Date().toISOString(), observaciones };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='observaciones_offline_'+META.version+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  a.download='observaciones_offline_'+META.version+'_'+stamp()+'.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+
+// Importar un JSON exportado antes (seguir en otro computador): une por id, sin
+// duplicar; en conflicto gana la observación más nueva (por fecha de creación).
+function mergeObs(arr){ var byId={}; observaciones.forEach(function(o){ byId[o.id]=o; });
+  var imp=0, ex=0, upd=0;
+  (arr||[]).forEach(function(n){ if(!n||!n.id) return; var cur=byId[n.id];
+    if(!cur){ byId[n.id]=n; observaciones.push(n); imp++; }
+    else { var tn=Date.parse(n.creada||'')||0, tc=Date.parse(cur.creada||'')||0;
+      if(tn>tc){ observaciones[observaciones.indexOf(cur)]=n; byId[n.id]=n; upd++; } else ex++; } });
+  saveLS(); renderObs(); return {imp:imp,ex:ex,upd:upd}; }
+$('#btn-import').addEventListener('click',()=>$('#imp-file').click());
+$('#imp-file').addEventListener('change', async (e)=>{
+  var files=[].slice.call(e.target.files); if(!files.length) return;
+  var tot={imp:0,ex:0,upd:0};
+  for(var i=0;i<files.length;i++){
+    try{ var txt=await files[i].text(); var data=JSON.parse(txt); var arr=data.observaciones||data;
+      var r=mergeObs(arr); tot.imp+=r.imp; tot.ex+=r.ex; tot.upd+=r.upd;
+    }catch(err){ $('#imp-status').textContent='No pude leer '+files[i].name+': '+err.message; }
+  }
+  $('#imp-status').textContent='Importadas '+tot.imp+' · ya estaban '+tot.ex+' · actualizadas '+tot.upd+'.';
+  e.target.value='';
 });
 
 loadLS(); renderObs();
