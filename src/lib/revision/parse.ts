@@ -40,10 +40,12 @@ export type ReviewBlock =
     };
 
 export type ReviewSection = { title: string | null; blocks: ReviewBlock[] };
-export type ReviewChapter = { number: string; title: string; sections: ReviewSection[] };
+export type ReviewChapter = { number: string; title: string; sections: ReviewSection[]; frontMatter: boolean };
 export type ReviewDoc = {
   chapters: ReviewChapter[];
   images: ImageRef[];
+  /** Bytes de cada imagen, indexados por `ImageRef.index` (para servirlas). */
+  imageBuffers: Buffer[];
   stats: { figuras: number; cuadros: number; tablas: number; rotulosNoAdyacentes: number };
   mapa: { total: number; emparejados: number; sinEmparejar: string[] };
   warnings: string[];
@@ -68,10 +70,13 @@ export async function parseReviewDocx(
   mapa: MapaRotulo[] = []
 ): Promise<ReviewDoc> {
   const images: ImageRef[] = [];
+  const imageBuffers: Buffer[] = [];
   const convertImage = mammoth.images.imgElement(async (image) => {
     const b64 = await image.read("base64");
-    const ref: ImageRef = { index: images.length, contentType: image.contentType, bytes: Math.floor((b64.length * 3) / 4) };
+    const buf = Buffer.from(b64, "base64");
+    const ref: ImageRef = { index: images.length, contentType: image.contentType, bytes: buf.length };
     images.push(ref);
+    imageBuffers.push(buf);
     return { src: "" }; // el orden del <img> en el HTML == orden en images[]
   });
 
@@ -87,7 +92,8 @@ export async function parseReviewDocx(
   let imgCursor = 0;
 
   const ensureChapter = (): ReviewChapter => {
-    if (chapters.length === 0) { chapterCount++; chapters.push({ number: String(chapterCount), title: "Introducción", sections: [] }); }
+    // Capítulo auto-creado por contenido ANTES del primer h1 = portada/TOC/índices.
+    if (chapters.length === 0) { chapterCount++; chapters.push({ number: String(chapterCount), title: "Portada e índices", sections: [], frontMatter: true }); }
     return chapters[chapters.length - 1];
   };
   const ensureSection = (): ReviewSection => {
@@ -120,7 +126,7 @@ export async function parseReviewDocx(
     if (!el.tagName) continue;
     const tag = el.tagName.toLowerCase();
     switch (tag) {
-      case "h1": chapterCount++; chapters.push({ number: String(chapterCount), title: clean(el.text) || `Capítulo ${chapterCount}`, sections: [] }); break;
+      case "h1": chapterCount++; chapters.push({ number: String(chapterCount), title: clean(el.text) || `Capítulo ${chapterCount}`, sections: [], frontMatter: false }); break;
       case "h2": ensureChapter().sections.push({ title: clean(el.text) || null, blocks: [] }); break;
       case "h3": case "h4": case "h5": case "h6": { const t = clean(el.text); if (t) add({ k: "heading", level: Number(tag[1]), text: t }); break; }
       case "table": { const t = parseTable(el); for (const ref of takeImages(el)) add({ k: "image", ref }); if (t) add({ k: "table", ...t }); break; }
@@ -191,7 +197,7 @@ export async function parseReviewDocx(
 
   const sinEmparejar = mapa.map((m) => m.rotulo).filter((r) => !emparejados.has(r));
   return {
-    chapters, images,
+    chapters, images, imageBuffers,
     stats: { figuras, cuadros, tablas, rotulosNoAdyacentes },
     mapa: { total: mapa.length, emparejados: emparejados.size, sinEmparejar },
     warnings,
