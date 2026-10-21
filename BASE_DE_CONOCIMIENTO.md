@@ -91,13 +91,16 @@ Requieren `ELEVENLABS_API_KEY`. El caché es durable: no re-gasta créditos tras
 
 Visor local para que **un estudio revise su propio borrador** (el `.docx` de `informe-word`) y deje
 observaciones ancladas (texto o **voz**) en archivos de su carpeta. Lo abre la skill **`informe-revision`**
-(en `~/.claude/skills/`, con su `abrir.py`). Lógica en `src/lib/revision/*` (`parse`, `viewer-html`, `rounds`).
+(en `~/.claude/skills/`, con su `abrir.py`). Lógica en `src/lib/revision/*` (`parse`, `viewer-html` —render compartido con temas claro/sepia/oscuro
+e índice multinivel—, `offline-html`, `rounds`).
 
 | Script | Qué hace | Comando |
 |---|---|---|
 | **`revision-local.ts`** | Servidor `node:http`: parsea el docx (+ mapa de rótulos), sirve el visor y las imágenes, guarda `observaciones.json`/`.md`/`audios` y re-ancla al cambiar de versión. Lanza el transcriptor persistente. | `npx tsx scripts/revision-local.ts <docx> <mapa.csv> <_revision/ronda_NN> <ver> <ronda> [puerto]` |
 | **`transcribe.py`** | Transcribe audio **local** con faster-whisper (`small`, `vad_filter=False`). Modo `--server`: carga el modelo una vez y transcribe por stdin (dictado en ~seg vs ~28s recargando). | `python -X utf8 scripts/transcribe.py <audio.webm>` · `… --server` |
 | **`revision-parse.ts`** | CLI de prueba: parsea un docx y resume estructura/figuras/cuadros contra el mapa. | `npx tsx scripts/revision-parse.ts <docx> <mapa.csv>` |
+| **`revision-export-offline.ts`** | Exporta a **un HTML offline autocontenido** (figuras `data:` URI recomprimidas con sharp a ~1600px, `localStorage`, voz base64; ~5 MB). Para revisar sin conexión. | `npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [ver] [ronda]` |
+| **`revision-import-offline.ts`** | Importa los JSON que exporta el HTML offline a la ronda: decodifica audios, transcribe, mezcla en `observaciones.json`. Acepta varios archivos/carpeta, deduplica por id (newest-per-id). | `npx tsx scripts/revision-import-offline.ts <offline.json|carpeta ...> <_revision/ronda_NN>` |
 
 **Contrato de archivos** (un archivo, un dueño): la herramienta escribe `observaciones.json`; el estudio
 escribe `respuestas.json` (mismo `id`: estado + nota + versión); el estado consolidado se computa uniendo.
