@@ -100,6 +100,12 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   .obs-item .txt{font-size:13.5px;white-space:pre-wrap}
   .obs-item .meta{font-size:11px;color:var(--muted);margin-top:6px;display:flex;justify-content:space-between;align-items:center}
   .obs-item .del{color:#b3261e;cursor:pointer;border:none;background:none;font-size:11px}
+  .obs-sum{font-size:11.5px;color:var(--muted);margin:-6px 0 12px}
+  .estado{font:600 10px Segoe UI;text-transform:uppercase;letter-spacing:.03em;border-radius:5px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
+  .estado.atendida{color:#1D4E7A;border-color:#1D4E7A} .estado.respondida{color:#2d7d5a;border-color:#2d7d5a}
+  .obs-item.orphan{border-color:var(--warn);background:#fff7ef}
+  .orphan-tag{font:600 10px Segoe UI;color:var(--warn)}
+  .obs-item .resp{font-size:12.5px;color:#2d7d5a;border-left:3px solid #2d7d5a;padding-left:8px;margin:6px 0}
   .empty{color:var(--muted);font-size:13px}
   /* composer */
   #composer{position:fixed;z-index:50;display:none;width:340px;left:50%;top:110px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(14,51,88,.18);padding:12px}
@@ -124,7 +130,7 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
     ${toc.join("\n")}
   </nav>
   <main id="doc">${body.join("\n")}</main>
-  <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
+  <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2><div id="obs-sum" class="obs-sum"></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
 </div>
 <button id="sel-btn" class="obs-btn">+ observar</button>
 <div id="composer">
@@ -202,11 +208,14 @@ $('#comp-save').addEventListener('click',async()=>{ const texto=$('#comp-text').
 
 async function load(){ observaciones=await (await fetch('/observaciones')).json(); renderObs(); }
 function renderObs(){ $('#obs-count').textContent=observaciones.length;
+  const by=(e)=>observaciones.filter(o=>(o.estado||'pendiente')===e).length;
+  $('#obs-sum').textContent=observaciones.length? (by('pendiente')+' pendientes · '+by('atendida')+' atendidas · '+by('respondida')+' respondidas') : '';
   const L=$('#obs-list'); if(!observaciones.length){ L.innerHTML='<div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div>'; return; }
-  L.innerHTML=observaciones.map(o=>'<div class="obs-item"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+(o.id)+'</b></div>'+
+  L.innerHTML=observaciones.map(o=>'<div class="obs-item'+(o.orphaned?' orphan':'')+'"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+(o.id)+'</b> <span class="estado '+(o.estado||'pendiente')+'">'+(o.estado||'pendiente')+'</span>'+(o.orphaned?' <span class="orphan-tag">⚠ ancla perdida</span>':'')+'</div>'+
     '<div class="cita">'+ (o.ancla.rotulo? '<b>'+esc(o.ancla.rotulo)+'</b> ':'') +'«'+esc(o.ancla.cita)+'»</div>'+
     '<div class="txt">'+esc(o.texto)+'</div>'+
     (o.audio? '<div class="voz">🎤 voz</div><audio controls preload="none" src="/'+o.audio+'"></audio>':'')+
+    (o.respuesta&&o.respuesta.nota? '<div class="resp">↳ '+esc(o.respuesta.nota)+(o.respuesta.version?' <i>('+esc(o.respuesta.version)+')</i>':'')+'</div>':'')+
     '<div class="meta"><span>'+esc(o.seccion_titulos.slice(-1)[0]||'')+(o.seccion_archivo? ' · '+esc(o.seccion_archivo):'')+'</span><button class="del" data-id="'+o.id+'">borrar</button></div></div>').join('');
   L.querySelectorAll('.del').forEach(b=>b.addEventListener('click',async()=>{ observaciones=await (await fetch('/observacion/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.dataset.id})})).json(); renderObs(); }));
 }

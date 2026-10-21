@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { parseReviewDocx, type MapaRotulo } from "../src/lib/revision/parse";
 import { renderReviewHtml } from "../src/lib/revision/viewer-html";
+import { mergeRespuestas, reanchorOnto, type Respuesta } from "../src/lib/revision/rounds";
 
 function parseCsv(text: string): Record<string, string>[] {
   const t = text.replace(/^﻿/, "");
@@ -27,6 +28,7 @@ type Obs = {
   seccion_titulos: string[]; seccion_archivo: string | null;
   ancla: { cita: string; prefijo: string; sufijo: string; rotulo: string | null; codigo: string | null };
   texto: string; origen: string; audio: string | null; transcripcion: string | null; creada: string;
+  orphaned?: boolean; orphanedAt?: string | null;
 };
 
 async function main() {
@@ -90,6 +92,22 @@ async function main() {
     writeFileSync(mdPath, lines.join("\n"), "utf8");
   };
 
+  // Respuestas de Talca (archivo hermano, su dueño). Para el estado consolidado.
+  const respuestasPath = join(revDir, "respuestas.json");
+  const readRespuestas = (): Respuesta[] => {
+    try { if (!existsSync(respuestasPath)) return []; const j = JSON.parse(readFileSync(respuestasPath, "utf8")); return Array.isArray(j) ? j : (j.respuestas ?? []); }
+    catch { return []; }
+  };
+
+  // Versión nueva del informe: re-anclar las observaciones de la ronda previa.
+  // Ninguna se pierde: si su cita/código ya no está, queda marcada huérfana.
+  if (store.observaciones.length && store.version_revisada !== version) {
+    const prev = store.version_revisada;
+    const { obs, anchored, orphaned } = reanchorOnto(store.observaciones, doc);
+    store.observaciones = obs as Obs[]; store.version_revisada = version; persist();
+    console.log(`  re-ancladas ${anchored} observaciones (${prev} → ${version}) · huérfanas ${orphaned}`);
+  }
+
   const readBody = (req: import("node:http").IncomingMessage) => new Promise<string>((res) => { const cs: Buffer[] = []; req.on("data", (c: Buffer) => cs.push(c)); req.on("end", () => res(Buffer.concat(cs).toString("utf8"))); });
   const readBodyBuffer = (req: import("node:http").IncomingMessage) => new Promise<Buffer>((res) => { const cs: Buffer[] = []; req.on("data", (c: Buffer) => cs.push(c)); req.on("end", () => res(Buffer.concat(cs))); });
 
@@ -99,7 +117,7 @@ async function main() {
       if (url === "/" ) { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); res.end(html); return; }
       if (url.startsWith("/img/")) { const i = Number(url.slice(5)); const buf = doc.imageBuffers[i]; if (!buf) { res.writeHead(404); res.end(); return; }
         res.writeHead(200, { "Content-Type": doc.images[i]?.contentType || "image/png", "Cache-Control": "max-age=3600" }); res.end(buf); return; }
-      if (url === "/observaciones") { res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(store.observaciones)); return; }
+      if (url === "/observaciones") { res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(mergeRespuestas(store.observaciones, readRespuestas()))); return; }
       if (url === "/transcribe" && req.method === "POST") {
         const buf = await readBodyBuffer(req);
         const audioId = "_pending_" + Date.now();
@@ -118,7 +136,7 @@ async function main() {
           ancla: { cita: p.cita || "", prefijo: p.prefijo || "", sufijo: p.sufijo || "", rotulo: p.rotulo || null, codigo: p.codigo || null },
           texto: p.texto || "", origen: p.origen || (audio ? "voz" : "escrito"), audio, transcripcion, creada: new Date().toISOString() };
         store.observaciones.push(o); persist();
-        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(store.observaciones)); return;
+        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(mergeRespuestas(store.observaciones, readRespuestas()))); return;
       }
       if (url.startsWith("/audios/")) { const f = join(audiosDir, decodeURIComponent(url.slice(8))); if (!existsSync(f)) { res.writeHead(404); res.end(); return; }
         res.writeHead(200, { "Content-Type": "audio/webm" }); res.end(readFileSync(f)); return; }
@@ -127,7 +145,7 @@ async function main() {
         const victim = store.observaciones.find((o) => o.id === id);
         if (victim?.audio) try { unlinkSync(join(revDir, victim.audio)); } catch { /* ignore */ }
         store.observaciones = store.observaciones.filter((o) => o.id !== id); persist();
-        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(store.observaciones)); return;
+        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(mergeRespuestas(store.observaciones, readRespuestas()))); return;
       }
       res.writeHead(404); res.end();
     } catch (e) { res.writeHead(500); res.end(String(e).slice(0, 300)); }
