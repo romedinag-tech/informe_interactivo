@@ -13,19 +13,22 @@ carpeta declarativa o desde el paquete de entrega V&R. En vivo: Talca original
 (`prediagnostico-talca`, referencia) + paquete V&R (`-completo`, `-ejecutivo`), con
 mapas interactivos, figuras nítidas y audio latinoamericano cacheado (HIT permanente).
 Segundo cerebro documentado (`PROYECTO.md` + `BASE_DE_CONOCIMIENTO.md`).
-Última actividad: 2026-09-19 (commit `9d08136`: fin de re-facturación del audio del
-Talca original + segundo cerebro + columna vertebral v2); árbol limpio, pusheado a
-`main`. Conforme en el índice maestro v2. **Registrada en el orquestador** como
+Última actividad: 2026-10-21 (modo **revisión local** E1-E5 entregado, commit `e5692c7`);
+árbol limpio, pusheado a `main`. Conforme en el índice maestro v2. **Registrada en el orquestador** como
 `informes_interactivos` (tipo herramienta, 2026-10-20), para que el hub le pueda encargar
 publicar entregables de los motores como informes interactivos (p. ej. el prediagnóstico de
 Talca). Reporta anotando en el libro cuando publique algo; no la vigila el vigía.
-**Encargo abierto del hub** (`informes_interactivos.revision-local`, plazo 2026-10-22): modo de
-**revisión local** del visor —sin audio, sin Vercel, sin Postgres; almacenamiento en archivos en la
-carpeta del estudio— + skill `informe-revision`, piloto Talca. Ver `_hub_encargos/2026-10-20_revision_local.md`.
+**Encargo del hub ENTREGADO** (`informes_interactivos.revision-local`, 2026-10-21, respondido en el
+libro): modo de **revisión local** del visor —sin Vercel/Postgres/narración-nube; observaciones por
+voz transcritas **local** (faster-whisper); almacenamiento en archivos en la carpeta del estudio— +
+skill `informe-revision`. Piloto `pmtu_talca` corriendo (ronda 01 sobre v08). Detalle en
+`BASE_DE_CONOCIMIENTO.md` (§ modo revisión) y recado `_hub_encargos/2026-10-20_revision_local.md`.
 
 ## Entradas y salidas
-**Produce:** informes interactivos en vivo, que consume la contraparte técnica de
-MTT/SECTRA para leer, escuchar y dejar observaciones ancladas.
+**Produce:** (1) informes interactivos en vivo, que consume la contraparte técnica de
+MTT/SECTRA para leer, escuchar y dejar observaciones ancladas; (2) un **visor de revisión
+interna local** (sin Vercel) que los estudios citan vía la skill `informe-revision` para
+revisar sus borradores y dejar observaciones (texto/voz) en archivos de su carpeta.
 **Consume (solo lectura):** el paquete de entrega V&R (`.docx` + `datos/` +
 `secciones_relato.json`) o una carpeta declarativa (`informe.json` + `informe.docx` +
 `graficos.json`/`mapas.json`/`geo/`/`figuras/`), y ElevenLabs (TTS por `fetch`).
@@ -56,6 +59,13 @@ la app en línea, no archivos en disco).
 - 2026-08-03 — El modo CREAR de `generar-informe.ts` es **destructivo** (`deleteMany`
   por slug: borra observaciones/versiones/audio). Para corregir un informe con
   observaciones: `--actualizar`. Detalle: `PLAYBOOK.md` #13.
+- 2026-10-21 — **Modo revisión local** (encargo `revision-local`): visor `node:http` local (sin
+  Vercel/Postgres) que lee el `.docx` de `informe-word`, ancla observaciones por cita (figuras/cuadros
+  por **código**, robusto a renumeración) y las dicta por **voz con faster-whisper local**
+  (`transcribe.py`, modelo `small` persistente, `vad_filter=False`). Compatibilidad medida:
+  `informe-word` parsea limpio (Título 1/2 → cap/sección por el nombre «heading 1/2»; números de
+  figura/cuadro por campo SÍ sobreviven a mammoth). Trampa: Git-Bash auto-convierte rutas `/c/…` como
+  argumento pero **no por stdin** (pasar rutas Windows a Python). Código y comandos en `BASE_DE_CONOCIMIENTO.md`.
 - Registro completo (20 trampas) en `PLAYBOOK.md`; lecciones destiladas en `BASE_DE_CONOCIMIENTO.md`.
 
 ## Cómo se ejecuta
@@ -66,7 +76,7 @@ Informe nuevo: `npx tsx scripts/generar-informe.ts <carpeta> [neon]` (o
 `npx tsc --noEmit` **y** `npm run build` con exit 0 real. Deploy: push a `main`
 (Vercel despliega solo). Comandos y reglas duras completas: manual abajo, `GENERACION.md`, `PLAYBOOK.md`.
 
-<!-- columna-vertebral: ultima_actualizacion=2026-10-20 commit=9e4178c -->
+<!-- columna-vertebral: ultima_actualizacion=2026-10-21 commit=e5692c7 -->
 
 ---
 

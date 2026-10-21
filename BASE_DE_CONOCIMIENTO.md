@@ -87,6 +87,23 @@ Requieren `ELEVENLABS_API_KEY`. El caché es durable: no re-gasta créditos tras
 | **`migrate-neon.mjs`** | Migra a Neon: `prisma db push` → seed → `import-talca`. Lee URL de `.env.production.local`. | `node scripts/migrate-neon.mjs` |
 | **`prep-brand-assets.mjs`** | Prepara `/public/brand` (isotipo/icon/lockup): fondo blanco → transparente por flood-fill desde bordes, con **sharp**. | `node scripts/prep-brand-assets.mjs` |
 
+### Modo revisión interna (local, sin Vercel/Postgres/nube) — encargo `revision-local`
+
+Visor local para que **un estudio revise su propio borrador** (el `.docx` de `informe-word`) y deje
+observaciones ancladas (texto o **voz**) en archivos de su carpeta. Lo abre la skill **`informe-revision`**
+(en `~/.claude/skills/`, con su `abrir.py`). Lógica en `src/lib/revision/*` (`parse`, `viewer-html`, `rounds`).
+
+| Script | Qué hace | Comando |
+|---|---|---|
+| **`revision-local.ts`** | Servidor `node:http`: parsea el docx (+ mapa de rótulos), sirve el visor y las imágenes, guarda `observaciones.json`/`.md`/`audios` y re-ancla al cambiar de versión. Lanza el transcriptor persistente. | `npx tsx scripts/revision-local.ts <docx> <mapa.csv> <_revision/ronda_NN> <ver> <ronda> [puerto]` |
+| **`transcribe.py`** | Transcribe audio **local** con faster-whisper (`small`, `vad_filter=False`). Modo `--server`: carga el modelo una vez y transcribe por stdin (dictado en ~seg vs ~28s recargando). | `python -X utf8 scripts/transcribe.py <audio.webm>` · `… --server` |
+| **`revision-parse.ts`** | CLI de prueba: parsea un docx y resume estructura/figuras/cuadros contra el mapa. | `npx tsx scripts/revision-parse.ts <docx> <mapa.csv>` |
+
+**Contrato de archivos** (un archivo, un dueño): la herramienta escribe `observaciones.json`; el estudio
+escribe `respuestas.json` (mismo `id`: estado + nota + versión); el estado consolidado se computa uniendo.
+Figuras/cuadros se re-anclan por **código** (robusto a renumeración), el texto por cita; las huérfanas se
+marcan, no se pierden. Entrada: `informe-word` parsea limpio (medido). Voz: `faster-whisper small` + ffmpeg/PyAV.
+
 ---
 
 ## 3. Arquitectura de `src/`
@@ -109,6 +126,9 @@ Requieren `ELEVENLABS_API_KEY`. El caché es durable: no re-gasta créditos tras
 | `anchor.ts` | Re-anclaje W3C con cascada: posición → cita (prefix/suffix) → normalizada → núcleo difuso → huérfana. Puro. |
 | `snapshot.ts` | `buildSnapshot`, `diffSnapshots` (por `blockId`), `wordDiff` (LCS) para el visor de versiones. |
 | `version.ts` | `APP_VERSION` ("2.0") + `buildId()` (commit de Vercel). |
+| `revision/parse.ts` | Parser del docx de `informe-word` para el **modo revisión**: extrae imágenes, etiqueta figura/cuadro por rótulo y resuelve código/sección vía mapa, filtra el front-matter. |
+| `revision/viewer-html.ts` | Genera el HTML autocontenido del visor de revisión (lectura + anclaje por selección + dictado por voz + panel de observaciones con estados). |
+| `revision/rounds.ts` | Rondas: estado consolidado (une mis observaciones con las respuestas de Talca por id) y re-anclaje a versión nueva (reusa `anchor.ts`; huérfanas marcadas). |
 
 ### `src/app/` — rutas
 
