@@ -108,6 +108,12 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   #composer .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
   #composer button{font:600 13px Segoe UI;border-radius:8px;padding:6px 12px;cursor:pointer;border:1px solid var(--line);background:#fff}
   #composer button.save{background:var(--navy);color:#fff;border-color:var(--navy)}
+  #composer .rec-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  #comp-rec{font:600 13px Segoe UI;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer}
+  #comp-rec.rec{background:#b3261e;color:#fff;border-color:#b3261e}
+  #rec-status{font-size:12px;color:var(--muted)}
+  .obs-item audio{width:100%;margin-top:6px;height:30px}
+  .obs-item .voz{color:var(--warn)}
   #sel-btn{position:absolute;z-index:40;display:none;transform:translate(-50%,-120%)}
 </style></head>
 <body>
@@ -123,7 +129,8 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
 <button id="sel-btn" class="obs-btn">+ observar</button>
 <div id="composer">
   <div class="cita" id="comp-cita"></div>
-  <textarea id="comp-text" placeholder="Tu observación…"></textarea>
+  <textarea id="comp-text" placeholder="Escribe o dicta tu observación…"></textarea>
+  <div class="rec-row"><button id="comp-rec" type="button">🎤 Dictar</button><span id="rec-status"></span></div>
   <div class="row"><button id="comp-cancel">Cancelar</button><button class="save" id="comp-save">Guardar</button></div>
 </div>
 <script>const META=${JSON.stringify(data)};${CLIENT_JS}</script>
@@ -132,7 +139,7 @@ export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
 
 // ── JS del cliente (anclaje + composer + panel) ──────────────────────────────
 const CLIENT_JS = String.raw`
-let pending=null, observaciones=[];
+let pending=null, observaciones=[], audioId=null, transcripcion=null, mediaRec=null, chunks=[];
 const $=(s)=>document.querySelector(s);
 
 function blockOf(node){ while(node && node.nodeType!==1) node=node.parentNode; return node? node.closest('.block'):null; }
@@ -165,11 +172,31 @@ document.querySelectorAll('.obs-btn[data-bid]').forEach(b=>b.addEventListener('c
   openComposer({ tipo, ch:block.dataset.ch, sec:block.dataset.sec, rotulo:block.dataset.rotulo||'', codigo:block.dataset.codigo||'', seccionArchivo:block.dataset.secarch||'', cita, prefijo:'', sufijo:'' });
 }));
 
-function openComposer(p){ pending=p; $('#comp-cita').textContent=(p.rotulo? p.rotulo+'. ':'')+'«'+p.cita+'»'; $('#comp-text').value='';
+function openComposer(p){ pending=p; audioId=null; transcripcion=null; resetRec();
+  $('#comp-cita').textContent=(p.rotulo? p.rotulo+'. ':'')+'«'+p.cita+'»'; $('#comp-text').value='';
   $('#composer').style.display='block'; $('#comp-text').focus(); }
-$('#comp-cancel').addEventListener('click',()=>$('#composer').style.display='none');
+function resetRec(){ const b=$('#comp-rec'); b.classList.remove('rec'); b.textContent='🎤 Dictar'; $('#rec-status').textContent=''; mediaRec=null; chunks=[]; }
+$('#comp-cancel').addEventListener('click',()=>{ if(mediaRec&&mediaRec.state==='recording') mediaRec.stop(); $('#composer').style.display='none'; });
+
+// Dictado por voz: graba en el navegador, transcribe LOCAL en el servidor (faster-whisper).
+$('#comp-rec').addEventListener('click',async()=>{
+  const b=$('#comp-rec');
+  if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); return; }
+  try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'}); chunks=[];
+    mediaRec.ondataavailable=(e)=>{ if(e.data.size) chunks.push(e.data); };
+    mediaRec.onstop=async()=>{ stream.getTracks().forEach(t=>t.stop()); b.classList.remove('rec'); b.textContent='🎤 Dictar';
+      $('#rec-status').textContent='transcribiendo…';
+      const blob=new Blob(chunks,{type:'audio/webm'});
+      const r=await fetch('/transcribe',{method:'POST',headers:{'Content-Type':'audio/webm'},body:blob});
+      const j=await r.json(); audioId=j.audioId; transcripcion=j.transcript||'';
+      const t=$('#comp-text'); t.value=(t.value? t.value+' ':'')+transcripcion; $('#rec-status').textContent='✓ transcrito (audio guardado)'; };
+    mediaRec.start(); b.classList.add('rec'); b.textContent='⏹ Detener'; $('#rec-status').textContent='grabando…';
+  }catch(e){ $('#rec-status').textContent='sin micrófono: '+e.message; }
+});
+
 $('#comp-save').addEventListener('click',async()=>{ const texto=$('#comp-text').value.trim(); if(!texto) return;
-  const obs={...pending, texto, origen:'escrito'};
+  const obs={...pending, texto, origen: audioId? 'voz':'escrito', audioId, transcripcion};
   const r=await fetch('/observacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obs)});
   observaciones=await r.json(); $('#composer').style.display='none'; renderObs(); });
 
@@ -179,6 +206,7 @@ function renderObs(){ $('#obs-count').textContent=observaciones.length;
   L.innerHTML=observaciones.map(o=>'<div class="obs-item"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+(o.id)+'</b></div>'+
     '<div class="cita">'+ (o.ancla.rotulo? '<b>'+esc(o.ancla.rotulo)+'</b> ':'') +'«'+esc(o.ancla.cita)+'»</div>'+
     '<div class="txt">'+esc(o.texto)+'</div>'+
+    (o.audio? '<div class="voz">🎤 voz</div><audio controls preload="none" src="/'+o.audio+'"></audio>':'')+
     '<div class="meta"><span>'+esc(o.seccion_titulos.slice(-1)[0]||'')+(o.seccion_archivo? ' · '+esc(o.seccion_archivo):'')+'</span><button class="del" data-id="'+o.id+'">borrar</button></div></div>').join('');
   L.querySelectorAll('.del').forEach(b=>b.addEventListener('click',async()=>{ observaciones=await (await fetch('/observacion/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.dataset.id})})).json(); renderObs(); }));
 }
