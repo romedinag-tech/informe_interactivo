@@ -14,17 +14,12 @@ carpeta declarativa o desde el paquete de entrega V&R. En vivo: Talca original
 mapas interactivos, figuras nítidas y audio latinoamericano cacheado (HIT permanente).
 Segundo cerebro documentado (`PROYECTO.md` + `BASE_DE_CONOCIMIENTO.md`).
 Última actividad: 2026-10-21 (modo **revisión local** E1-E6 + aspecto pro + offline, commit `a6d99af`);
-árbol limpio, pusheado a `main`. Conforme en el índice maestro v2. **Registrada en el orquestador** como
-`informes_interactivos` (tipo herramienta, 2026-10-20), para que el hub le pueda encargar
-publicar entregables de los motores como informes interactivos (p. ej. el prediagnóstico de
-Talca). Reporta anotando en el libro cuando publique algo; no la vigila el vigía.
-**Encargo del hub ENTREGADO** (`informes_interactivos.revision-local`, 2026-10-21, respondido en el
-libro): modo de **revisión local** del visor —sin Vercel/Postgres/narración-nube; observaciones por
-voz transcritas **local** (faster-whisper); almacenamiento en archivos en la carpeta del estudio— +
-skill `informe-revision`. Incluye **exportación a HTML offline** (sin conexión, con export/import
-de observaciones entre computadores), **temas claro/sepia/oscuro** y **marcador de lectura**. Piloto
-`pmtu_talca` corriendo (ronda 01 sobre v08). Detalle en `BASE_DE_CONOCIMIENTO.md` (§ modo revisión)
-y recado `_hub_encargos/2026-10-20_revision_local.md`.
+árbol limpio, pusheado a `main`. Conforme en el índice maestro v2. **Registrada en el orquestador**
+como `informes_interactivos` (tipo herramienta); reporta anotando en el libro cuando publique algo.
+**Encargo del hub `revision-local` ENTREGADO** (2026-10-21): modo de **revisión local** del visor
+—sin Vercel/Postgres/nube; observaciones por voz transcritas local; HTML offline con export/import;
+temas claro/sepia/oscuro; marcador de lectura— + skill `informe-revision`. Piloto `pmtu_talca` en
+ronda 01 (v08). Detalle en `BASE_DE_CONOCIMIENTO.md` (§ modo revisión) y `_hub_encargos/`.
 
 ## Entradas y salidas
 **Produce:** (1) informes interactivos en vivo, que consume la contraparte técnica de
@@ -54,13 +49,9 @@ la app en línea, no archivos en disco).
   facturación se detiene al instante). Caché obsoleto se limpia con
   `limpiar-audio-obsoleto.ts` (dry-run por defecto). Detalle: `PLAYBOOK.md` #20.
   Consulta reproducible (cifras de control): `consultas/2026-10_re-facturacion-audio-elevenlabs-talca-original/`.
-- 2026-08-03 — Un `tsc`/build con pipe a `head`/`tail` **enmascara el exit code** → un
-  build roto llegó a Vercel. Correr `npx tsc --noEmit` **y** `npm run build` con exit 0
-  real antes de cada push; `scripts/*` cuenta para el build. `consultas/` está excluida del
-  `tsconfig` para que los scripts de análisis no tumben el deploy. Detalle: `PLAYBOOK.md` #18-19.
-- 2026-08-03 — El modo CREAR de `generar-informe.ts` es **destructivo** (`deleteMany`
-  por slug: borra observaciones/versiones/audio). Para corregir un informe con
-  observaciones: `--actualizar`. Detalle: `PLAYBOOK.md` #13.
+- 2026-08-03 — Build antes de push (pipe a `head` enmascara el exit; `scripts/*` cuenta, `consultas/`
+  excluida del `tsconfig`) · modo CREAR de `generar-informe.ts` es destructivo → usar `--actualizar`.
+  Detalle: `PLAYBOOK.md` #13, #18-19.
 - 2026-10-21 — **Modo revisión local** (encargo `revision-local`): visor `node:http` local (sin
   Vercel/Postgres) que lee el `.docx` de `informe-word`, ancla observaciones por cita (figuras/cuadros
   por **código**, robusto a renumeración) y las dicta por **voz con faster-whisper local**

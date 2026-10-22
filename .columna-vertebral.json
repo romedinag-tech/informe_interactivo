@@ -1,5 +1,5 @@
 {
-"generado": "2026-10-21T13:56:09-03:00",
+"generado": "2026-10-21T21:17:00-03:00",
 "archivos": {
 ".audio-cache/21bbf53df004aa5f0983d6d3bdbd34f8b702306076f0ed0d72da11c6d3b907be.mp3": [
 474427,
@@ -26,12 +26,12 @@
 1785685009
 ],
 "BASE_DE_CONOCIMIENTO.md": [
-19605,
-1792601710
+20311,
+1792625846
 ],
 "CLAUDE.md": [
-7716,
-1792601663
+7711,
+1792628057
 ],
 "GENERACION.md": [
 9239,
@@ -713,6 +713,14 @@
 4583,
 1785689899
 ],
+"scripts/revision-export-offline.ts": [
+3009,
+1792602337
+],
+"scripts/revision-import-offline.ts": [
+5494,
+1792611086
+],
 "scripts/revision-local.ts": [
 11006,
 1792600353
@@ -969,6 +977,10 @@
 2596,
 1785717700
 ],
+"src/lib/revision/offline-html.ts": [
+9739,
+1792610841
+],
 "src/lib/revision/parse.ts": [
 9784,
 1792597638
@@ -978,8 +990,8 @@
 1792600292
 ],
 "src/lib/revision/viewer-html.ts": [
-16534,
-1792600402
+23827,
+1792610850
 ],
 "src/lib/snapshot.ts": [
 3170,
@@ -1014,8 +1026,8 @@
 1792539824
 ],
 "tsconfig.tsbuildinfo": [
-139991,
-1792600520
+140531,
+1792611116
 ]
 }
 }
