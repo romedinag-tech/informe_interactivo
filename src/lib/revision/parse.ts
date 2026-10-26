@@ -1,7 +1,7 @@
 // Parser del MODO REVISIÓN interna. Convierte el .docx que produce `informe-word`
 // (marca sectra_consorcio / formato Bonilla) en un modelo de datos para el visor
 // local: Capítulo → Sección → Bloque, con las figuras y cuadros etiquetados por su
-// rótulo («Figura 2-3. Título» / «Cuadro 3-5. Título», con punto, sin «N°») y
+// rótulo («Figura 2-3. Título» / «Cuadro 2.4.1.5-3. Título», con punto, sin «N°») y
 // resueltos a su código y archivo de sección vía el mapa del ensamblador.
 //
 // A diferencia del parser de generación (`src/lib/docx.ts`), acá:
@@ -55,7 +55,8 @@ export type ReviewDoc = {
   warnings: string[];
 };
 
-const ROTULO_RE = /^(Figura|Cuadro)\s+(\d+-\d+)\.\s*(.*)$/;
+// Número = sección con cualquier número de niveles + guion + correlativo: «3-1» o «2.4.1.5-3».
+const ROTULO_RE = /^(Figura|Cuadro)\s+(\d+(?:\.\d+)*-\d+)\.\s*(.*)$/;
 const FUENTE_RE = /^Fuente\s*:/i;
 
 function clean(s: string): string {
