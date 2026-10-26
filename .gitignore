@@ -43,3 +43,6 @@ yarn-error.log*
 
 # recados del hub (orquestador) — carpeta del proyecto ajena al repo
 /_hub_encargos
+
+# Salidas del modo revisión (contenido del estudio, no se versiona)
+revision_salidas/

@@ -6,7 +6,9 @@
 
 import type { ReviewDoc, ReviewBlock } from "./parse";
 
-export type ReviewMeta = { informe: string; version: string; ronda: number };
+// `informe` es la llave de las observaciones guardadas (no cambiarla entre corridas);
+// `estudio` y `titulo` son los textos del encabezado, que vienen de parámetros.
+export type ReviewMeta = { informe: string; version: string; ronda: number; estudio?: string; titulo?: string };
 export type ImgOpts = { imgSrc: (index: number) => string; lazy: boolean };
 
 export const esc = (s: string): string =>
@@ -23,7 +25,7 @@ function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }
   const lazy = io.lazy ? ' loading="lazy"' : "";
   switch (b.type) {
     case "HEADING":
-      return `<h3 class="subt" id="h-${bid.replace(/\./g, "-")}" data-bid="${bid}">${esc(b.text)}</h3>`;
+      return `<h3 class="subt" id="h-${bid.replace(/\./g, "-")}" data-bid="${bid}">${numHtml(b.numero)}${esc(b.text)}</h3>`;
     case "PARAGRAPH":
       return `<p class="block texto" ${anchorData} data-tipo="texto">${esc(b.text)}</p>`;
     case "TABLE":
@@ -40,22 +42,25 @@ function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }
   }
 }
 
+// Número del título (el de la lista de Word), aparte del texto: el anclaje usa sólo el texto.
+const numHtml = (n: string): string => (n ? `<span class="num">${esc(n)}</span>` : "");
+
 // Construye el índice (TOC) y el cuerpo del documento (capítulos de contenido).
 export function renderBodyToc(doc: ReviewDoc, io: ImgOpts): { toc: string; body: string } {
   const toc: string[] = [];
   const body: string[] = [];
-  const tocEntry = (lvl: number, id: string, text: string) =>
-    toc.push(`<a class="toc-ch toc-l${lvl}" data-lvl="${lvl}" href="#${id}">${esc(text)}</a>`);
+  const tocEntry = (lvl: number, id: string, text: string, numero: string) =>
+    toc.push(`<a class="toc-ch toc-l${lvl}" data-lvl="${lvl}" href="#${id}">${numHtml(numero)}<span class="t">${esc(text)}</span></a>`);
   doc.chapters.filter((c) => !c.frontMatter).forEach((ch, ci) => {
     const chId = `ch-${ci}`;
-    tocEntry(1, chId, ch.title);
-    body.push(`<section class="chapter" id="${chId}"><h1>${esc(ch.title)}</h1>`);
+    tocEntry(1, chId, ch.title, ch.numero);
+    body.push(`<section class="chapter" id="${chId}"><h1>${numHtml(ch.numero)}${esc(ch.title)}</h1>`);
     ch.sections.forEach((sec, si) => {
       const secTitle = sec.title ?? "";
-      if (secTitle) { body.push(`<h2 class="sec" id="${chId}-s${si}">${esc(secTitle)}</h2>`); tocEntry(2, `${chId}-s${si}`, secTitle); }
+      if (secTitle) { body.push(`<h2 class="sec" id="${chId}-s${si}">${numHtml(sec.numero)}${esc(secTitle)}</h2>`); tocEntry(2, `${chId}-s${si}`, secTitle, sec.numero); }
       sec.blocks.forEach((b, bi) => {
         const bid = `${ci}.${si}.${bi}`;
-        if (b.type === "HEADING") tocEntry(Math.min(b.level, 4), `h-${ci}-${si}-${bi}`, b.text);
+        if (b.type === "HEADING") tocEntry(Math.min(b.level, 4), `h-${ci}-${si}-${bi}`, b.text, b.numero);
         body.push(blockHtml(b, bid, { ch: ch.title, sec: secTitle }, io));
       });
     });
@@ -67,15 +72,21 @@ export function renderBodyToc(doc: ReviewDoc, io: ImgOpts): { toc: string; body:
 export const STYLES = `
   :root{ --bg:#f1f4f8; --card:#fff; --soft:#eef2f7; --line:#dbe1ea; --line-2:#c3ccda; --ink:#16202f; --muted:#4a5a70; --faint:#7c8aa0; --navy:#16365a; --accent:#1e4d88; --accent-soft:#e9f0f9; --warn:#C55A11;
     --r:14px; --sh-sm:0 1px 2px rgba(14,35,56,.05); --sh:0 1px 3px rgba(14,35,56,.05),0 10px 26px rgba(14,35,56,.07);
-    --font-display:'Source Serif 4',Georgia,serif; --font-ui:Inter,-apple-system,'Segoe UI',Roboto,sans-serif; }
+    --font-display:'Source Serif 4',Georgia,serif; --font-ui:Inter,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --paper:#fbfcfe; --grad:linear-gradient(135deg,#0E2338 0%,#16365a 60%,#21507F 100%); }
   :root[data-theme="sepia"]{ --bg:#e9dec5; --card:#f8f3e8; --soft:#f1e8d6; --line:#dccfb2; --line-2:#cbb98f; --ink:#362f1f; --muted:#6b5e45; --faint:#8a7c60; --navy:#5f4120; --accent:#7a542a; --accent-soft:#efe6d2; --warn:#9c5a1e;
-    --sh:0 1px 3px rgba(54,47,31,.06),0 10px 26px rgba(54,47,31,.08); }
+    --sh:0 1px 3px rgba(54,47,31,.06),0 10px 26px rgba(54,47,31,.08); --paper:#f4ecdb; --grad:linear-gradient(135deg,#3a2812 0%,#5f4120 60%,#7a542a 100%); }
   :root[data-theme="dark"]{ --bg:#0a0d13; --card:#151c27; --soft:#1a212c; --line:#232c3a; --line-2:#2b3547; --ink:#e9eef5; --muted:#8a93a5; --faint:#6b7382; --navy:#ff6a1a; --accent:#ff7a2e; --accent-soft:rgba(255,106,26,.15); --warn:#ff9d2f;
-    --sh-sm:0 1px 2px rgba(0,0,0,.5); --sh:0 10px 26px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.5); }
+    --sh-sm:0 1px 2px rgba(0,0,0,.5); --sh:0 10px 26px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.5); --paper:#10161f; --grad:linear-gradient(135deg,#12161f 0%,#0d1119 60%,#161d28 100%); }
   *{box-sizing:border-box} html,body{margin:0}
   body{font:16px/1.65 var(--font-ui);color:var(--ink);background:var(--bg)}
-  .wrap{display:grid;grid-template-columns:240px minmax(0,1fr) 360px;gap:0;min-height:100vh}
-  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:20px 14px;border-right:1px solid var(--line);background:var(--card)}
+  .page{max-width:1280px;margin:0 auto;padding:18px clamp(16px,2.5vw,32px) 28px}
+  .apphead{position:relative;text-align:center;padding:26px 26px 22px;background:var(--grad);color:#fff;border-radius:18px;margin:0 0 16px;box-shadow:var(--sh);overflow:hidden}
+  .apphead .estudio{font:700 clamp(1.3rem,2.1vw,1.95rem)/1.18 var(--font-display);letter-spacing:-.01em;max-width:960px;margin:0 auto}
+  .apphead .inf{font:600 .8rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.6px;opacity:.88;margin-top:9px}
+  .apphead .rev{display:inline-block;margin-top:10px;font:600 .7rem/1.3 var(--font-ui);text-transform:uppercase;letter-spacing:.5px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:3px 12px}
+  .wrap{display:grid;grid-template-columns:250px minmax(0,1fr) 330px;gap:0;min-height:100vh;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:18px 12px;border-right:1px solid var(--line);background:var(--card);border-radius:var(--r) 0 0 var(--r)}
   nav.toc .brand{font-weight:700;color:var(--navy);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
   nav.toc .ver{color:var(--muted);font-size:12px;margin:2px 0 14px}
   .toc-ch{display:block;padding:5px 8px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:13.5px}
@@ -91,7 +102,11 @@ export const STYLES = `
   .theme-toggle{display:flex;gap:4px;margin:10px 0 2px}
   .theme-toggle button{flex:1;font-size:15px;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 0;cursor:pointer;color:var(--muted)}
   .theme-toggle button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .toc-ch.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .toc-ch .num{font-variant-numeric:tabular-nums;color:var(--faint);font-weight:600;margin-right:6px}
+  .toc-ch.active{background:var(--accent-soft);color:var(--accent);font-weight:700;box-shadow:inset 3px 0 0 var(--accent);border-radius:0 7px 7px 0}
+  .toc-ch.active .num{color:var(--accent)}
+  main .num{color:var(--accent);margin-right:.45em;font-variant-numeric:tabular-nums}
+  main h1,main h2.sec,h3.subt{scroll-margin-top:14px}
   #readbar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:60;transition:width .12s ease-out}
   #readlabel{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:55;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);border-radius:999px;padding:6px 16px;font:600 12.5px var(--font-ui);color:var(--ink);max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0;transition:opacity .25s;pointer-events:none}
   #readlabel b{color:var(--accent);font-weight:700;margin-right:7px;text-transform:uppercase;font-size:10px;letter-spacing:.05em}
@@ -113,7 +128,7 @@ export const STYLES = `
   .obs-btn{font:600 12px Segoe UI;border:1px solid var(--navy);color:var(--navy);background:var(--card);border-radius:999px;padding:3px 10px;cursor:pointer}
   .obs-btn:hover{background:var(--navy);color:#fff}
   .anchored{background:#fde8d4;border-bottom:2px solid var(--warn);cursor:pointer}
-  aside.obs{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;border-left:1px solid var(--line);background:var(--card);padding:18px 16px}
+  aside.obs{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;border-left:1px solid var(--line);background:var(--card);padding:18px 16px;border-radius:0 var(--r) var(--r) 0}
   aside.obs h2{font:700 13px Segoe UI;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 12px}
   aside.obs .acts{display:flex;gap:8px;margin:0 0 12px}
   aside.obs .acts button{font:600 12px Segoe UI;border:1px solid var(--navy);color:var(--navy);background:var(--card);border-radius:8px;padding:5px 10px;cursor:pointer}
@@ -159,16 +174,21 @@ export function renderPage(meta: ReviewMeta, tb: { toc: string; body: string }, 
 <script>try{var _t=localStorage.getItem('revtheme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script></head>
 <body>
 <div id="readbar"></div>
+<div class="page">
+<header class="apphead">
+  <div class="estudio">${esc(meta.estudio || meta.informe)}</div>
+  ${meta.estudio ? `<div class="inf">${esc(meta.titulo || meta.informe)}</div>` : ""}
+  <div class="rev">Revisión interna N° ${String(meta.ronda).padStart(2, "0")} · versión ${esc(meta.version)}</div>
+</header>
 <div class="wrap">
   <nav class="toc">
-    <div class="brand">Revisión interna</div>
-    <div class="ver">${esc(meta.informe)} · ${esc(meta.version)} · ronda ${meta.ronda}</div>
     <div class="theme-toggle"><button data-theme-set="claro" title="Claro">☀</button><button data-theme-set="sepia" title="Sepia">📖</button><button data-theme-set="dark" title="Oscuro">🌙</button></div>
     <div class="toc-levels"><span>Índice</span><button data-setlvl="1">1</button><button data-setlvl="2">2</button><button data-setlvl="3">3</button><button data-setlvl="4">4</button></div>
     ${tb.toc}
   </nav>
   <main id="doc">${tb.body}</main>
   <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2>${warnbar ? '<div class="warnbar" id="warnbar"></div>' : ""}${acts}<div id="obs-sum" class="obs-sum"></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
+</div>
 </div>
 <button id="sel-btn" class="obs-btn">+ observar</button>
 <div id="composer">
@@ -187,31 +207,49 @@ export function renderPage(meta: ReviewMeta, tb: { toc: string; body: string }, 
 // de progreso + índice activo + etiqueta flotante del capítulo en curso).
 const UI_JS = String.raw`(function(){
   var nav=document.querySelector('nav.toc'); if(!nav) return;
-  // Índice por niveles
+  // Entradas del índice en orden de documento, cada una con su título en el cuerpo.
+  var entries=[].slice.call(nav.querySelectorAll('.toc-ch')).map(function(a){
+    return { a:a, lvl:+a.dataset.lvl, el:document.getElementById(a.getAttribute('href').slice(1)) };
+  }).filter(function(e){ return e.el; });
+  var maxLvl=2, curAct=null;
+  // Índice por niveles: al cambiar el nivel, el destacado se recalcula al instante.
   var lv=nav.querySelectorAll('.toc-levels button');
-  function setLvl(mx){ nav.querySelectorAll('.toc-ch').forEach(function(a){ a.style.display=(+a.dataset.lvl<=mx)?'block':'none'; }); lv.forEach(function(b){ b.classList.toggle('on',+b.dataset.setlvl===mx); }); }
-  lv.forEach(function(b){ b.addEventListener('click',function(){ setLvl(+b.dataset.setlvl); }); }); setLvl(2);
+  function setLvl(mx){ maxLvl=mx; entries.forEach(function(e){ e.a.style.display=(e.lvl<=mx)?'block':'none'; }); lv.forEach(function(b){ b.classList.toggle('on',+b.dataset.setlvl===mx); }); if(curAct) curAct.a.classList.remove('active'); curAct=null; spy(); }
+  lv.forEach(function(b){ b.addEventListener('click',function(){ setLvl(+b.dataset.setlvl); }); });
   // Tema claro/sepia/oscuro
   var tg=nav.querySelectorAll('.theme-toggle button');
   function paint(t){ tg.forEach(function(b){ b.classList.toggle('on', b.dataset.themeSet===t); }); }
   function setTheme(t){ if(t==='claro') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); try{ localStorage.setItem('revtheme',t); }catch(e){} paint(t); }
   tg.forEach(function(b){ b.addEventListener('click',function(){ setTheme(b.dataset.themeSet); }); });
   var cur=document.documentElement.getAttribute('data-theme')||'claro'; paint(cur);
-  // Marcador de lectura: barra de progreso + índice activo + etiqueta flotante
+  // Marcador de lectura: barra de progreso + índice activo (scroll-spy) + etiqueta flotante.
+  // La posición de lectura es el último título que pasó la línea de lectura (110 px bajo el
+  // borde superior). Se destaca el título más profundo, dentro del nivel elegido, que la
+  // contiene: recorriendo hacia atrás, la primera entrada con nivel <= N es ese ancestro.
   var bar=document.getElementById('readbar'), label=document.getElementById('readlabel');
-  var chs=[].slice.call(document.querySelectorAll('main .chapter'));
-  var tocByCh={}; nav.querySelectorAll('.toc-ch.toc-l1').forEach(function(a,i){ tocByCh[i]=a; });
-  var hideT;
-  function onScroll(){
+  var hideT, lastPos=-2, ticking=false;
+  function spy(){
+    ticking=false;
     var h=document.documentElement; var max=h.scrollHeight-h.clientHeight;
     var p=max>0? (h.scrollTop/max):0; if(bar) bar.style.width=Math.round(p*100)+'%';
-    var y=h.scrollTop+120, idx=0;
-    for(var i=0;i<chs.length;i++){ if(chs[i].offsetTop<=y) idx=i; }
-    nav.querySelectorAll('.toc-ch').forEach(function(a){ a.classList.remove('active'); });
-    if(tocByCh[idx]) tocByCh[idx].classList.add('active');
-    if(label && chs[idx]){ var t=chs[idx].querySelector('h1'); label.innerHTML='<b>Vas en</b>'+(t?t.textContent:''); label.style.opacity='1'; clearTimeout(hideT); hideT=setTimeout(function(){ label.style.opacity='0'; },1800); }
+    var pos=-1;
+    for(var k=0;k<entries.length;k++){ if(entries[k].el.getBoundingClientRect().top<=110) pos=k; else break; }
+    var act=null;
+    for(var j=pos;j>=0;j--){ if(entries[j].lvl<=maxLvl){ act=entries[j]; break; } }
+    if(!act && entries.length) act=entries[0];
+    if(act!==curAct){
+      if(curAct) curAct.a.classList.remove('active');
+      curAct=act;
+      if(act){ act.a.classList.add('active');
+        // el índice se desplaza solo para mantener visible la entrada activa
+        var nr=nav.getBoundingClientRect(), ar=act.a.getBoundingClientRect();
+        if(ar.top<nr.top+70||ar.bottom>nr.bottom-24) nav.scrollTop+=(ar.top-nr.top)-nr.height/3; }
+    }
+    if(label && pos!==lastPos && pos>=0){ lastPos=pos; var ea=entries[pos].a, n=ea.querySelector('.num'), t=ea.querySelector('.t'); label.textContent=(n?n.textContent+' ':'')+(t?t.textContent:ea.textContent); label.insertAdjacentHTML('afterbegin','<b>Vas en</b>'); label.style.opacity='1'; clearTimeout(hideT); hideT=setTimeout(function(){ label.style.opacity='0'; },1800); }
   }
-  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(spy); } }
+  window.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',onScroll);
+  setLvl(2);
 })();`;
 
 export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {

@@ -12,6 +12,7 @@
 
 import mammoth from "mammoth";
 import { parse, type HTMLElement } from "node-html-parser";
+import { numerarTitulos, normTitulo, type TituloNumerado } from "./numbering";
 
 export type MapaRotulo = {
   codigo: string;
@@ -23,7 +24,7 @@ export type MapaRotulo = {
 export type ImageRef = { index: number; contentType: string; bytes: number };
 
 export type ReviewBlock =
-  | { type: "HEADING"; level: number; text: string }
+  | { type: "HEADING"; level: number; text: string; numero: string }
   | { type: "PARAGRAPH"; text: string }
   | { type: "TABLE"; columns: string[]; rows: string[][] }
   | {
@@ -39,14 +40,17 @@ export type ReviewBlock =
       columns: string[]; rows: string[][]; fuente: string | null;
     };
 
-export type ReviewSection = { title: string | null; blocks: ReviewBlock[] };
-export type ReviewChapter = { number: string; title: string; sections: ReviewSection[]; frontMatter: boolean };
+// `numero`: el número que Word le pone al título con su lista automática («2.5»), "" si no lleva.
+export type ReviewSection = { title: string | null; numero: string; blocks: ReviewBlock[] };
+export type ReviewChapter = { number: string; numero: string; title: string; sections: ReviewSection[]; frontMatter: boolean };
 export type ReviewDoc = {
   chapters: ReviewChapter[];
   images: ImageRef[];
   /** Bytes de cada imagen, indexados por `ImageRef.index` (para servirlas). */
   imageBuffers: Buffer[];
   stats: { figuras: number; cuadros: number; tablas: number; rotulosNoAdyacentes: number };
+  /** Títulos numerados: cuántos llevaron número y de dónde salió («docx» calculado o «csv» de Word). */
+  titulos: { total: number; numerados: number; fuente: "docx" | "csv" };
   mapa: { total: number; emparejados: number; sinEmparejar: string[] };
   warnings: string[];
 };
@@ -60,14 +64,15 @@ function clean(s: string): string {
 
 // Bloques "crudos" antes de fusionar rótulo + elemento.
 type Raw =
-  | { k: "heading"; level: number; text: string }
+  | { k: "heading"; level: number; text: string; numero: string }
   | { k: "paragraph"; text: string }
   | { k: "table"; columns: string[]; rows: string[][] }
   | { k: "image"; ref: ImageRef };
 
 export async function parseReviewDocx(
   buffer: Buffer,
-  mapa: MapaRotulo[] = []
+  mapa: MapaRotulo[] = [],
+  titulosCsv: TituloNumerado[] | null = null
 ): Promise<ReviewDoc> {
   const images: ImageRef[] = [];
   const imageBuffers: Buffer[] = [];
@@ -84,6 +89,19 @@ export async function parseReviewDocx(
   const warnings = [...new Set(messages.filter((m) => m.type === "warning").map((m) => m.message))];
   const root = parse(html);
 
+  // Números de los títulos: el CSV del estudio (leído en Word) si viene; si no, calculados
+  // del docx. Se emparejan en orden con los h1..h6 de mammoth por texto normalizado.
+  const numerados = titulosCsv ?? await numerarTitulos(buffer);
+  let numCursor = 0, numerados_ok = 0, totalTitulos = 0;
+  const numeroDe = (text: string): string => {
+    totalTitulos++;
+    const k = normTitulo(text);
+    for (let j = numCursor; j < Math.min(numerados.length, numCursor + 6); j++) {
+      if (normTitulo(numerados[j].titulo) === k) { numCursor = j + 1; if (numerados[j].numero) numerados_ok++; return numerados[j].numero; }
+    }
+    return "";
+  };
+
   const byRotulo = new Map(mapa.map((m) => [m.rotulo, m]));
   const emparejados = new Set<string>();
 
@@ -93,12 +111,12 @@ export async function parseReviewDocx(
 
   const ensureChapter = (): ReviewChapter => {
     // Capítulo auto-creado por contenido ANTES del primer h1 = portada/TOC/índices.
-    if (chapters.length === 0) { chapterCount++; chapters.push({ number: String(chapterCount), title: "Portada e índices", sections: [], frontMatter: true }); }
+    if (chapters.length === 0) { chapterCount++; chapters.push({ number: String(chapterCount), numero: "", title: "Portada e índices", sections: [], frontMatter: true }); }
     return chapters[chapters.length - 1];
   };
   const ensureSection = (): ReviewSection => {
     const ch = ensureChapter();
-    if (ch.sections.length === 0) ch.sections.push({ title: null, blocks: [] });
+    if (ch.sections.length === 0) ch.sections.push({ title: null, numero: "", blocks: [] });
     return ch.sections[ch.sections.length - 1];
   };
   // Acumulamos los bloques crudos por sección (clave "ci:si") y los fusionamos
@@ -126,9 +144,9 @@ export async function parseReviewDocx(
     if (!el.tagName) continue;
     const tag = el.tagName.toLowerCase();
     switch (tag) {
-      case "h1": chapterCount++; chapters.push({ number: String(chapterCount), title: clean(el.text) || `Capítulo ${chapterCount}`, sections: [], frontMatter: false }); break;
-      case "h2": ensureChapter().sections.push({ title: clean(el.text) || null, blocks: [] }); break;
-      case "h3": case "h4": case "h5": case "h6": { const t = clean(el.text); if (t) add({ k: "heading", level: Number(tag[1]), text: t }); break; }
+      case "h1": { chapterCount++; const t = clean(el.text); chapters.push({ number: String(chapterCount), numero: t ? numeroDe(t) : "", title: t || `Capítulo ${chapterCount}`, sections: [], frontMatter: false }); break; }
+      case "h2": { const t = clean(el.text); ensureChapter().sections.push({ title: t || null, numero: t ? numeroDe(t) : "", blocks: [] }); break; }
+      case "h3": case "h4": case "h5": case "h6": { const t = clean(el.text); if (t) add({ k: "heading", level: Number(tag[1]), text: t, numero: numeroDe(t) }); break; }
       case "table": { const t = parseTable(el); for (const ref of takeImages(el)) add({ k: "image", ref }); if (t) add({ k: "table", ...t }); break; }
       case "ul": case "ol": for (const li of el.querySelectorAll("li")) { const t = clean(li.text); if (t) add({ k: "paragraph", text: `• ${t}` }); break; }
       case "img": if (imgCursor < images.length) add({ k: "image", ref: images[imgCursor++] }); break;
@@ -183,7 +201,7 @@ export async function parseReviewDocx(
           }
           blocks.push({ type: "PARAGRAPH", text: r.text });
         } else if (r.k === "heading") {
-          blocks.push({ type: "HEADING", level: r.level, text: r.text });
+          blocks.push({ type: "HEADING", level: r.level, text: r.text, numero: r.numero });
         } else if (r.k === "table") {
           used.add(i); tablas++; blocks.push({ type: "TABLE", columns: r.columns, rows: r.rows });
         } else if (r.k === "image") {
@@ -199,6 +217,7 @@ export async function parseReviewDocx(
   return {
     chapters, images, imageBuffers,
     stats: { figuras, cuadros, tablas, rotulosNoAdyacentes },
+    titulos: { total: totalTitulos, numerados: numerados_ok, fuente: titulosCsv ? "csv" : "docx" },
     mapa: { total: mapa.length, emparejados: emparejados.size, sinEmparejar },
     warnings,
   };

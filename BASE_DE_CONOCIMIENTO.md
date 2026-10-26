@@ -94,12 +94,25 @@ observaciones ancladas (texto o **voz**) en archivos de su carpeta. Lo abre la s
 (en `~/.claude/skills/`, con su `abrir.py`). Lógica en `src/lib/revision/*` (`parse`, `viewer-html` —render compartido con temas claro/sepia/oscuro
 e índice multinivel—, `offline-html`, `rounds`).
 
+**Ajustes de Rodrigo (2026-10-26, encargo `visor-ajustes-rodrigo`):** (1) **índice activo por nivel**: scroll-spy
+que destaca (fondo + barra lateral + negrita) el título más profundo, **dentro del nivel N1–N4 elegido**, que
+contiene la línea de lectura (110 px), y desplaza el índice para dejarlo visible; al cambiar el nivel se recalcula.
+(2) **numeración de Word** en índice y títulos (`numbering.ts`): se calcula de `numbering.xml`+`styles.xml`
+(`numPr` del estilo o del párrafo, contadores por `abstractNum`); si el estudio deja `<stem>_titulos.csv`
+(nivel, numero, titulo; `mapa_titulos.py` lo lee de Word con `ListString`) ese archivo manda. El número va en
+`<span class="num">`, **fuera** del texto de anclaje (`data-ch`/`data-sec` no cambian). Medido en IA1 v08:
+calculado = CSV de Word en 113/113 títulos y = índice del PDF en 112/112 numerados. (3) **encabezado** en banda
+degradada (modelo: tablero de siniestralidad) con estudio, informe y «Revisión interna N° NN · versión vNN»; los
+textos vienen de `--estudio`/`--titulo` o de `encabezado.json` en `_revision\` o en la ronda (`opciones.ts`).
+`META.informe` sigue siendo la llave de `localStorage`: no cambiarla o el offline «pierde» lo guardado.
+(4) **página contenida** (`.page` máx. 1.280 px con margen lateral; 32 px a 1.280, 352 px a 1.920).
+
 | Script | Qué hace | Comando |
 |---|---|---|
 | **`revision-local.ts`** | Servidor `node:http`: parsea el docx (+ mapa de rótulos), sirve el visor y las imágenes, guarda `observaciones.json`/`.md`/`audios` y re-ancla al cambiar de versión. Lanza el transcriptor persistente. | `npx tsx scripts/revision-local.ts <docx> <mapa.csv> <_revision/ronda_NN> <ver> <ronda> [puerto]` |
 | **`transcribe.py`** | Transcribe audio **local** con faster-whisper (`small`, `vad_filter=False`). Modo `--server`: carga el modelo una vez y transcribe por stdin (dictado en ~seg vs ~28s recargando). | `python -X utf8 scripts/transcribe.py <audio.webm>` · `… --server` |
 | **`revision-parse.ts`** | CLI de prueba: parsea un docx y resume estructura/figuras/cuadros contra el mapa. | `npx tsx scripts/revision-parse.ts <docx> <mapa.csv>` |
-| **`revision-export-offline.ts`** | Exporta a **un HTML offline autocontenido** (figuras `data:` URI recomprimidas con sharp a ~1600px, `localStorage`, voz base64; ~5 MB). Para revisar sin conexión. | `npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [ver] [ronda]` |
+| **`revision-export-offline.ts`** | Exporta a **un HTML offline autocontenido** (figuras `data:` URI recomprimidas con sharp a ~1600px, `localStorage`, voz base64; ~5 MB). Para revisar sin conexión. | `npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [ver] [ronda] [--estudio …] [--titulo …] [--titulos csv]` |
 | **`revision-import-offline.ts`** | Importa los JSON que exporta el HTML offline a la ronda: decodifica audios, transcribe, mezcla en `observaciones.json`. Acepta varios archivos/carpeta, deduplica por id (newest-per-id). | `npx tsx scripts/revision-import-offline.ts <offline.json|carpeta ...> <_revision/ronda_NN>` |
 
 **Contrato de archivos** (un archivo, un dueño): la herramienta escribe `observaciones.json`; el estudio

@@ -2,6 +2,7 @@
 // Levanta un servidor local que sirve el informe para leerlo y dejar observaciones
 // ancladas, y las guarda en archivos dentro de la carpeta de revisión del estudio.
 //   npx tsx scripts/revision-local.ts <informe.docx> <mapa.csv> <carpeta_revision> [version] [ronda] [puerto]
+//     [--estudio "<estudio>"] [--titulo "<Informe de Avance N° 1>"] [--titulos <csv>]  (ver src/lib/revision/opciones.ts)
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, unlinkSync, renameSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -10,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { parseReviewDocx, type MapaRotulo } from "../src/lib/revision/parse";
 import { renderReviewHtml } from "../src/lib/revision/viewer-html";
 import { mergeRespuestas, reanchorOnto, type Respuesta } from "../src/lib/revision/rounds";
+import { leerOpciones } from "../src/lib/revision/opciones";
 
 function parseCsv(text: string): Record<string, string>[] {
   const t = text.replace(/^﻿/, "");
@@ -32,7 +34,8 @@ type Obs = {
 };
 
 async function main() {
-  const [docxPath, csvPath, revDir, version = "v08", rondaStr = "1", puertoStr = "4610"] = process.argv.slice(2);
+  const op = leerOpciones(process.argv.slice(2), undefined, (pos) => pos[2]);
+  const [docxPath, csvPath, revDir, version = "v08", rondaStr = "1", puertoStr = "4610"] = op.posicionales;
   if (!docxPath || !csvPath || !revDir) throw new Error("Uso: revision-local.ts <docx> <mapa.csv> <carpeta_revision> [version] [ronda] [puerto]");
   const ronda = Number(rondaStr), puerto = Number(puertoStr);
   mkdirSync(revDir, { recursive: true });
@@ -68,9 +71,9 @@ async function main() {
   });
 
   const mapa: MapaRotulo[] = parseCsv(readFileSync(csvPath, "utf8")).map((r) => ({ codigo: r.codigo, rotulo: r.rotulo, seccionArchivo: r.seccion_archivo, titulo: r.titulo }));
-  const doc = await parseReviewDocx(readFileSync(docxPath), mapa);
+  const doc = await parseReviewDocx(readFileSync(docxPath), mapa, op.titulos);
   const informe = "Informe de avance 1 · PMTU Talca–Maule";
-  const html = renderReviewHtml(doc, { informe, version, ronda });
+  const html = renderReviewHtml(doc, { informe, version, ronda, estudio: op.estudio, titulo: op.titulo });
 
   // Estado persistido.
   let store: { informe: string; version_revisada: string; ronda: number; fecha: string; observaciones: Obs[] } =
@@ -154,6 +157,7 @@ async function main() {
     console.log(`\nRevisión local lista: http://localhost:${puerto}`);
     console.log(`  informe: ${informe} · ${version} · ronda ${ronda}`);
     console.log(`  figuras ${doc.stats.figuras} · cuadros ${doc.stats.cuadros} · imágenes ${doc.images.length}`);
+    console.log(`  títulos ${doc.titulos.numerados}/${doc.titulos.total} con número (${doc.titulos.fuente === "csv" ? op.titulosCsv : "calculado del docx"})`);
     console.log(`  observaciones → ${jsonPath}`);
     console.log(`  (Ctrl-C para terminar)`);
   });

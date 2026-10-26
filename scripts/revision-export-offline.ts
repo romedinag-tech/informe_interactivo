@@ -3,10 +3,13 @@
 // esquema de observaciones. Rodrigo lo revisa sin conexión; al volver, lo importa
 // con revision-import-offline.ts.
 //   npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [version] [ronda] [informe]
+//     [--estudio "<estudio>"] [--titulo "<Informe de Avance N° 1>"] [--titulos <csv>]  (ver src/lib/revision/opciones.ts)
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { dirname } from "node:path";
 import { parseReviewDocx, type MapaRotulo } from "../src/lib/revision/parse";
 import { renderOfflineHtml } from "../src/lib/revision/offline-html";
+import { leerOpciones } from "../src/lib/revision/opciones";
 const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
@@ -20,11 +23,12 @@ function parseCsv(t: string): Record<string, string>[] {
 }
 
 async function main() {
-  const [docxPath, csvPath, outPath, version = "v08", rondaStr = "1", informe = "Informe de avance 1 · PMTU Talca–Maule"] = process.argv.slice(2);
+  const op = leerOpciones(process.argv.slice(2), undefined, (pos) => (pos[2] ? dirname(pos[2]) : undefined));
+  const [docxPath, csvPath, outPath, version = "v08", rondaStr = "1", informe = "Informe de avance 1 · PMTU Talca–Maule"] = op.posicionales;
   if (!docxPath || !csvPath || !outPath) throw new Error("Uso: revision-export-offline.ts <docx> <mapa.csv> <salida.html> [version] [ronda] [informe]");
 
   const mapa: MapaRotulo[] = parseCsv(readFileSync(csvPath, "utf8")).map((r) => ({ codigo: r.codigo, rotulo: r.rotulo, seccionArchivo: r.seccion_archivo, titulo: r.titulo }));
-  const doc = await parseReviewDocx(readFileSync(docxPath), mapa);
+  const doc = await parseReviewDocx(readFileSync(docxPath), mapa, op.titulos);
 
   // Recomprime cada figura a ~1600px JPEG y la incrusta como data: URI (legible y liviano).
   let bruto = 0, comp = 0;
@@ -36,10 +40,12 @@ async function main() {
     dataUris.push("data:image/jpeg;base64," + out.toString("base64"));
   }
 
-  const html = renderOfflineHtml(doc, { informe, version, ronda: Number(rondaStr) }, dataUris);
+  const html = renderOfflineHtml(doc, { informe, version, ronda: Number(rondaStr), estudio: op.estudio, titulo: op.titulo }, dataUris);
   writeFileSync(outPath, html, "utf8");
   console.log(`OFFLINE: ${outPath}`);
   console.log(`  ${doc.chapters.filter((c) => !c.frontMatter).length} caps · ${doc.stats.figuras} figuras · ${doc.stats.cuadros} cuadros`);
+  console.log(`  títulos ${doc.titulos.numerados}/${doc.titulos.total} con número (${doc.titulos.fuente === "csv" ? op.titulosCsv : "calculado del docx"})`);
+  console.log(`  encabezado: ${op.estudio ?? "(sin estudio)"} · ${op.titulo ?? "(sin título)"}${op.encabezadoJson ? ` (${op.encabezadoJson})` : ""}`);
   console.log(`  figuras ${(bruto / 1e6).toFixed(1)} MB → ${(comp / 1e6).toFixed(1)} MB recomprimidas · HTML ${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB`);
 }
 main().catch((e) => { console.error(String(e).slice(0, 500)); process.exit(1); });
