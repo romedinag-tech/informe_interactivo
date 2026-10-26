@@ -79,13 +79,14 @@ $('#comp-save').addEventListener('click',()=>{ const texto=$('#comp-text').value
 
 function renderObs(){ $('#obs-count').textContent=observaciones.length;
   $('#obs-sum').textContent=observaciones.length? (observaciones.length+' observación(es) · offline, en este archivo') : '';
-  const L=$('#obs-list'); if(!observaciones.length){ L.innerHTML='<div class="empty">Selecciona texto o usa "+ observar" para dejar una observación. Se guardan en este archivo.</div>'; return; }
-  L.innerHTML=observaciones.map(o=>'<div class="obs-item"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+o.id+'</b>'+(o.origen==='voz'?' <span class="voz">🎤</span>':'')+'</div>'+
+  const L=$('#obs-list'); if(!observaciones.length){ L.innerHTML='<div class="empty">Selecciona texto o usa "+ observar" para dejar una observación. Se guardan en este archivo.</div>'; revPaint([]); return; }
+  L.innerHTML=observaciones.map(o=>'<div class="obs-item" data-oid="'+o.id+'"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+o.id+'</b>'+(o.origen==='voz'?' <span class="voz">🎤</span>':'')+'</div>'+
     '<div class="cita">'+(o.ancla.rotulo? '<b>'+esc(o.ancla.rotulo)+'</b> ':'')+'«'+esc(o.ancla.cita)+'»</div>'+
     '<div class="txt">'+esc(o.texto)+'</div>'+
     (o.audioB64? '<audio controls preload="none" src="'+o.audioB64+'"></audio>':'')+
     '<div class="meta"><span>'+esc((o.seccion_titulos.slice(-1)[0])||'')+(o.seccion_archivo? ' · '+esc(o.seccion_archivo):'')+'</span><button class="del" data-id="'+o.id+'">borrar</button></div></div>').join('');
   L.querySelectorAll('.del').forEach(b=>b.addEventListener('click',()=>{ observaciones=observaciones.filter(o=>o.id!==b.dataset.id); saveLS(); renderObs(); }));
+  revPaint(observaciones);
 }
 
 function stamp(){ var d=new Date(), p=function(n){return String(n).padStart(2,'0');};

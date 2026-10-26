@@ -161,7 +161,27 @@ export const STYLES = `
   #rec-status{font-size:12px;color:var(--muted)}
   .obs-item audio{width:100%;margin-top:6px;height:30px}
   .obs-item .voz{color:var(--warn)}
-  #sel-btn{position:absolute;z-index:40;display:none;transform:translate(-50%,-120%)}`;
+  #sel-btn{position:absolute;z-index:40;display:none;transform:translate(-50%,-120%)}
+  /* Texto observado: resaltado tipo marcador (o tachado, alternativo); figuras y cuadros con contorno. */
+  mark.obs-mark{background:#fff07a;color:inherit;border-radius:2px;cursor:pointer;padding:0}
+  mark.obs-mark mark.obs-mark{background:#ffd84a}
+  :root[data-theme="dark"] mark.obs-mark{background:rgba(255,214,0,.30)} :root[data-theme="dark"] mark.obs-mark mark.obs-mark{background:rgba(255,214,0,.52)}
+  body.marca-tachado mark.obs-mark{background:transparent;text-decoration:line-through;text-decoration-color:#e6b800;text-decoration-thickness:2px}
+  .block.obs-fig{outline:3px solid #f2c200;outline-offset:2px}
+  .block.obs-fig figcaption b{background:#fff07a;color:var(--ink);cursor:pointer;border-radius:2px}
+  mark.obs-mark.flash,.block.obs-fig.flash{box-shadow:0 0 0 3px var(--accent)}
+  .obs-item.focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);z-index:3}
+  .obs-item[data-oid]{cursor:pointer;background:var(--card)}
+  .obs-head{background:var(--card)}
+  .obs-vista{display:flex;gap:4px;margin:0 0 10px;align-items:center;flex-wrap:wrap}
+  .obs-vista span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+  .obs-vista button{font:600 11px Segoe UI;border:1px solid var(--line);background:var(--card);border-radius:6px;padding:2px 7px;cursor:pointer;color:var(--muted)}
+  .obs-vista button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  /* Vista al margen (como Word): el panel crece con el documento y cada comentario va a la altura de su texto. */
+  body.margen aside.obs{position:relative;height:auto;overflow:visible;align-self:stretch}
+  body.margen .obs-head{position:sticky;top:0;z-index:5;padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  body.margen #obs-list{position:relative}
+  body.margen #obs-list .obs-item{position:absolute;left:0;right:0;margin:0}`;
 
 // Esqueleto de página compartido. `acts` son botones extra del panel (export offline),
 // `dataScript` las constantes inline, `clientScript` la lógica del modo.
@@ -187,7 +207,7 @@ export function renderPage(meta: ReviewMeta, tb: { toc: string; body: string }, 
     ${tb.toc}
   </nav>
   <main id="doc">${tb.body}</main>
-  <aside class="obs"><h2>Observaciones (<span id="obs-count">0</span>)</h2>${warnbar ? '<div class="warnbar" id="warnbar"></div>' : ""}${acts}<div id="obs-sum" class="obs-sum"></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
+  <aside class="obs"><div class="obs-head"><h2>Observaciones (<span id="obs-count">0</span>)</h2>${warnbar ? '<div class="warnbar" id="warnbar"></div>' : ""}${acts}<div class="obs-vista"><span>Vista</span><button data-vista="margen" title="Cada comentario a la altura de su texto">Al margen</button><button data-vista="lista" title="Lista corrida">Lista</button><span style="margin-left:6px">Marca</span><button data-marca="resaltado">Resaltado</button><button data-marca="tachado">Tachado</button></div><div id="obs-sum" class="obs-sum"></div></div><div id="obs-list"><div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div></div></aside>
 </div>
 </div>
 <button id="sel-btn" class="obs-btn">+ observar</button>
@@ -198,7 +218,7 @@ export function renderPage(meta: ReviewMeta, tb: { toc: string; body: string }, 
   <div class="row"><button id="comp-cancel">Cancelar</button><button class="save" id="comp-save">Guardar</button></div>
 </div>
 <div id="readlabel"></div>
-<script>${dataScript}${UI_JS}${clientScript}</script>
+<script>${dataScript}${UI_JS}${MARGIN_JS}${clientScript}</script>
 </body></html>`;
 }
 
@@ -251,6 +271,105 @@ const UI_JS = String.raw`(function(){
   window.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',onScroll);
   setLvl(2);
 })();`;
+
+// Resaltado y comentarios al margen, compartido por ambos modos. Cada modo llama
+// `revPaint(observaciones)` al final de su renderObs: se borran las marcas, se
+// reconstruyen desde el ancla (cita + prefijo + sufijo; figura/cuadro por código o
+// rótulo) y, en la vista «al margen», cada comentario se ubica a la altura de su
+// marca, empujando hacia abajo el que choque. Ancla perdida o cita no hallada: sin
+// marca, y el comentario va al final (en la lista) con su aviso.
+const MARGIN_JS = String.raw`
+var revObs=[], revPos={};
+function revLS(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
+function revUnpaint(){
+  var ps=[]; document.querySelectorAll('#doc mark.obs-mark').forEach(function(m){ var p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); ps.push(p); });
+  ps.forEach(function(p){ if(p.isConnected) p.normalize(); });
+  document.querySelectorAll('#doc .obs-fig').forEach(function(b){ b.classList.remove('obs-fig'); delete b.dataset.oids; });
+}
+// Prefijo/sufijo en común con el contexto guardado: desempata citas repetidas.
+function revCtx(full,i,a){ var s=0, pre=a.prefijo||'', suf=a.sufijo||'', k;
+  for(k=1;k<=pre.length&&i-k>=0&&full[i-k]===pre[pre.length-k];k++) s++;
+  var j=i+a.cita.length; for(k=0;k<suf.length&&j+k<full.length&&full[j+k]===suf[k];k++) s++;
+  return s; }
+function revFind(o){
+  var a=o.ancla||{}, cita=a.cita||''; if(!cita) return null;
+  var best=null, ch=(o.seccion_titulos||[])[0]||'';
+  document.querySelectorAll('#doc .block[data-tipo="texto"]').forEach(function(b){
+    var full=b.textContent, i=full.indexOf(cita);
+    while(i>=0){ var s=revCtx(full,i,a)+(b.dataset.ch===ch?1000:0);
+      if(!best||s>best.s) best={b:b,i:i,s:s}; i=full.indexOf(cita,i+1); }
+  });
+  return best;
+}
+// Envuelve [start,end) del bloque en <mark>, nodo de texto por nodo de texto: con
+// citas que se solapan quedan marcas anidadas, sin romper el párrafo.
+function revWrap(block,start,end,oid){
+  var tw=document.createTreeWalker(block,NodeFilter.SHOW_TEXT), pos=0, n, segs=[];
+  while((n=tw.nextNode())){ var L=n.data.length, s=Math.max(start,pos), e=Math.min(end,pos+L);
+    if(s<e && !(n.parentNode.closest&&n.parentNode.closest('.obs-btn-wrap'))) segs.push([n,s-pos,e-pos]);
+    pos+=L; if(pos>=end) break; }
+  var first=null;
+  segs.forEach(function(g){ var t=g[0]; if(g[1]>0) t=t.splitText(g[1]); if(g[2]-g[1]<t.data.length) t.splitText(g[2]-g[1]);
+    var m=document.createElement('mark'); m.className='obs-mark'; m.dataset.oid=oid; t.parentNode.insertBefore(m,t); m.appendChild(t); if(!first) first=m; });
+  return first;
+}
+function revFig(o){ var a=o.ancla||{}, bs=document.querySelectorAll('#doc .block.figura,#doc .block.cuadro'), i;
+  if(a.codigo) for(i=0;i<bs.length;i++) if(bs[i].dataset.codigo===a.codigo) return bs[i];
+  if(a.rotulo) for(i=0;i<bs.length;i++) if(bs[i].dataset.rotulo===a.rotulo) return bs[i];
+  return null; }
+function revPaint(obs){
+  revObs=obs||[]; revPos={}; revUnpaint();
+  revObs.forEach(function(o){ if(o.orphaned) return; var el=null;
+    if(o.tipo==='figura'||o.tipo==='cuadro'){ el=revFig(o); if(el){ el.classList.add('obs-fig'); el.dataset.oids=((el.dataset.oids||'')+' '+o.id).trim(); } }
+    else { var f=revFind(o); if(f) el=revWrap(f.b,f.i,f.i+o.ancla.cita.length,o.id); }
+    if(el) revPos[o.id]=el; });
+  document.querySelectorAll('#obs-list .obs-item[data-oid]').forEach(function(it){
+    if(!revPos[it.dataset.oid]){ it.classList.add('sin-ubicar'); if(!it.querySelector('.orphan-tag')) it.firstChild.insertAdjacentHTML('beforeend',' <span class="orphan-tag">⚠ sin ubicar en esta versión</span>'); } });
+  revLayout();
+}
+function revVista(){ return document.body.classList.contains('margen'); }
+function revLayout(){
+  var L=document.getElementById('obs-list'); if(!L) return;
+  var items=[].slice.call(L.querySelectorAll('.obs-item[data-oid]'));
+  if(!revVista()){ items.forEach(function(it){ it.style.top=''; }); L.style.height=''; return; }
+  var base=L.getBoundingClientRect().top, placed=[], loose=[];
+  items.forEach(function(it){ var el=revPos[it.dataset.oid]; if(el) placed.push({it:it,y:el.getBoundingClientRect().top-base}); else loose.push(it); });
+  placed.sort(function(a,b){ return a.y-b.y; });
+  var bottom=0;
+  placed.forEach(function(p){ var y=Math.max(p.y,bottom); p.it.style.top=y+'px'; bottom=y+p.it.offsetHeight+8; });
+  loose.forEach(function(it){ it.style.top=bottom+'px'; bottom+=it.offsetHeight+8; });
+  L.style.height=bottom+'px';
+}
+var revRaf=0; function revRelayout(){ if(!revRaf) revRaf=requestAnimationFrame(function(){ revRaf=0; revLayout(); }); }
+function revFocus(oid,scrollDoc){
+  document.querySelectorAll('#obs-list .obs-item.focus').forEach(function(x){ x.classList.remove('focus'); });
+  var it=document.querySelector('#obs-list .obs-item[data-oid="'+oid+'"]'); if(it){ it.classList.add('focus'); if(!revVista()) it.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+  var el=revPos[oid]; if(el){ if(scrollDoc) el.scrollIntoView({block:'center',behavior:'smooth'});
+    el.classList.add('flash'); setTimeout(function(){ el.classList.remove('flash'); },1200); }
+}
+document.getElementById('doc').addEventListener('click',function(e){
+  if(window.getSelection&&String(window.getSelection()).trim()) return;
+  var m=e.target.closest('mark.obs-mark'); if(m){ revFocus(m.dataset.oid,false); return; }
+  var c=e.target.closest('.block.obs-fig figcaption'); if(c){ var b=c.closest('.block'); revFocus(b.dataset.oids.split(' ')[0],false); }
+});
+document.getElementById('obs-list').addEventListener('click',function(e){
+  if(e.target.closest('button,audio,a')) return; var it=e.target.closest('.obs-item[data-oid]'); if(it) revFocus(it.dataset.oid,true);
+});
+// Vista (al margen / lista) y estilo de marca (resaltado / tachado), recordados por navegador.
+// En pantallas angostas la vista al margen no cabe: se usa la lista.
+function revSetVista(v){ var ok=v==='margen'&&window.innerWidth>=1100; document.body.classList.toggle('margen',ok);
+  document.querySelectorAll('.obs-vista [data-vista]').forEach(function(b){ b.classList.toggle('on',b.dataset.vista===(ok?'margen':'lista')); }); revLayout(); }
+function revSetMarca(m){ document.body.classList.toggle('marca-tachado',m==='tachado');
+  document.querySelectorAll('.obs-vista [data-marca]').forEach(function(b){ b.classList.toggle('on',b.dataset.marca===m); }); }
+var revVistaPref=revLS('revvista')||'margen';
+document.querySelectorAll('.obs-vista [data-vista]').forEach(function(b){ b.addEventListener('click',function(){ revVistaPref=b.dataset.vista; revLS('revvista',revVistaPref); revSetVista(revVistaPref); }); });
+document.querySelectorAll('.obs-vista [data-marca]').forEach(function(b){ b.addEventListener('click',function(){ revLS('revmarca',b.dataset.marca); revSetMarca(b.dataset.marca); }); });
+revSetVista(revVistaPref); revSetMarca(revLS('revmarca')||'resaltado');
+window.addEventListener('resize',function(){ revSetVista(revVistaPref); });
+// El cuerpo cambia de alto al cargar imágenes (lazy) o fuentes: re-ubicar.
+if(window.ResizeObserver) new ResizeObserver(revRelayout).observe(document.getElementById('doc'));
+window.addEventListener('load',revRelayout);
+`;
 
 export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
   const tb = renderBodyToc(doc, { imgSrc: (i) => `/img/${i}`, lazy: true });
@@ -309,14 +428,15 @@ async function load(){ observaciones=await (await fetch('/observaciones')).json(
 function renderObs(){ $('#obs-count').textContent=observaciones.length;
   const by=(e)=>observaciones.filter(o=>(o.estado||'pendiente')===e).length;
   $('#obs-sum').textContent=observaciones.length? (by('pendiente')+' pendientes · '+by('atendida')+' atendidas · '+by('respondida')+' respondidas') : '';
-  const L=$('#obs-list'); if(!observaciones.length){ L.innerHTML='<div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div>'; return; }
-  L.innerHTML=observaciones.map(o=>'<div class="obs-item'+(o.orphaned?' orphan':'')+'"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+(o.id)+'</b> <span class="estado '+(o.estado||'pendiente')+'">'+(o.estado||'pendiente')+'</span>'+(o.orphaned?' <span class="orphan-tag">⚠ ancla perdida</span>':'')+'</div>'+
+  const L=$('#obs-list'); if(!observaciones.length){ L.innerHTML='<div class="empty">Selecciona texto o usa "+ observar" para dejar una observación.</div>'; revPaint([]); return; }
+  L.innerHTML=observaciones.map(o=>'<div class="obs-item'+(o.orphaned?' orphan':'')+'" data-oid="'+o.id+'"><div><span class="tag '+o.tipo+'">'+o.tipo+'</span> <b>'+(o.id)+'</b> <span class="estado '+(o.estado||'pendiente')+'">'+(o.estado||'pendiente')+'</span>'+(o.orphaned?' <span class="orphan-tag">⚠ ancla perdida</span>':'')+'</div>'+
     '<div class="cita">'+ (o.ancla.rotulo? '<b>'+esc(o.ancla.rotulo)+'</b> ':'') +'«'+esc(o.ancla.cita)+'»</div>'+
     '<div class="txt">'+esc(o.texto)+'</div>'+
     (o.audio? '<div class="voz">🎤 voz</div><audio controls preload="none" src="/'+o.audio+'"></audio>':'')+
     (o.respuesta&&o.respuesta.nota? '<div class="resp">↳ '+esc(o.respuesta.nota)+(o.respuesta.version?' <i>('+esc(o.respuesta.version)+')</i>':'')+'</div>':'')+
     '<div class="meta"><span>'+esc(o.seccion_titulos.slice(-1)[0]||'')+(o.seccion_archivo? ' · '+esc(o.seccion_archivo):'')+'</span><button class="del" data-id="'+o.id+'">borrar</button></div></div>').join('');
   L.querySelectorAll('.del').forEach(b=>b.addEventListener('click',async()=>{ observaciones=await (await fetch('/observacion/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.dataset.id})})).json(); renderObs(); }));
+  revPaint(observaciones);
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 load();
