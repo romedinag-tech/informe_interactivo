@@ -5,6 +5,7 @@
 // imágenes y el script de cliente; todo lo demás (CSS, bloques, composer) se reusa.
 
 import type { ReviewDoc, ReviewBlock } from "./parse";
+import { PLAN_VACIO, type PlanGrupos, type GrupoFiguras } from "./grupos";
 
 // `informe` es la llave de las observaciones guardadas (no cambiarla entre corridas);
 // `estudio` y `titulo` son los textos del encabezado, que vienen de parámetros.
@@ -20,8 +21,9 @@ function tableHtml(columns: string[], rows: string[][]): string {
   return `<table class="cuadro-tabla"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
 
-function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }, io: ImgOpts): string {
-  const anchorData = `data-bid="${bid}" data-ch="${esc(ctx.ch)}" data-sec="${esc(ctx.sec)}"`;
+// `extra`: clases y atributos de la figura cuando va como pestaña de un grupo.
+function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }, io: ImgOpts, extra = ""): string {
+  const anchorData = `data-bid="${bid}" data-ch="${esc(ctx.ch)}" data-sec="${esc(ctx.sec)}"${extra}`;
   const lazy = io.lazy ? ' loading="lazy"' : "";
   switch (b.type) {
     case "HEADING":
@@ -33,7 +35,7 @@ function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }
     case "FIGURE": {
       const cap = b.rotulo ? `<figcaption><b>${esc(b.rotulo)}.</b> ${esc(b.titulo)}${b.fuente ? `<span class="fuente">${esc(b.fuente)}</span>` : ""}</figcaption>` : "";
       const img = b.image ? `<img src="${io.imgSrc(b.image.index)}" alt="${esc(b.rotulo || "figura")}"${lazy}>` : "";
-      return `<figure class="block figura" ${anchorData} data-tipo="figura" data-rotulo="${esc(b.rotulo)}" data-codigo="${esc(b.codigo ?? "")}" data-secarch="${esc(b.seccionArchivo ?? "")}"><div class="obs-btn-wrap"><button class="obs-btn" data-bid="${bid}">+ observar figura</button></div>${img}${cap}</figure>`;
+      return `<figure class="block figura${extra ? " fg-pane" : ""}" ${anchorData} data-tipo="figura" data-rotulo="${esc(b.rotulo)}" data-codigo="${esc(b.codigo ?? "")}" data-secarch="${esc(b.seccionArchivo ?? "")}"><div class="obs-btn-wrap"><button class="obs-btn" data-bid="${bid}">+ observar figura</button></div>${img}${cap}</figure>`;
     }
     case "CUADRO": {
       const cap = `<figcaption><b>${esc(b.rotulo)}.</b> ${esc(b.titulo)}${b.fuente ? `<span class="fuente">${esc(b.fuente)}</span>` : ""}</figcaption>`;
@@ -45,8 +47,17 @@ function blockHtml(b: ReviewBlock, bid: string, ctx: { ch: string; sec: string }
 // Número del título (el de la lista de Word), aparte del texto: el anclaje usa sólo el texto.
 const numHtml = (n: string): string => (n ? `<span class="num">${esc(n)}</span>` : "");
 
+// Figuras agrupadas: un bloque con una pestaña por figura, en la posición de la primera.
+// Cada figura conserva su <figure class="block figura"> (código, rótulo, botón de observar);
+// las no activas sólo se ocultan (`hidden`), así el anclaje y el resaltado no cambian.
+function grupoHtml(g: GrupoFiguras, io: ImgOpts): string {
+  const tabs = g.miembros.map((m, i) => `<button type="button" role="tab" data-fgi="${i}"${i ? "" : ' class="on"'} title="${esc(m.block.type === "FIGURE" ? m.block.rotulo : "")}">${esc(m.pestana)}</button>`).join("");
+  const panes = g.miembros.map((m, i) => blockHtml(m.block, m.bid, { ch: m.ch, sec: m.sec }, io, ` data-fgi="${i}"${i ? " hidden" : ""}`)).join("");
+  return `<div class="fig-grupo" data-grupo="${esc(g.grupo)}">${g.titulo ? `<div class="fg-titulo">${esc(g.titulo)}</div>` : ""}<div class="fg-tabs" role="tablist">${tabs}</div>${panes}</div>`;
+}
+
 // Construye el índice (TOC) y el cuerpo del documento (capítulos de contenido).
-export function renderBodyToc(doc: ReviewDoc, io: ImgOpts): { toc: string; body: string } {
+export function renderBodyToc(doc: ReviewDoc, io: ImgOpts, grupos: PlanGrupos = PLAN_VACIO): { toc: string; body: string } {
   const toc: string[] = [];
   const body: string[] = [];
   const tocEntry = (lvl: number, id: string, text: string, numero: string) =>
@@ -61,7 +72,9 @@ export function renderBodyToc(doc: ReviewDoc, io: ImgOpts): { toc: string; body:
       sec.blocks.forEach((b, bi) => {
         const bid = `${ci}.${si}.${bi}`;
         if (b.type === "HEADING") tocEntry(Math.min(b.level, 4), `h-${ci}-${si}-${bi}`, b.text, b.numero);
-        body.push(blockHtml(b, bid, { ch: ch.title, sec: secTitle }, io));
+        const g = grupos.lider.get(bid);
+        if (g) body.push(grupoHtml(g, io));
+        else if (!grupos.miembros.has(bid)) body.push(blockHtml(b, bid, { ch: ch.title, sec: secTitle }, io));
       });
     });
     body.push(`</section>`);
@@ -181,7 +194,20 @@ export const STYLES = `
   body.margen aside.obs{position:relative;height:auto;overflow:visible;align-self:stretch}
   body.margen .obs-head{position:sticky;top:0;z-index:5;padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:8px}
   body.margen #obs-list{position:relative}
-  body.margen #obs-list .obs-item{position:absolute;left:0;right:0;margin:0}`;
+  body.margen #obs-list .obs-item{position:absolute;left:0;right:0;margin:0}
+  /* Figuras agrupadas: un bloque, una pestaña por figura. */
+  .fig-grupo{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px 16px;margin:20px 0;box-shadow:var(--sh-sm)}
+  .fig-grupo .fg-titulo{font:600 13.5px/1.35 var(--font-ui);color:var(--navy);margin:0 0 8px}
+  .fg-tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:0 0 12px}
+  .fg-tabs button{font:600 12px var(--font-ui);border:1px solid var(--line);border-bottom:none;background:var(--soft);color:var(--muted);border-radius:8px 8px 0 0;padding:5px 12px;cursor:pointer;margin-bottom:-1px}
+  .fg-tabs button.on{background:var(--card);color:var(--accent);border-color:var(--line-2);box-shadow:inset 0 2px 0 var(--accent)}
+  .fg-tabs button.tiene-obs::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#f2c200;margin-left:6px;vertical-align:middle}
+  .fig-grupo .block.figura{border:none;box-shadow:none;margin:0;padding:0;background:transparent}
+  .fig-grupo .block.figura[hidden]{display:none}
+  /* Contador de observaciones pendientes por título (sección y subsecciones). */
+  .obs-cnt{color:#c62828;font-weight:700;margin-left:.4em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  :root[data-theme="dark"] .obs-cnt{color:#ff6b6b}
+  .toc-ch .obs-cnt{font-size:11.5px}`;
 
 // Esqueleto de página compartido. `acts` son botones extra del panel (export offline),
 // `dataScript` las constantes inline, `clientScript` la lógica del modo.
@@ -325,7 +351,43 @@ function revPaint(obs){
     if(el) revPos[o.id]=el; });
   document.querySelectorAll('#obs-list .obs-item[data-oid]').forEach(function(it){
     if(!revPos[it.dataset.oid]){ it.classList.add('sin-ubicar'); if(!it.querySelector('.orphan-tag')) it.firstChild.insertAdjacentHTML('beforeend',' <span class="orphan-tag">⚠ sin ubicar en esta versión</span>'); } });
+  document.querySelectorAll('#doc .fig-grupo .fg-pane').forEach(function(p){ var b=p.closest('.fig-grupo').querySelector('.fg-tabs button[data-fgi="'+p.dataset.fgi+'"]'); if(b) b.classList.toggle('tiene-obs',p.classList.contains('obs-fig')); });
+  revCount(revObs);
   revLayout();
+}
+// Figuras agrupadas: la pestaña i muestra su figura y oculta las demás del bloque.
+function revTab(g,i){ g.querySelectorAll('.fg-pane').forEach(function(p){ p.hidden=(+p.dataset.fgi!==i); });
+  g.querySelectorAll('.fg-tabs button').forEach(function(b){ b.classList.toggle('on',+b.dataset.fgi===i); }); revRelayout(); }
+document.querySelectorAll('#doc .fig-grupo .fg-tabs button').forEach(function(b){ b.addEventListener('click',function(){ revTab(b.closest('.fig-grupo'),+b.dataset.fgi); }); });
+// Lo que se ve de un ancla: una figura en una pestaña oculta se ubica por su bloque.
+function revShown(el){ return el.hidden? (el.closest('.fig-grupo')||el) : el; }
+// Contador rojo de observaciones PENDIENTES por título, sumando sus subsecciones. Pendiente
+// = sin respuesta o con estado distinto de atendida/respondida (servidor: o.estado; offline:
+// RESP, las respuestas que traía el HTML al exportarse). La observación se ubica por su marca
+// en el documento; la que no tiene marca (ancla perdida, cita no hallada), por seccion_titulos.
+var revHeads=null, REV_HECHO={atendida:1,respondida:1};
+function revHeadList(){ if(revHeads) return revHeads;
+  revHeads=[].slice.call(document.querySelectorAll('nav.toc .toc-ch')).map(function(a){ var t=a.querySelector('.t');
+    return { a:a, lvl:+a.dataset.lvl, el:document.getElementById(a.getAttribute('href').slice(1)), t:t?t.textContent:'' }; }).filter(function(h){ return h.el; });
+  return revHeads; }
+function revHeadBefore(el){ var hs=revHeadList(), pos=-1;
+  for(var k=0;k<hs.length;k++){ if(hs[k].el.compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING) pos=k; else break; }
+  return pos; }
+function revHeadBySec(st){ var hs=revHeadList(), ch=(st||[])[0], sec=(st||[])[1], c=-1, i;
+  for(i=0;i<hs.length;i++) if(hs[i].lvl===1&&hs[i].t===ch){ c=i; break; }
+  if(c<0||!sec) return c;
+  for(i=c+1;i<hs.length&&hs[i].lvl>1;i++) if(hs[i].lvl===2&&hs[i].t===sec) return i;
+  return c; }
+function revEstado(o){ return o.estado||(typeof RESP!=='undefined'&&RESP[o.id])||'pendiente'; }
+function revCount(obs){
+  var hs=revHeadList(), n=hs.map(function(){ return 0; });
+  (obs||[]).forEach(function(o){ if(REV_HECHO[revEstado(o)]) return;
+    var el=revPos[o.id], pos=el? revHeadBefore(el) : revHeadBySec(o.seccion_titulos), lv=99;
+    for(var k=pos;k>=0&&lv>1;k--) if(hs[k].lvl<lv){ n[k]++; lv=hs[k].lvl; } });
+  document.querySelectorAll('.obs-cnt').forEach(function(s){ s.remove(); });
+  hs.forEach(function(h,k){ if(!n[k]) return; var s='<span class="obs-cnt" title="observaciones pendientes">('+n[k]+')</span>', t=h.a.querySelector('.t');
+    var hd=h.el.tagName==='SECTION'? (h.el.querySelector('h1')||h.el) : h.el; // el capítulo se indexa por su <section>
+    hd.insertAdjacentHTML('beforeend',s); if(t) t.insertAdjacentHTML('afterend',s); else h.a.insertAdjacentHTML('beforeend',s); });
 }
 function revVista(){ return document.body.classList.contains('margen'); }
 function revLayout(){
@@ -333,7 +395,7 @@ function revLayout(){
   var items=[].slice.call(L.querySelectorAll('.obs-item[data-oid]'));
   if(!revVista()){ items.forEach(function(it){ it.style.top=''; }); L.style.height=''; return; }
   var base=L.getBoundingClientRect().top, placed=[], loose=[];
-  items.forEach(function(it){ var el=revPos[it.dataset.oid]; if(el) placed.push({it:it,y:el.getBoundingClientRect().top-base}); else loose.push(it); });
+  items.forEach(function(it){ var el=revPos[it.dataset.oid]; if(el) placed.push({it:it,y:revShown(el).getBoundingClientRect().top-base}); else loose.push(it); });
   placed.sort(function(a,b){ return a.y-b.y; });
   var bottom=0;
   placed.forEach(function(p){ var y=Math.max(p.y,bottom); p.it.style.top=y+'px'; bottom=y+p.it.offsetHeight+8; });
@@ -344,7 +406,8 @@ var revRaf=0; function revRelayout(){ if(!revRaf) revRaf=requestAnimationFrame(f
 function revFocus(oid,scrollDoc){
   document.querySelectorAll('#obs-list .obs-item.focus').forEach(function(x){ x.classList.remove('focus'); });
   var it=document.querySelector('#obs-list .obs-item[data-oid="'+oid+'"]'); if(it){ it.classList.add('focus'); if(!revVista()) it.scrollIntoView({block:'nearest',behavior:'smooth'}); }
-  var el=revPos[oid]; if(el){ if(scrollDoc) el.scrollIntoView({block:'center',behavior:'smooth'});
+  var el=revPos[oid]; if(el&&el.hidden) revTab(el.closest('.fig-grupo'),+el.dataset.fgi);
+  if(el){ if(scrollDoc) el.scrollIntoView({block:'center',behavior:'smooth'});
     el.classList.add('flash'); setTimeout(function(){ el.classList.remove('flash'); },1200); }
 }
 document.getElementById('doc').addEventListener('click',function(e){
@@ -371,9 +434,13 @@ if(window.ResizeObserver) new ResizeObserver(revRelayout).observe(document.getEl
 window.addEventListener('load',revRelayout);
 `;
 
-export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta): string {
-  const tb = renderBodyToc(doc, { imgSrc: (i) => `/img/${i}`, lazy: true });
-  return renderPage(meta, tb, `const META=${JSON.stringify(meta)};`, SERVER_JS);
+// Los avisos del agrupamiento de figuras se repiten en la consola del navegador.
+export const avisosJs = (g: PlanGrupos): string =>
+  g.avisos.map((a) => `console.warn(${JSON.stringify("[grupos de figuras] " + a).replace(/</g, "\\u003c")});`).join("");
+
+export function renderReviewHtml(doc: ReviewDoc, meta: ReviewMeta, grupos: PlanGrupos = PLAN_VACIO): string {
+  const tb = renderBodyToc(doc, { imgSrc: (i) => `/img/${i}`, lazy: true }, grupos);
+  return renderPage(meta, tb, `const META=${JSON.stringify(meta)};${avisosJs(grupos)}`, SERVER_JS);
 }
 
 // ── JS del cliente MODO SERVIDOR (anclaje + composer + panel + fetch) ─────────

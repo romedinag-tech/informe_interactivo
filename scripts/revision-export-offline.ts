@@ -10,6 +10,7 @@ import { dirname } from "node:path";
 import { parseReviewDocx, type MapaRotulo } from "../src/lib/revision/parse";
 import { renderOfflineHtml } from "../src/lib/revision/offline-html";
 import { leerOpciones } from "../src/lib/revision/opciones";
+import { planGrupos } from "../src/lib/revision/grupos";
 const require = createRequire(import.meta.url);
 const sharp = require("sharp");
 
@@ -40,12 +41,15 @@ async function main() {
     dataUris.push("data:image/jpeg;base64," + out.toString("base64"));
   }
 
-  const html = renderOfflineHtml(doc, { informe, version, ronda: Number(rondaStr), estudio: op.estudio, titulo: op.titulo }, dataUris);
+  const grupos = planGrupos(doc, op.grupos);
+  for (const a of grupos.avisos) console.warn(`  ⚠ grupos de figuras: ${a}`);
+  const html = renderOfflineHtml(doc, { informe, version, ronda: Number(rondaStr), estudio: op.estudio, titulo: op.titulo }, dataUris, grupos, op.respuestas);
   writeFileSync(outPath, html, "utf8");
   console.log(`OFFLINE: ${outPath}`);
   console.log(`  ${doc.chapters.filter((c) => !c.frontMatter).length} caps · ${doc.stats.figuras} figuras · ${doc.stats.cuadros} cuadros`);
   console.log(`  títulos ${doc.titulos.numerados}/${doc.titulos.total} con número (${doc.titulos.fuente === "csv" ? op.titulosCsv : "calculado del docx"})`);
-  console.log(`  encabezado: ${op.estudio ?? "(sin estudio)"} · ${op.titulo ?? "(sin título)"}${op.encabezadoJson ? ` (${op.encabezadoJson})` : ""}`);
+  console.log(`  grupos de figuras ${grupos.grupos.length} (${grupos.grupos.reduce((s, g) => s + g.miembros.length, 0)} figuras)${op.gruposCsv ? ` (${op.gruposCsv})` : " (sin CSV)"} · respuestas ${op.respuestas.length}${op.respuestasJson ? ` (${op.respuestasJson})` : ""}`);
+  console.log(`  encabezado:${op.estudio ?? "(sin estudio)"} · ${op.titulo ?? "(sin título)"}${op.encabezadoJson ? ` (${op.encabezadoJson})` : ""}`);
   console.log(`  figuras ${(bruto / 1e6).toFixed(1)} MB → ${(comp / 1e6).toFixed(1)} MB recomprimidas · HTML ${(Buffer.byteLength(html) / 1e6).toFixed(1)} MB`);
 }
 main().catch((e) => { console.error(String(e).slice(0, 500)); process.exit(1); });

@@ -4,13 +4,18 @@
 // Reusa el render (CSS + bloques + composer) de viewer-html.ts.
 
 import type { ReviewDoc } from "./parse";
-import { renderBodyToc, renderPage, type ReviewMeta } from "./viewer-html";
+import type { Respuesta } from "./rounds";
+import { PLAN_VACIO, type PlanGrupos } from "./grupos";
+import { renderBodyToc, renderPage, avisosJs, type ReviewMeta } from "./viewer-html";
 
-export function renderOfflineHtml(doc: ReviewDoc, meta: ReviewMeta, dataUris: string[]): string {
+// `respuestas`: las de `respuestas.json` de la ronda al exportar; el contador de pendientes
+// por título las cruza por id con lo guardado en localStorage.
+export function renderOfflineHtml(doc: ReviewDoc, meta: ReviewMeta, dataUris: string[], grupos: PlanGrupos = PLAN_VACIO, respuestas: Respuesta[] = []): string {
   // Offline: imágenes incrustadas (sin lazy, para que se dibujen al abrir con file://).
-  const tb = renderBodyToc(doc, { imgSrc: (i) => dataUris[i] ?? "", lazy: false });
+  const tb = renderBodyToc(doc, { imgSrc: (i) => dataUris[i] ?? "", lazy: false }, grupos);
   const acts = `<div class="acts"><button id="btn-export">⤓ Exportar</button><button id="btn-import">⤒ Importar</button><input id="imp-file" type="file" accept="application/json,.json" multiple hidden></div><div id="imp-status" class="imp-status"></div>`;
-  const dataScript = `const META=${JSON.stringify(meta)};`;
+  const resp = Object.fromEntries(respuestas.filter((r) => r?.id && r.estado).map((r) => [r.id, r.estado]));
+  const dataScript = `const META=${JSON.stringify(meta)};const RESP=${JSON.stringify(resp).replace(/</g, "\\u003c")};${avisosJs(grupos)}`;
   return renderPage(meta, tb, dataScript, OFFLINE_JS, acts, true);
 }
 

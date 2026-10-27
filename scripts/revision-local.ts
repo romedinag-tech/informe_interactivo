@@ -12,6 +12,7 @@ import { parseReviewDocx, type MapaRotulo } from "../src/lib/revision/parse";
 import { renderReviewHtml } from "../src/lib/revision/viewer-html";
 import { mergeRespuestas, reanchorOnto, type Respuesta } from "../src/lib/revision/rounds";
 import { leerOpciones } from "../src/lib/revision/opciones";
+import { planGrupos } from "../src/lib/revision/grupos";
 
 function parseCsv(text: string): Record<string, string>[] {
   const t = text.replace(/^﻿/, "");
@@ -73,7 +74,9 @@ async function main() {
   const mapa: MapaRotulo[] = parseCsv(readFileSync(csvPath, "utf8")).map((r) => ({ codigo: r.codigo, rotulo: r.rotulo, seccionArchivo: r.seccion_archivo, titulo: r.titulo }));
   const doc = await parseReviewDocx(readFileSync(docxPath), mapa, op.titulos);
   const informe = "Informe de avance 1 · PMTU Talca–Maule";
-  const html = renderReviewHtml(doc, { informe, version, ronda, estudio: op.estudio, titulo: op.titulo });
+  const grupos = planGrupos(doc, op.grupos);
+  for (const a of grupos.avisos) console.warn(`  ⚠ grupos de figuras: ${a}`);
+  const html = renderReviewHtml(doc, { informe, version, ronda, estudio: op.estudio, titulo: op.titulo }, grupos);
 
   // Estado persistido.
   let store: { informe: string; version_revisada: string; ronda: number; fecha: string; observaciones: Obs[] } =
@@ -158,6 +161,7 @@ async function main() {
     console.log(`  informe: ${informe} · ${version} · ronda ${ronda}`);
     console.log(`  figuras ${doc.stats.figuras} · cuadros ${doc.stats.cuadros} · imágenes ${doc.images.length}`);
     console.log(`  títulos ${doc.titulos.numerados}/${doc.titulos.total} con número (${doc.titulos.fuente === "csv" ? op.titulosCsv : "calculado del docx"})`);
+    console.log(`  grupos de figuras ${grupos.grupos.length} (${grupos.grupos.reduce((s, g) => s + g.miembros.length, 0)} figuras)${op.gruposCsv ? ` (${op.gruposCsv})` : " (sin CSV)"}`);
     console.log(`  observaciones → ${jsonPath}`);
     console.log(`  (Ctrl-C para terminar)`);
   });

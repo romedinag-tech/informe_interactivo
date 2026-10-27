@@ -107,12 +107,24 @@ textos vienen de `--estudio`/`--titulo` o de `encabezado.json` en `_revision\` o
 `META.informe` sigue siendo la llave de `localStorage`: no cambiarla o el offline «pierde» lo guardado.
 (4) **página contenida** (`.page` máx. 1.280 px con margen lateral; 32 px a 1.280, 352 px a 1.920).
 
+**Figuras en pestañas y contador (2026-10-27, encargo `figuras-en-pestanas-y-contador`):** (1) si junto al docx
+está `<stem>_grupos_figuras.csv` (o `--grupos`; columnas `grupo,titulo_grupo,orden,codigo,rotulo,pestana`),
+`grupos.ts` arma un bloque con una pestaña por figura en la posición de la primera. Cada figura sigue siendo su
+`<figure class="block figura">` con código y rótulo; las inactivas sólo llevan `hidden`, así el anclaje no cambia.
+Una fila sin figura (por código ni rótulo) deja el grupo suelto; no consecutivas → se agrupan igual y avisa
+(consola del CLI y `console.warn`). Clic en una observación de figura oculta activa su pestaña. (2) **contador rojo
+de pendientes** por título y en el índice (`revCount` en `MARGIN_JS`, se recalcula en cada `revPaint`): pendiente =
+estado ≠ atendida/respondida, suma subsecciones, cero no se muestra; se ubica por la marca o, sin marca, por
+`seccion_titulos`. El offline incrusta `respuestas.json` de la ronda (`RESP`, o `--respuestas`). Trampa: el índice
+del capítulo apunta a su `<section>`, no al `<h1>`; el contador va en el `<h1>`. Medido en copia del v10: en el v10,
+2.4.1.5-1/-2 **no** son consecutivas (hay contenido entre medio); 2.4.1.5-6/-7 sí.
+
 | Script | Qué hace | Comando |
 |---|---|---|
 | **`revision-local.ts`** | Servidor `node:http`: parsea el docx (+ mapa de rótulos), sirve el visor y las imágenes, guarda `observaciones.json`/`.md`/`audios` y re-ancla al cambiar de versión. Lanza el transcriptor persistente. | `npx tsx scripts/revision-local.ts <docx> <mapa.csv> <_revision/ronda_NN> <ver> <ronda> [puerto]` |
 | **`transcribe.py`** | Transcribe audio **local** con faster-whisper (`small`, `vad_filter=False`). Modo `--server`: carga el modelo una vez y transcribe por stdin (dictado en ~seg vs ~28s recargando). | `python -X utf8 scripts/transcribe.py <audio.webm>` · `… --server` |
 | **`revision-parse.ts`** | CLI de prueba: parsea un docx y resume estructura/figuras/cuadros contra el mapa. | `npx tsx scripts/revision-parse.ts <docx> <mapa.csv>` |
-| **`revision-export-offline.ts`** | Exporta a **un HTML offline autocontenido** (figuras `data:` URI recomprimidas con sharp a ~1600px, `localStorage`, voz base64; ~5 MB). Para revisar sin conexión. | `npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [ver] [ronda] [--estudio …] [--titulo …] [--titulos csv]` |
+| **`revision-export-offline.ts`** | Exporta a **un HTML offline autocontenido** (figuras `data:` URI recomprimidas con sharp a ~1600px, `localStorage`, voz base64; ~5 MB). Para revisar sin conexión. | `npx tsx scripts/revision-export-offline.ts <docx> <mapa.csv> <salida.html> [ver] [ronda] [--estudio …] [--titulo …] [--titulos csv] [--grupos csv] [--respuestas json]` |
 | **`revision-import-offline.ts`** | Importa los JSON que exporta el HTML offline a la ronda: decodifica audios, transcribe, mezcla en `observaciones.json`. Acepta varios archivos/carpeta, deduplica por id (newest-per-id). | `npx tsx scripts/revision-import-offline.ts <offline.json|carpeta ...> <_revision/ronda_NN>` |
 
 **Contrato de archivos** (un archivo, un dueño): la herramienta escribe `observaciones.json`; el estudio
